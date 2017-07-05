@@ -1,6 +1,7 @@
 #!/bin/dash
 
-. /opt/iecd/service-func
+#. /opt/iecd/service-func
+. /$PWD/service-func 
 
 smsparse()
 {
@@ -48,10 +49,11 @@ fi
 
 sms=$(echo $sms | sed 's/ gradus C//')
 
-filename=$(mktemp -u -p ${SMSDIR}/ "${comaddr}_XXXXXX")
+filename=$(mktemp -u -p "${MSGDIR}/drop" "${comaddr}_XXXXXX")
 if printf '%s\n' "$sms" | smsparse "$filename" "$comaddr"; then
 	if sync $filename; then
-		mv "$filename" "${SMSDIR}/`stat -c %i $filename`"
+		mv "$filename" "${MSGDIR}/drop/`stat -c %i $filename`"
+		printf "1" > $FIFOTRIGGER
 	else
 		exit 1
 	fi

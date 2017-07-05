@@ -1,10 +1,17 @@
 #!/bin/dash
 
-. /opt/iecd/service-func
+. /$PWD/service-func
 
 usage() 
 {
-	echo -e "Usage: $0 [OPTION] -F DEVICE"
+	echo "Usage: $0 [-idcg] -F DEVICE"
+	echo " "
+	echo "  -i  Device information."
+	echo "  -d  Device initialization."
+	echo "  -c  Device check."
+	echo "  -g  Receiving messages from the device."
+	echo "  -F  Name of gsm-device (example: /dev/ttyUSB0)"
+	echo " "
 }
 
 atsend()
@@ -61,7 +68,7 @@ smssep()
 			
 			case $senddevice in
 			granit)
-				printf '%s\n' "$sms" | smsdropgranit.sh $comaddr &
+				printf '%s\n' "$sms" | ./smsdropgranit.sh $comaddr &
 			;;
 			esac
 			wait %1
@@ -100,15 +107,15 @@ if [ $# -eq 0 ]; then
 	exit 0
 fi
 
-while getopts "idgcF:" opt; do
-    case $opt in
-    F) gsmdev=$OPTARG ;;
-    i) info=1 ;;
+while getopts "cdghiF:" opt; do
+	case $opt in
+	F) gsmdev=$OPTARG ;;
+	i) info=1 ;;
 	d) devinit=1 ;;
 	g) get=1 ;;
 	c) check=1 ;;
-	*) usage; exit 0 ;;
-    esac
+	*) usage; exit ;;
+	esac
 done
 
 shift $(($OPTIND - 1)) 
