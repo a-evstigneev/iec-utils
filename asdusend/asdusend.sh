@@ -1,11 +1,11 @@
 #!/bin/dash
 
-. /home/artem/gitproject/iec-utils/smsget/service-func
+. /opt/iecd/service-func
 
 # M_EI_NA_1 (COT=4)
 end_init="46010400020000000000"
 # C_IC_NA_1 (COT=6)
-act_poll="64010600FFFF00000014"
+act_poll="64010600FFFF00000014" # poll заменить на interrogation
 # C_IC_NA_1 (COT=7)
 con_act_poll="64010700FFFF00000014"
 # C_IC_NA_1 (COT=10)
@@ -40,7 +40,7 @@ while read asdu <&3; do
 		echo "Station Initialization completed"
 	elif [ "$asdu" = "$act_poll" ]; then
 		printf '%s\n' "$con_act_poll" >&4
-		asduconv.sh -c 20 "${SMSDIR}/*" >&4
+		/opt/iecd/asduconv.sh -c 20 "$1" >&4
 		printf '%s\n' "$end_act_poll" >&4
 		exec 4>&-
 	fi

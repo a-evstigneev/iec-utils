@@ -1,7 +1,6 @@
 #!/bin/dash
 
-#. /opt/iecd/service-func
-. /$PWD/service-func 
+. /opt/iecd/service-func
 
 smsparse()
 {

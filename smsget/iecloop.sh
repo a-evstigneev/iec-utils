@@ -1,46 +1,26 @@
 #!/bin/dash
 
-iecquedir="/var/iecque"
-export SMSDIR="${iecquedir}/work"
-export RELEASEDIR="${iecquedir}/release"
-export LOGFILE="${iecquedir}/iecd.log"
-export PIDFILE="${iecquedir}/iecd.pid"
-export PHONEBOOK="/opt/iecd/phonebook"
+iecdir="/opt/iecd"
+export MSGDIR="${iecdir}/work"
+export LOGFILE="${iecdir}/iecd.log"
+export PIDFILE="${iecdir}/iecd.pid"
+export PHONEBOOK="${iecdir}/phonebook"
+export FIFOTRIGGER="${MSGDIR}/fifotr"
+export BROKERSEND="${iecdir}/broker.sh"
+export GSMDEV="/dev/ttyUSB0"
+export IECSERVER="10.90.90.40"
 
 . /opt/iecd/service-func
 
-gsmdev="/dev/ttyUSB0"
-iecserver="10.90.90.40"
+./quemngr -d 3 -l ./quemngrlog.txt &
 
-smssend() 
-{
-if [ "$(ls -A ${SMSDIR})" ]; then 
-	logmsgtime "Catalog $SMSDIR is not empty"
-	if asdusend.sh -l "iecclient $iecserver"; then
-		logmsgtime "ASDU sent successfully to server $iecserver"
-		mv ${SMSDIR}/* $RELEASEDIR
-	fi
-fi
-}
-
-rm $LOGFILE
-
-smssend >> $LOGFILE
-
-logmsgtime "Catalog $SMSDIR is empty" >> $LOGFILE
-
-if smsget.sh -c -F $gsmdev; then
-	{
-	stty raw -echo -F $gsmdev
-	smsget.sh -d -F $gsmdev
-
+if ./smsget.sh -c -F $GSMDEV; then
+	stty raw -echo -F $GSMDEV
+	./smsget.sh -d -F $GSMDEV
 	while true; do
-		if smsget.sh -g -F $gsmdev; then
-			smssend
-		fi
-		sleep 20 
+		./smsget.sh -g -F $GSMDEV
+		sleep 10 
 	done
-	} >> $LOGFILE
 else
 	exit 1
 fi

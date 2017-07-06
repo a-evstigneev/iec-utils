@@ -3,6 +3,11 @@
 tmpdir=$(mktemp -d /tmp/XXXXX.broker)
 test -n "$MSGDIR" && actdir=${MSGDIR}/act
 
+sendfile()
+{
+	/opt/iecd/asdusend.sh -l "/opt/iecd/iecclient $IECSERVER" $1
+}
+
 jobslist=${tmpdir}/jobslist
 sendfiles=${tmpdir}/sendfiles
 
@@ -57,7 +62,7 @@ trap 'sigchld' CHLD
 while true; do 
 	if read filename; then 
 		printf '%s\n' "$filename 1 $conf"
-		cp ${actdir}/$filename /tmp/$filename & 
+		sendfile ${actdir}/$filename & 
 		printf '%s %s\n' $! $filename >> $sendfiles
 	fi
 done

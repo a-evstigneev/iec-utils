@@ -1,6 +1,6 @@
 #!/bin/dash
 
-. /$PWD/service-func
+. /opt/iecd/service-func
 
 usage() 
 {
