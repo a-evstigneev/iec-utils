@@ -26,7 +26,7 @@ extern  "C" {
 
 #define DEFAULT_W	8
 #define DEFAULT_K	12
-#define DEFAULT_T0	30
+#define DEFAULT_T0	4
 #define DEFAULT_T1	15
 #define DEFAULT_T2	10
 #define DEFAULT_T3	20

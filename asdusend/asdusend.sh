@@ -4,12 +4,17 @@
 
 # M_EI_NA_1 (COT=4)
 end_init="46010400020000000000"
+
 # C_IC_NA_1 (COT=6)
-act_poll="64010600FFFF00000014" # poll заменить на interrogation
+act_interrog="64010600FFFF00000014" 
+
 # C_IC_NA_1 (COT=7)
-con_act_poll="64010700FFFF00000014"
+con_act_interrog="64010700FFFF00000014"
+
 # C_IC_NA_1 (COT=10)
-end_act_poll="64010A00FFFF00000014" 
+end_act_interrog="64010A00FFFF00000014" 
+
+pid=$(echo $$)
 
 usage()
 {
@@ -25,23 +30,29 @@ done
 
 shift $(($OPTIND - 1))
 
-#trap "kill $! 2> /dev/null; exit 0" INT TERM
-
 mkfifo /tmp/fifo1.$$
 mkfifo /tmp/fifo2.$$
 
 $ieclink >/tmp/fifo2.$$ </tmp/fifo1.$$ &
-
 exec 3</tmp/fifo2.$$ 4>/tmp/fifo1.$$ 
+
 rm /tmp/fifo1.$$ /tmp/fifo2.$$ || true
 
 while read asdu <&3; do
-	if [ "$asdu" = "$end_init" ]; then
-		echo "Station Initialization completed"
-	elif [ "$asdu" = "$act_poll" ]; then
-		printf '%s\n' "$con_act_poll" >&4
+	if echo "$asdu" | grep -q "460104"; then
+		echo "asdusend [$pid]: read asdu M_EI_NA_1 (COT=4) $asdu"	
+	elif [ "$asdu" = "$act_interrog" ]; then
+		echo "asdusend [$pid]: read asdu C_IC_NA_1 (COT=6) $asdu"
+		
+		printf '%s\n' "$con_act_interrog" >&4
+		echo "asdusend [$pid]: send asdu C_IC_NA_1 (COT=7) $con_act_interrog"
+		
 		/opt/iecd/asduconv.sh -c 20 "$1" >&4
-		printf '%s\n' "$end_act_poll" >&4
+		echo "asdusend [$pid]: send msg $(basename $1)"
+		
+		printf '%s\n' "$end_act_interrog" >&4
+		echo "asdusend [$pid]: send asdu C_IC_NA_1 (COT=10) $end_act_interrog"
+		
 		exec 4>&-
 	fi
 done

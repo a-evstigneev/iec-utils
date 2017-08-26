@@ -111,11 +111,10 @@ static void stdin_read(int fd, short events, void *opaque)
 			discard:
 				if (cp == end && asdulen != 0) {
 					if (iecsock_can_queue(s)) {
-					//	fprintf(stderr, "%s: окно свободно, записываем ASDU в сокет\n", __FUNCTION__);
 						iec_asdu_send(s, asdubuf, asdulen);
 					}
 					else {
-						fprintf(stderr, "%s: окно закрыто, сохраняем ASDU в список asdulist\n", __FUNCTION__);
+						fprintf(stderr, "%s [%d]: window size exhausted, save ASDU in asdulist\n", __FUNCTION__, getpid());
 						struct asduhead *h;
 						h = xmalloc(sizeof(*h) + asdulen);
 						h->next = NULL;
@@ -139,7 +138,7 @@ static void stdin_read(int fd, short events, void *opaque)
 			rbuflen = 0;
 		
 		if (curlistsize == limlistsize) {
-			fprintf(stderr, "%s: достигнут размер списка asdulist, отключаем чтение сstdin\n", __FUNCTION__);
+			fprintf(stderr, "%s [%d]: limit size of asdulist is reached, disable reading from stdin\n", __FUNCTION__, getpid());
 			event_del(&s->user);
 			return;
 		}
@@ -147,7 +146,7 @@ static void stdin_read(int fd, short events, void *opaque)
 	}
 	
 	stdinclose = 1;
-	fprintf(stderr, "%s: стандартный ввод закрыт\n", __FUNCTION__);
+	fprintf(stderr, "%s [%d]: stdin is close\n", __FUNCTION__, getpid());
 
 //	if (asdulist != NULL) {
 //		fprintf(stderr, "%s: список не пуст, окно передачи закрыто, устанавливаем event_del(&s->user)\n", __FUNCTION__);
@@ -157,7 +156,7 @@ static void stdin_read(int fd, short events, void *opaque)
 
 static void iec_kick_callback(struct iecsock *s)
 {
-	fprintf(stderr, "%s: Sucess 0x%lu\n", __FUNCTION__, (unsigned long) s);
+	fprintf(stderr, "%s [%d]: Sucess 0x%lu\n", __FUNCTION__, getpid(), (unsigned long) s);
 	struct asduhead *p = NULL, *next = NULL;
 	
 	for (p = asdulist; p != NULL; p = next) {
@@ -173,7 +172,7 @@ static void iec_kick_callback(struct iecsock *s)
 	if ( (p == NULL) && (stdinclose == 0)) {
 		asdulistlast = &asdulist;
 		event_add(&s->user, NULL);
-		fprintf(stderr, "%s: список asdulist пуст, устанавливаем event_add(&s->user, NULL)\n", __FUNCTION__);
+		fprintf(stderr, "%s [%d]: asdulist is empty, set event_add(&s->user, NULL)\n", __FUNCTION__, getpid());
 	}
 	else if ( (p == NULL) && (stdinclose == 1)) {
 		close(1);
@@ -185,13 +184,15 @@ static void iec_kick_callback(struct iecsock *s)
 
 void disconnect_hook(struct iecsock *s, short reason)
 {	
-	fprintf(stderr, "%s: what=0x%02x\n", __FUNCTION__, reason);
-	return;
+	fprintf(stderr, "%s [%d]: what=0x%02x\n", __FUNCTION__, getpid(), reason);
+	while (close(s->sock) != 0 && errno == EINTR);
+	
+	exit(reason);
 }
 
 void data_received_hook(struct iecsock *s, struct iec_buf *b)
 {	
-	fprintf(stderr, "%s: data_len=%d Success\n", __FUNCTION__, b->data_len);
+	fprintf(stderr, "%s [%d]: data_len=%d Success\n", __FUNCTION__, getpid(), b->data_len);
 	int i;
 	
 	for (i = 0; i < b->data_len; ++i) {
@@ -208,7 +209,7 @@ void activation_hook(struct iecsock *s)
 	u_long flags;
 	int ret;
 
-	fprintf(stderr, "%s: Sucess 0x%lu\n", __FUNCTION__, (unsigned long) s);
+	fprintf(stderr, "%s [%d]: Sucess 0x%lu\n", __FUNCTION__, getpid(), (unsigned long) s);
 /*
 	flags = fcntl(0, F_GETFL);
 	ret = fcntl(0, F_SETFL, O_NONBLOCK | flags);
@@ -224,7 +225,7 @@ void activation_hook(struct iecsock *s)
 
 void connect_hook(struct iecsock *s)
 {	
-	fprintf(stderr, "%s: Sucess 0x%lu\n", __FUNCTION__, (unsigned long) s);
+	fprintf(stderr, "%s [%d]: Sucess 0x%lu\n", __FUNCTION__, getpid(), (unsigned long) s);
 }
 
 int main(int argc, char **argv)
@@ -243,7 +244,7 @@ int main(int argc, char **argv)
 	addr.sin_family = AF_INET;
 	addr.sin_port = htons(IEC_PORT_DEFAULT);
 	
-	if (argc > 1 && inet_pton(AF_INET, argv[1], &addr.sin_addr) > 0)
+	if (argc > 1 && inet_pton(AF_INET, argv[1], &addr.sin_addr) > 0) 
 		iecsock_connect(&addr);
 	else
 		iecsock_connect(NULL);

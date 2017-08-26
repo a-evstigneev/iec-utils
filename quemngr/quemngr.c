@@ -20,7 +20,7 @@
 #include "logging.h"
 #include "utils.h"
 
-#define WINSIZE 10
+#define WINSIZE 1
 #define WINDEFSIZE 10
 #define TIMERHEAPSIZE 16
 #define DELTAUSEC 25
@@ -82,7 +82,7 @@ init(void)
 	struct timeval now;
 	
 	daemon_proc = 1;
-	if (logfile && (logstream = fopen(logfile, "a")))
+	if (logfile && (logstream = fopen(logfile, "w")))
 		;
 	else if (fifolog && (logstream = fopen(fifolog, "a")))
 		;

@@ -203,10 +203,9 @@ static void iecsock_run_ackw_queue(struct iecsock *s, unsigned short nr)
 
 	proto_debug("received ack for N(s)=%d-1", nr);
 
-	for (tmp = b = TAILQ_FIRST(&s->ackw_q);
-		!(TAILQ_EMPTY(&s->ackw_q)) && (b = (TAILQ_NEXT(tmp, head)));
-			b = tmp) {
-		if (b->h.ic.ns == nr) break;
+	for (tmp = b = TAILQ_FIRST(&s->ackw_q); !(TAILQ_EMPTY(&s->ackw_q)) && (b = (TAILQ_NEXT(tmp, head))); b = tmp) {
+		if (b->h.ic.ns == nr) 
+			break;
 		TAILQ_REMOVE(&s->ackw_q, b, head);
 		free(b);
 	}
@@ -484,26 +483,33 @@ static void connect_writecb(int sock, short what, void *arg)
 	int ret, opt;
 	struct iecsock *s = (struct iecsock *) arg;
 	struct timeval tv;
-
-	if (what & EV_TIMEOUT) {
+	
+	/* 
+		Cокет неблокирующий, вызов connect может происходить долго.
+		Проверяем, если произошел таймаут t0 для сокета, то переустанавливаем его и возвращаемся в основую петлю. 
+	*/
+	if (what & EV_TIMEOUT) { 
 		tv.tv_sec = s->t0;
 		tv.tv_usec = 0;
 		event_add(&s->t0_timer, &tv);
 		return;
 	}
-
+	
+	/*
+		Проверяем имеется ли ожидающая ошибка на сокете. 
+	*/
 	slen = sizeof(opt);
 	ret = getsockopt(s->sock, SOL_SOCKET, SO_ERROR, &opt, &slen);
 	if (opt != 0) {
 		while(close(s->sock) != 0 && errno == EINTR);
 		tv.tv_sec = s->t0;
 		tv.tv_usec = 0;
-		evtimer_set(&s->t0_timer, t0_timer_run, s);
+		evtimer_set(&s->t0_timer, t0_timer_run, s); /* Если ошибка имеется, то после закрытия сокета, пытаемся снова подключиться */
 		evtimer_add(&s->t0_timer, &tv);
 		return;
 	}
 
-	t0_timer_stop(s);
+	t0_timer_stop(s); /* Подключились, таймер t0 можно удалить */
 
 	s->io = bufferevent_new(s->sock, bufreadcb, bufwritecb, buferrorcb, s);
 	if (!s->io) {
@@ -511,7 +517,7 @@ static void connect_writecb(int sock, short what, void *arg)
 		free(s);
 	}
 
-	bufferevent_setwatermark(s->io, EV_READ, sizeof(struct iechdr), 0);
+	bufferevent_setwatermark(s->io, EV_READ, sizeof(struct iechdr), 0); /* Необходимо считать первые два байта - это стартовый байт 0x68 и длина фрейма iec */
 	bufferevent_enable(s->io, EV_READ);
 
 	if (default_hooks.connect_indication)

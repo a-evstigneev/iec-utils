@@ -60,7 +60,7 @@ smssep()
 		id=$(echo $id | sed 's/+CMGL: //')
 		sms=$(echo $sms | sed 's/\r$//')
 		num=$(echo $num | sed 's/"//g; s/+//')
-		logmsg "sms_id = ${id}, number = ${num}, sms = ${sms}"
+		logmsg "Read sms_id = ${id}, number = ${num}, sms = ${sms}"
 	
 		comaddr=$(grep -q $num $PHONEBOOK && grep $num $PHONEBOOK | awk '{ print $2 }')
 		if [ $comaddr ]; then
@@ -68,7 +68,10 @@ smssep()
 			
 			case $senddevice in
 			granit)
-				printf '%s\n' "$sms" | ./smsdropgranit.sh $comaddr &
+				printf '%s\n' "$sms" | ./smsdrop_granit.sh $comaddr &
+			;;
+			verset)
+				printf '%s\n' "$sms" | ./smsdrop_verset.sh $comaddr &
 			;;
 			esac
 			wait %1
@@ -137,7 +140,8 @@ exec 3<$gsmdev 4>$gsmdev
 # Info about gsm-equipment
 if [ $info ]; then
 	logmsgtime "Information about $gsmdev"
-	for cmd in "ATI" "AT+COPS?" "AT^SYSINFO" "AT&V"; do
+#	for cmd in "ATI" "AT+COPS?" "AT&V"; do
+	for cmd in "AT#LSCRIPT" "AT+CREG?" "AT+CPIN?" "AT+CSQ" "AT+CREG?" "AT+COPS?"; do
 		atsend 4 $cmd
 		sleep 1
 		readreply 3
@@ -147,7 +151,7 @@ fi
 # Gsm device init
 if [ $devinit ]; then
 	logmsgtime "Gsm device $gsmdev initialization"
-	for cmd in 'AT+CSCS="GSM"' 'AT+CSMS=0' 'AT+CMGF=1' 'AT+CPMS="SM","SM","SM"' 'AT+CNMI=2,1,0,0,0'; do
+	for cmd in 'AT+CSCS="GSM"' "AT+CSMS=0" 'AT+CMGF=1' 'AT+CPMS="SM","SM","SM"' 'AT+CNMI=2,0,0,0,0'; do
 		logmsg $cmd
 		atsend 4 $cmd
 		sleep 1

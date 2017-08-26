@@ -43,9 +43,9 @@
 
 #define MODNAME "iecsock"
 #define debug(format, arg...)						\
-fprintf(stderr, "%s [%d]: " format ": %s\n", MODNAME, getpid(), ##arg, strerror(errno))
+fprintf(stderr, "%s: " format ": %s\n", MODNAME, ##arg, strerror(errno))
 #define proto_debug(format, arg...)					\
-fprintf(stderr, "%s [%d]: " format "\n", MODNAME, getpid(), ##arg)
+fprintf(stderr, "%s: " format "\n", MODNAME, ##arg)
 
 void bufferevent_setwatermark(struct bufferevent *bufev, short events, size_t lowmark, size_t highmark);
 
@@ -488,20 +488,14 @@ static void connect_writecb(int sock, short what, void *arg)
 	if (what & EV_TIMEOUT) {
 		tv.tv_sec = s->t0;
 		tv.tv_usec = 0;
-		while (close(s->sock) != 0 && errno == EINTR);
-	//	iecsock_close(s);	
-	//	event_add(&s->t0_timer, &tv);
-		exit(2);
-	//	return;
+		event_add(&s->t0_timer, &tv);
+		return;
 	}
 	
 	slen = sizeof(opt);
 	ret = getsockopt(s->sock, SOL_SOCKET, SO_ERROR, &opt, &slen);
 	if (opt != 0) {
-		while (close(s->sock) != 0 && errno == EINTR);
-		exit(opt); // Для шлюза нам не требуется, переустанавливать соединение при неудачи
-		// Просто выходим с кодом завершения opt
-		
+		while(close(s->sock) != 0 && errno == EINTR);
 		tv.tv_sec = s->t0;
 		tv.tv_usec = 0;
 		evtimer_set(&s->t0_timer, t0_timer_run, s);
@@ -520,7 +514,7 @@ static void connect_writecb(int sock, short what, void *arg)
 	bufferevent_setwatermark(s->io, EV_READ, sizeof(struct iechdr), 0);
 	bufferevent_enable(s->io, EV_READ);
 	
-//	s->stopdt = 1;
+	s->stopdt = 1;
 	iecsock_uframe_send(s, STARTACT);
 	t1_timer_start(s);
 	
@@ -714,8 +708,8 @@ int iecsock_connect(struct sockaddr_in *addr)
 	iecsock_set_defaults(s);
 	s->type = IEC_MASTER;
 //	s->type = IEC_SLAVE;
-	s->stopdt = 1;
-	
+//	s->stopdt = 1;
+
 	if (addr) {
 		s->addr.sin_family = addr->sin_family;
 		s->addr.sin_port = addr->sin_port;

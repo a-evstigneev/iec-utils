@@ -3,7 +3,7 @@
 !_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
 !_TAG_PROGRAM_NAME	Exuberant Ctags	//
 !_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
-!_TAG_PROGRAM_VERSION	5.8	//
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
 AddDeclaration	libevent/bin/event_rpcgen.py	/^    def AddDeclaration(self, funcname):$/;"	m	class:EntryArray
 AddEntry	libevent/bin/event_rpcgen.py	/^    def AddEntry(self, entry):$/;"	m	class:Struct
 AddFuncName	libevent/bin/event_rpcgen.py	/^    def AddFuncName(self):$/;"	m	class:Entry
@@ -197,31 +197,24 @@ HeaderPostamble	libevent/bin/event_rpcgen.py	/^def HeaderPostamble(name):$/;"	f
 HeaderPreamble	libevent/bin/event_rpcgen.py	/^def HeaderPreamble(name):$/;"	f
 IEC104_ASDU_MAX	iecsock.h	30;"	d
 IEC104_ASDU_MAX	newiecsock/iecsock.h	30;"	d
-IEC104_ASDU_MAX	oldiecsock/iecsock.h	30;"	d
 IEC104_BUF_LEN	iecsock.h	27;"	d
 IEC104_BUF_LEN	newiecsock/iecsock.h	27;"	d
-IEC104_BUF_LEN	oldiecsock/iecsock.h	27;"	d
 IEC104_CTRL_LEN	iecsock.h	29;"	d
 IEC104_CTRL_LEN	newiecsock/iecsock.h	29;"	d
-IEC104_CTRL_LEN	oldiecsock/iecsock.h	29;"	d
 IEC_APDU_MAX	iecsock_internal.h	33;"	d
 IEC_APDU_MIN	iecsock_internal.h	34;"	d
-IEC_MASTER	iecsock.h	/^	IEC_MASTER$/;"	e	enum:__anon2
-IEC_MASTER	newiecsock/iecsock.h	/^	IEC_MASTER$/;"	e	enum:__anon6
-IEC_MASTER	oldiecsock/iecsock.h	/^	IEC_MASTER$/;"	e	enum:__anon4
+IEC_MASTER	iecsock.h	/^	IEC_MASTER$/;"	e	enum:__anon1
+IEC_MASTER	newiecsock/iecsock.h	/^	IEC_MASTER$/;"	e	enum:__anon3
 IEC_OBJECT_MAX	iec104.h	31;"	d
 IEC_PORT_DEFAULT	iecsock.h	28;"	d
 IEC_PORT_DEFAULT	newiecsock/iecsock.h	28;"	d
-IEC_PORT_DEFAULT	oldiecsock/iecsock.h	28;"	d
-IEC_SLAVE	iecsock.h	/^	IEC_SLAVE,$/;"	e	enum:__anon2
-IEC_SLAVE	newiecsock/iecsock.h	/^	IEC_SLAVE,$/;"	e	enum:__anon6
-IEC_SLAVE	oldiecsock/iecsock.h	/^	IEC_SLAVE,$/;"	e	enum:__anon4
+IEC_SLAVE	iecsock.h	/^	IEC_SLAVE,$/;"	e	enum:__anon1
+IEC_SLAVE	newiecsock/iecsock.h	/^	IEC_SLAVE,$/;"	e	enum:__anon3
 IEC_TYPEID_LEN	iec104.h	32;"	d
 INPUT	libevent/include/evrpc.h	446;"	d
 LineCount	libevent/bin/event_rpcgen.py	/^    def LineCount(self):$/;"	m	class:Entry
 MODNAME	iecsock.c	44;"	d	file:
 MODNAME	newiecsock/iecsock.c	44;"	d	file:
-MODNAME	oldiecsock/iecsock.c	44;"	d	file:
 M_BO_NA_1	iec104_types.h	29;"	d
 M_BO_TB_1	iec104_types.h	34;"	d
 M_ME_NA_1	iec104_types.h	30;"	d
@@ -362,7 +355,6 @@ __IEC104_H	iec104.h	21;"	d
 __IEC104_TYPES_H	iec104_types.h	22;"	d
 __IECSOCK_H	iecsock.h	21;"	d
 __IECSOCK_H	newiecsock/iecsock.h	21;"	d
-__IECSOCK_H	oldiecsock/iecsock.h	21;"	d
 __IECSOCK_INTERNAL_H	iecsock_internal.h	21;"	d
 __init__	libevent/bin/event_rpcgen.py	/^    def __init__(self, entry):$/;"	m	class:EntryArray
 __init__	libevent/bin/event_rpcgen.py	/^    def __init__(self, name):$/;"	m	class:Struct
@@ -374,16 +366,12 @@ __init__	libevent/bin/event_rpcgen.py	/^    def __init__(self, type, name, tag, 
 __init__	libevent/bin/event_rpcgen.py	/^    def __init__(self, type, name, tag, refname):$/;"	m	class:EntryStruct
 ackw_q	iecsock.h	/^	struct iec_buf_queue ackw_q;	\/* acknowledge wait queue *\/$/;"	m	struct:iecsock	typeref:struct:iecsock::iec_buf_queue
 ackw_q	newiecsock/iecsock.h	/^	struct iec_buf_queue ackw_q;	\/* acknowledge wait queue *\/$/;"	m	struct:iecsock	typeref:struct:iecsock::iec_buf_queue
-ackw_q	oldiecsock/iecsock.h	/^	struct iec_buf_queue ackw_q;	\/* acknowledge wait queue *\/$/;"	m	struct:iecsock	typeref:struct:iecsock::iec_buf_queue
 activation_hook	client.c	/^void activation_hook(struct iecsock *s)$/;"	f
 activation_hook	server.c	/^void activation_hook(struct iecsock *s)$/;"	f
 activation_indication	iecsock.h	/^	void (*activation_indication)(struct iecsock *s);$/;"	m	struct:iechooks
 activation_indication	newiecsock/iecsock.h	/^	void (*activation_indication)(struct iecsock *s);$/;"	m	struct:iechooks
-activation_indication	oldiecsock/iecsock.h	/^	void (*activation_indication)(struct iecsock *s);$/;"	m	struct:iechooks
 addr	iecsock.h	/^	struct sockaddr_in addr;	\/* socket address *\/$/;"	m	struct:iecsock	typeref:struct:iecsock::sockaddr_in
 addr	newiecsock/iecsock.h	/^	struct sockaddr_in addr;	\/* socket address *\/$/;"	m	struct:iecsock	typeref:struct:iecsock::sockaddr_in
-addr	oldiecsock/iecsock.h	/^	struct sockaddr_in addr;	\/* socket address *\/$/;"	m	struct:iecsock	typeref:struct:iecsock::sockaddr_in
-asdu_test	server.c	/^unsigned char asdu_test[] = {$/;"	v
 asdubuf	client.c	/^static unsigned char asdubuf[IEC104_ASDU_MAX];$/;"	v	file:
 asduhead	client.c	/^struct asduhead {$/;"	s	file:
 asdulen	client.c	/^static int asdulen;$/;"	v	file:
@@ -402,18 +390,14 @@ bl	iec104_types.h	/^	u_char		bl	:1; \/* blocked\/not blocked *\/$/;"	m	struct:ie
 bl	iec104_types.h	/^	u_char		bl	:1; \/* blocked\/not blocked *\/$/;"	m	struct:iec_type9
 buf	iecsock.h	/^	u_char		buf[IEC104_BUF_LEN];$/;"	m	struct:iecsock
 buf	newiecsock/iecsock.h	/^	u_char		buf[IEC104_BUF_LEN];$/;"	m	struct:iecsock
-buf	oldiecsock/iecsock.h	/^	u_char		buf[IEC104_BUF_LEN];$/;"	m	struct:iecsock
 buferrorcb	iecsock.c	/^static void buferrorcb(struct bufferevent *bufev, short what, void *arg)$/;"	f	file:
 buferrorcb	newiecsock/iecsock.c	/^static void buferrorcb(struct bufferevent *bufev, short what, void *arg)$/;"	f	file:
-buferrorcb	oldiecsock/iecsock.c	/^static void buferrorcb(struct bufferevent *bufev, short what, void *arg)$/;"	f	file:
 buffer	libevent/include/event.h	/^	u_char *buffer;$/;"	m	struct:evbuffer
 bufferevent	libevent/include/event.h	/^struct bufferevent {$/;"	s
 bufreadcb	iecsock.c	/^static void bufreadcb(struct bufferevent *bufev, void *arg)$/;"	f	file:
 bufreadcb	newiecsock/iecsock.c	/^static void bufreadcb(struct bufferevent *bufev, void *arg)$/;"	f	file:
-bufreadcb	oldiecsock/iecsock.c	/^static void bufreadcb(struct bufferevent *bufev, void *arg)$/;"	f	file:
 bufwritecb	iecsock.c	/^static void bufwritecb(struct bufferevent *bufev, void *arg)$/;"	f	file:
 bufwritecb	newiecsock/iecsock.c	/^static void bufwritecb(struct bufferevent *bufev, void *arg)$/;"	f	file:
-bufwritecb	oldiecsock/iecsock.c	/^static void bufwritecb(struct bufferevent *bufev, void *arg)$/;"	f	file:
 ca	iec104_types.h	/^	u_short		ca;	\/* common address of ASDU *\/$/;"	m	struct:iec_unit_id
 cause	iec104_types.h	/^	u_char		cause	:6; \/* cause of transmission *\/$/;"	m	struct:iec_unit_id
 cb	libevent/include/event.h	/^	void (*cb)(struct evbuffer *, size_t, size_t, void *);$/;"	m	struct:evbuffer
@@ -444,48 +428,39 @@ cd8	iec104_types.h	/^	u_char		cd8	:1;$/;"	m	struct:iec_stcd
 cd9	iec104_types.h	/^	u_char		cd9	:1;$/;"	m	struct:iec_stcd
 check_nr	iecsock.c	/^static inline int check_nr(struct iecsock *s, unsigned short nr)$/;"	f	file:
 check_nr	newiecsock/iecsock.c	/^static inline int check_nr(struct iecsock *s, unsigned short nr)$/;"	f	file:
-check_nr	oldiecsock/iecsock.c	/^static inline int check_nr(struct iecsock *s, unsigned short nr)$/;"	f	file:
 check_ns	iecsock.c	/^static inline int check_ns(struct iecsock *s, unsigned short ns)$/;"	f	file:
 check_ns	newiecsock/iecsock.c	/^static inline int check_ns(struct iecsock *s, unsigned short ns)$/;"	f	file:
-check_ns	oldiecsock/iecsock.c	/^static inline int check_ns(struct iecsock *s, unsigned short ns)$/;"	f	file:
 chunk_cb	libevent/include/evhttp.h	/^	void (*chunk_cb)(struct evhttp_request *, void *);$/;"	m	struct:evhttp_request
 chunked	libevent/include/evhttp.h	/^	int chunked:1,                  \/* a chunked request *\/$/;"	m	struct:evhttp_request
 connect_hook	client.c	/^void connect_hook(struct iecsock *s)$/;"	f
 connect_hook	server.c	/^void connect_hook(struct iecsock *s)$/;"	f
 connect_indication	iecsock.h	/^	void (*connect_indication)(struct iecsock *s);$/;"	m	struct:iechooks
 connect_indication	newiecsock/iecsock.h	/^	void (*connect_indication)(struct iecsock *s);$/;"	m	struct:iechooks
-connect_indication	oldiecsock/iecsock.h	/^	void (*connect_indication)(struct iecsock *s);$/;"	m	struct:iechooks
 connect_writecb	iecsock.c	/^static void connect_writecb(int sock, short what, void *arg)$/;"	f	file:
 connect_writecb	newiecsock/iecsock.c	/^static void connect_writecb(int sock, short what, void *arg)$/;"	f	file:
-connect_writecb	oldiecsock/iecsock.c	/^static void connect_writecb(int sock, short what, void *arg)$/;"	f	file:
 cp56time2a	iec104_types.h	/^typedef struct cp56time2a {$/;"	s
 cp56time2a	iec104_types.h	/^} cp56time2a __attribute__((__packed__));$/;"	t	typeref:struct:cp56time2a
 cppcomment	libevent/bin/event_rpcgen.py	/^cppcomment = re.compile(r'\\\/\\\/.*$')$/;"	v
 cppdirect	libevent/bin/event_rpcgen.py	/^cppdirect = []$/;"	v
+curlistsize	client.c	/^int curlistsize = 0; \/\/ Текущий размер списка asdulist$/;"	v
 data	iecsock.h	/^	u_char	data[0];$/;"	m	struct:iec_buf
 data	newiecsock/iecsock.h	/^	u_char	data[0];$/;"	m	struct:iec_buf
-data	oldiecsock/iecsock.h	/^	u_char data[0];$/;"	m	struct:iec_buf
 data_indication	iecsock.h	/^	void (*data_indication)(struct iecsock *s, struct iec_buf *b);$/;"	m	struct:iechooks
 data_indication	newiecsock/iecsock.h	/^	void (*data_indication)(struct iecsock *s, struct iec_buf *b);$/;"	m	struct:iechooks
-data_indication	oldiecsock/iecsock.h	/^	void (*data_indication)(struct iecsock *s, struct iec_buf *b);$/;"	m	struct:iechooks
 data_len	iecsock.h	/^	u_char	data_len;	\/* actual ASDU length *\/$/;"	m	struct:iec_buf
 data_len	newiecsock/iecsock.h	/^	u_char	data_len;	\/* actual ASDU length *\/$/;"	m	struct:iec_buf
-data_len	oldiecsock/iecsock.h	/^	u_char	data_len;	\/* actual ASDU length *\/$/;"	m	struct:iec_buf
 data_received_hook	client.c	/^void data_received_hook(struct iecsock *s, struct iec_buf *b)$/;"	f
 data_received_hook	server.c	/^void data_received_hook(struct iecsock *s, struct iec_buf *b)$/;"	f
 deactivation_indication	iecsock.h	/^	void (*deactivation_indication)(struct iecsock *s);$/;"	m	struct:iechooks
 deactivation_indication	newiecsock/iecsock.h	/^	void (*deactivation_indication)(struct iecsock *s);$/;"	m	struct:iechooks
-deactivation_indication	oldiecsock/iecsock.h	/^	void (*deactivation_indication)(struct iecsock *s);$/;"	m	struct:iechooks
 debug	iecsock.c	45;"	d	file:
 debug	newiecsock/iecsock.c	45;"	d	file:
-debug	oldiecsock/iecsock.c	45;"	d	file:
 default_hooks	client.c	/^struct iechooks default_hooks;$/;"	v	typeref:struct:iechooks
 default_hooks	server.c	/^struct iechooks default_hooks;$/;"	v	typeref:struct:iechooks
 disconnect_hook	client.c	/^void disconnect_hook(struct iecsock *s, short reason)$/;"	f
 disconnect_hook	server.c	/^void disconnect_hook(struct iecsock *s, short reason)$/;"	f
 disconnect_indication	iecsock.h	/^	void (*disconnect_indication)(struct iecsock *s, short reason);$/;"	m	struct:iechooks
 disconnect_indication	newiecsock/iecsock.h	/^	void (*disconnect_indication)(struct iecsock *s, short reason);$/;"	m	struct:iechooks
-disconnect_indication	oldiecsock/iecsock.h	/^	void (*disconnect_indication)(struct iecsock *s, short reason);$/;"	m	struct:iechooks
 dns_question_class	libevent/include/evdns.h	/^	int dns_question_class;$/;"	m	struct:evdns_server_question
 dns_question_class	libevent/include/evdns.h	487;"	d
 done	libevent/include/evrpc.h	/^	void (*done)(struct evrpc_req_generic* rpc); $/;"	m	struct:evrpc_req_generic
@@ -571,48 +546,37 @@ flags	libevent/include/evdns.h	/^	int flags;$/;"	m	struct:evdns_server_request
 flags	libevent/include/evhttp.h	/^	int flags;$/;"	m	struct:evhttp_request
 flush_queue	iecsock.c	/^static inline void flush_queue(struct iec_buf_queue *q)$/;"	f	file:
 flush_queue	newiecsock/iecsock.c	/^static inline void flush_queue(struct iec_buf_queue *q)$/;"	f	file:
-flush_queue	oldiecsock/iecsock.c	/^static inline void flush_queue(struct iec_buf_queue *q)$/;"	f	file:
 frame_to_string	iecsock_internal.h	/^static inline char * frame_to_string(struct iechdr *h)$/;"	f
 frame_type	iecsock_internal.h	/^enum frame_type {$/;"	g
 frame_type	iecsock_internal.h	/^static inline enum frame_type frame_type(struct iechdr *h)$/;"	f
-ft	iecsock.h	/^				u_char	ft:1;$/;"	m	struct:iec_buf::iechdr::__anon3::iec_i
-ft	iecsock.h	/^				u_char	ft:1;$/;"	m	struct:iec_buf::iechdr::__anon3::iec_s
-ft	iecsock.h	/^				u_char	ft:2;$/;"	m	struct:iec_buf::iechdr::__anon3::iec_u
-ft	newiecsock/iecsock.h	/^				u_char	ft:1;$/;"	m	struct:iec_buf::iechdr::__anon7::iec_i
-ft	newiecsock/iecsock.h	/^				u_char	ft:1;$/;"	m	struct:iec_buf::iechdr::__anon7::iec_s
-ft	newiecsock/iecsock.h	/^				u_char	ft:2;$/;"	m	struct:iec_buf::iechdr::__anon7::iec_u
-ft	oldiecsock/iecsock.h	/^				u_char	ft:1;$/;"	m	struct:iec_buf::iechdr::__anon5::iec_i
-ft	oldiecsock/iecsock.h	/^				u_char	ft:1;$/;"	m	struct:iec_buf::iechdr::__anon5::iec_s
-ft	oldiecsock/iecsock.h	/^				u_char	ft:2;$/;"	m	struct:iec_buf::iechdr::__anon5::iec_u
+ft	iecsock.h	/^				u_char	ft:1;$/;"	m	struct:iec_buf::iechdr::__anon2::iec_i
+ft	iecsock.h	/^				u_char	ft:1;$/;"	m	struct:iec_buf::iechdr::__anon2::iec_s
+ft	iecsock.h	/^				u_char	ft:2;$/;"	m	struct:iec_buf::iechdr::__anon2::iec_u
+ft	newiecsock/iecsock.h	/^				u_char	ft:1;$/;"	m	struct:iec_buf::iechdr::__anon4::iec_i
+ft	newiecsock/iecsock.h	/^				u_char	ft:1;$/;"	m	struct:iec_buf::iechdr::__anon4::iec_s
+ft	newiecsock/iecsock.h	/^				u_char	ft:2;$/;"	m	struct:iec_buf::iechdr::__anon4::iec_u
 h	iecsock.h	/^	} h;	$/;"	m	struct:iec_buf	typeref:struct:iec_buf::iechdr
 h	newiecsock/iecsock.h	/^	} h;	$/;"	m	struct:iec_buf	typeref:struct:iec_buf::iechdr
-h	oldiecsock/iecsock.h	/^	} h;	$/;"	m	struct:iec_buf	typeref:struct:iec_buf::iechdr
 head	iecsock.h	/^	TAILQ_ENTRY(iec_buf) head;$/;"	m	struct:iec_buf
 head	newiecsock/iecsock.h	/^	TAILQ_ENTRY(iec_buf) head;$/;"	m	struct:iec_buf
-head	oldiecsock/iecsock.h	/^	TAILQ_ENTRY(iec_buf) head;$/;"	m	struct:iec_buf
 headerdirect	libevent/bin/event_rpcgen.py	/^headerdirect = []$/;"	v
 high	libevent/include/event.h	/^	size_t high;$/;"	m	struct:event_watermark
 hooks	iecsock.h	/^	struct iechooks hooks;$/;"	m	struct:iecsock	typeref:struct:iecsock::iechooks
 hooks	newiecsock/iecsock.h	/^	struct iechooks hooks;$/;"	m	struct:iecsock	typeref:struct:iecsock::iechooks
-hooks	oldiecsock/iecsock.h	/^	struct iechooks hooks;$/;"	m	struct:iecsock	typeref:struct:iecsock::iechooks
 hour	iec104_types.h	/^	u_char		hour	:5;$/;"	m	struct:cp56time2a
 http_req	libevent/include/evrpc.h	/^	struct evhttp_request *http_req;$/;"	m	struct:evrpc_status	typeref:struct:evrpc_status::evhttp_request
 http_req	libevent/include/evrpc.h	/^	struct evhttp_request* http_req;$/;"	m	struct:evrpc_req_generic	typeref:struct:evrpc_req_generic::evhttp_request
-ic	iecsock.h	/^			} ic;$/;"	m	union:iec_buf::iechdr::__anon3	typeref:struct:iec_buf::iechdr::__anon3::iec_i
-ic	newiecsock/iecsock.h	/^			} ic;$/;"	m	union:iec_buf::iechdr::__anon7	typeref:struct:iec_buf::iechdr::__anon7::iec_i
-ic	oldiecsock/iecsock.h	/^			} ic;$/;"	m	union:iec_buf::iechdr::__anon5	typeref:struct:iec_buf::iechdr::__anon5::iec_i
+ic	iecsock.h	/^			} ic;$/;"	m	union:iec_buf::iechdr::__anon2	typeref:struct:iec_buf::iechdr::__anon2::iec_i
+ic	newiecsock/iecsock.h	/^			} ic;$/;"	m	union:iec_buf::iechdr::__anon4	typeref:struct:iec_buf::iechdr::__anon4::iec_i
 iec_asdu_send	client.c	/^static void iec_asdu_send(struct iecsock *s, unsigned char *asdubuf, const int len)$/;"	f	file:
 iec_buf	iecsock.h	/^struct iec_buf {$/;"	s
 iec_buf	newiecsock/iecsock.h	/^struct iec_buf {$/;"	s
-iec_buf	oldiecsock/iecsock.h	/^struct iec_buf {$/;"	s
-iec_i	iecsock.h	/^			struct iec_i {$/;"	s	union:iec_buf::iechdr::__anon3
-iec_i	newiecsock/iecsock.h	/^			struct iec_i {$/;"	s	union:iec_buf::iechdr::__anon7
-iec_i	oldiecsock/iecsock.h	/^			struct iec_i {$/;"	s	union:iec_buf::iechdr::__anon5
+iec_i	iecsock.h	/^			struct iec_i {$/;"	s	union:iec_buf::iechdr::__anon2
+iec_i	newiecsock/iecsock.h	/^			struct iec_i {$/;"	s	union:iec_buf::iechdr::__anon4
 iec_kick_callback	client.c	/^static void iec_kick_callback(struct iecsock *s)$/;"	f	file:
 iec_object	iec104.h	/^struct iec_object {$/;"	s
-iec_s	iecsock.h	/^			struct iec_s {$/;"	s	union:iec_buf::iechdr::__anon3
-iec_s	newiecsock/iecsock.h	/^			struct iec_s {$/;"	s	union:iec_buf::iechdr::__anon7
-iec_s	oldiecsock/iecsock.h	/^			struct iec_s {$/;"	s	union:iec_buf::iechdr::__anon5
+iec_s	iecsock.h	/^			struct iec_s {$/;"	s	union:iec_buf::iechdr::__anon2
+iec_s	newiecsock/iecsock.h	/^			struct iec_s {$/;"	s	union:iec_buf::iechdr::__anon4
 iec_stcd	iec104_types.h	/^struct iec_stcd {$/;"	s
 iec_type1	iec104_types.h	/^struct iec_type1 {$/;"	s
 iec_type11	iec104_types.h	/^struct iec_type11 {$/;"	s
@@ -624,94 +588,66 @@ iec_type35	iec104_types.h	/^struct iec_type35 {$/;"	s
 iec_type36	iec104_types.h	/^struct iec_type36 {$/;"	s
 iec_type7	iec104_types.h	/^struct iec_type7 {$/;"	s
 iec_type9	iec104_types.h	/^struct iec_type9 {$/;"	s
-iec_u	iecsock.h	/^			struct iec_u {$/;"	s	union:iec_buf::iechdr::__anon3
-iec_u	newiecsock/iecsock.h	/^			struct iec_u {$/;"	s	union:iec_buf::iechdr::__anon7
-iec_u	oldiecsock/iecsock.h	/^			struct iec_u {$/;"	s	union:iec_buf::iechdr::__anon5
+iec_u	iecsock.h	/^			struct iec_u {$/;"	s	union:iec_buf::iechdr::__anon2
+iec_u	newiecsock/iecsock.h	/^			struct iec_u {$/;"	s	union:iec_buf::iechdr::__anon4
 iec_unit_id	iec104_types.h	/^struct iec_unit_id {$/;"	s
 iechdr	iecsock.h	/^	struct iechdr {$/;"	s	struct:iec_buf
 iechdr	newiecsock/iecsock.h	/^	struct iechdr {$/;"	s	struct:iec_buf
-iechdr	oldiecsock/iecsock.h	/^	struct iechdr {$/;"	s	struct:iec_buf
 iechooks	iecsock.h	/^struct iechooks {$/;"	s
 iechooks	newiecsock/iecsock.h	/^struct iechooks {$/;"	s
-iechooks	oldiecsock/iecsock.h	/^struct iechooks {$/;"	s
 iecsock	iecsock.h	/^struct iecsock {$/;"	s
 iecsock	newiecsock/iecsock.h	/^struct iecsock {$/;"	s
-iecsock	oldiecsock/iecsock.h	/^struct iecsock {$/;"	s
 iecsock_buffer_read	iecsock.c	/^static void iecsock_buffer_read(struct iecsock *s, int (*frame_recv)(struct iecsock *s))$/;"	f	file:
 iecsock_buffer_read	newiecsock/iecsock.c	/^static void iecsock_buffer_read(struct iecsock *s, int (*frame_recv)(struct iecsock *s))$/;"	f	file:
-iecsock_buffer_read	oldiecsock/iecsock.c	/^static void iecsock_buffer_read(struct iecsock *s, int (*frame_recv)(struct iecsock *s))$/;"	f	file:
 iecsock_can_queue	iecsock.c	/^size_t iecsock_can_queue(struct iecsock *s)$/;"	f
 iecsock_can_queue	newiecsock/iecsock.c	/^size_t iecsock_can_queue(struct iecsock *s)$/;"	f
-iecsock_can_queue	oldiecsock/iecsock.c	/^size_t iecsock_can_queue(struct iecsock *s)$/;"	f
 iecsock_close	iecsock.c	/^void iecsock_close(struct iecsock *s)$/;"	f
 iecsock_close	newiecsock/iecsock.c	/^void iecsock_close(struct iecsock *s)$/;"	f
-iecsock_close	oldiecsock/iecsock.c	/^void iecsock_close(struct iecsock *s)$/;"	f
 iecsock_connect	iecsock.c	/^int iecsock_connect(struct sockaddr_in *addr)$/;"	f
 iecsock_connect	newiecsock/iecsock.c	/^int iecsock_connect(struct sockaddr_in *addr)$/;"	f
-iecsock_connect	oldiecsock/iecsock.c	/^ int iecsock_connect(struct sockaddr_in *addr)$/;"	f
 iecsock_flush_queues	iecsock.c	/^static inline void iecsock_flush_queues(struct iecsock *s)$/;"	f	file:
 iecsock_flush_queues	newiecsock/iecsock.c	/^static inline void iecsock_flush_queues(struct iecsock *s)$/;"	f	file:
-iecsock_flush_queues	oldiecsock/iecsock.c	/^static inline void iecsock_flush_queues(struct iecsock *s)$/;"	f	file:
 iecsock_frame_recv	iecsock.c	/^static int iecsock_frame_recv(struct iecsock *s)$/;"	f	file:
 iecsock_frame_recv	newiecsock/iecsock.c	/^static int iecsock_frame_recv(struct iecsock *s)$/;"	f	file:
-iecsock_frame_recv	oldiecsock/iecsock.c	/^static int iecsock_frame_recv(struct iecsock *s)$/;"	f	file:
 iecsock_iframe_recv	iecsock.c	/^static int iecsock_iframe_recv(struct iecsock *s, struct iec_buf *buf)$/;"	f	file:
 iecsock_iframe_recv	newiecsock/iecsock.c	/^static int iecsock_iframe_recv(struct iecsock *s, struct iec_buf *buf)$/;"	f	file:
-iecsock_iframe_recv	oldiecsock/iecsock.c	/^static int iecsock_iframe_recv(struct iecsock *s, struct iec_buf *buf)$/;"	f	file:
 iecsock_listen	iecsock.c	/^int iecsock_listen(struct sockaddr_in *addr, int backlog)$/;"	f
 iecsock_listen	newiecsock/iecsock.c	/^int iecsock_listen(struct sockaddr_in *addr, int backlog)$/;"	f
-iecsock_listen	oldiecsock/iecsock.c	/^ int iecsock_listen(struct sockaddr_in *addr, int backlog)$/;"	f
 iecsock_options	iecsock.h	/^struct iecsock_options {$/;"	s
 iecsock_options	newiecsock/iecsock.h	/^struct iecsock_options {$/;"	s
-iecsock_options	oldiecsock/iecsock.h	/^struct iecsock_options {$/;"	s
 iecsock_prepare_iframe	iecsock.c	/^void iecsock_prepare_iframe(struct iec_buf *buf)$/;"	f
 iecsock_prepare_iframe	newiecsock/iecsock.c	/^void iecsock_prepare_iframe(struct iec_buf *buf)$/;"	f
-iecsock_prepare_iframe	oldiecsock/iecsock.c	/^void iecsock_prepare_iframe(struct iec_buf *buf)$/;"	f
 iecsock_run_ackw_queue	iecsock.c	/^static void iecsock_run_ackw_queue(struct iecsock *s, unsigned short nr)$/;"	f	file:
 iecsock_run_ackw_queue	newiecsock/iecsock.c	/^static void iecsock_run_ackw_queue(struct iecsock *s, unsigned short nr)$/;"	f	file:
-iecsock_run_ackw_queue	oldiecsock/iecsock.c	/^static void iecsock_run_ackw_queue(struct iecsock *s, unsigned short nr)$/;"	f	file:
 iecsock_run_write_queue	iecsock.c	/^void iecsock_run_write_queue(struct iecsock *s)$/;"	f
 iecsock_run_write_queue	newiecsock/iecsock.c	/^void iecsock_run_write_queue(struct iecsock *s)$/;"	f
-iecsock_run_write_queue	oldiecsock/iecsock.c	/^void iecsock_run_write_queue(struct iecsock *s)$/;"	f
 iecsock_set_defaults	iecsock.c	/^static void iecsock_set_defaults(struct iecsock *s)$/;"	f	file:
 iecsock_set_defaults	newiecsock/iecsock.c	/^static void iecsock_set_defaults(struct iecsock *s)$/;"	f	file:
-iecsock_set_defaults	oldiecsock/iecsock.c	/^static void iecsock_set_defaults(struct iecsock *s)$/;"	f	file:
 iecsock_set_hooks	iecsock.c	/^void iecsock_set_hooks(struct iecsock *s, struct iechooks *hooks)$/;"	f
 iecsock_set_hooks	newiecsock/iecsock.c	/^void iecsock_set_hooks(struct iecsock *s, struct iechooks *hooks)$/;"	f
-iecsock_set_hooks	oldiecsock/iecsock.c	/^void iecsock_set_hooks(struct iecsock *s, struct iechooks *hooks)$/;"	f
 iecsock_set_options	iecsock.c	/^void iecsock_set_options(struct iecsock *s, struct iecsock_options *opt)$/;"	f
 iecsock_set_options	newiecsock/iecsock.c	/^void iecsock_set_options(struct iecsock *s, struct iecsock_options *opt)$/;"	f
-iecsock_set_options	oldiecsock/iecsock.c	/^void iecsock_set_options(struct iecsock *s, struct iecsock_options *opt)$/;"	f
 iecsock_sframe_recv	iecsock.c	/^static int iecsock_sframe_recv(struct iecsock *s, struct iec_buf *buf)$/;"	f	file:
 iecsock_sframe_recv	newiecsock/iecsock.c	/^static int iecsock_sframe_recv(struct iecsock *s, struct iec_buf *buf)$/;"	f	file:
-iecsock_sframe_recv	oldiecsock/iecsock.c	/^static int iecsock_sframe_recv(struct iecsock *s, struct iec_buf *buf)$/;"	f	file:
 iecsock_sframe_send	iecsock.c	/^static void iecsock_sframe_send(struct iecsock *s)$/;"	f	file:
 iecsock_sframe_send	newiecsock/iecsock.c	/^static void iecsock_sframe_send(struct iecsock *s)$/;"	f	file:
-iecsock_sframe_send	oldiecsock/iecsock.c	/^static void iecsock_sframe_send(struct iecsock *s)$/;"	f	file:
 iecsock_uframe_recv	iecsock.c	/^static int iecsock_uframe_recv(struct iecsock *s, struct iec_buf *buf)$/;"	f	file:
 iecsock_uframe_recv	newiecsock/iecsock.c	/^static int iecsock_uframe_recv(struct iecsock *s, struct iec_buf *buf)$/;"	f	file:
-iecsock_uframe_recv	oldiecsock/iecsock.c	/^static int iecsock_uframe_recv(struct iecsock *s, struct iec_buf *buf)$/;"	f	file:
 iecsock_uframe_send	iecsock.c	/^static void iecsock_uframe_send(struct iecsock *s, enum uframe_func func)$/;"	f	file:
 iecsock_uframe_send	newiecsock/iecsock.c	/^static void iecsock_uframe_send(struct iecsock *s, enum uframe_func func)$/;"	f	file:
-iecsock_uframe_send	oldiecsock/iecsock.c	/^static void iecsock_uframe_send(struct iecsock *s, enum uframe_func func)$/;"	f	file:
 iecsock_user_timer_run	iecsock.c	/^static void iecsock_user_timer_run(int nofd, short what, void *arg)$/;"	f	file:
 iecsock_user_timer_run	newiecsock/iecsock.c	/^static void iecsock_user_timer_run(int nofd, short what, void *arg)$/;"	f	file:
-iecsock_user_timer_run	oldiecsock/iecsock.c	/^static void iecsock_user_timer_run(int nofd, short what, void *arg)$/;"	f	file:
 iecsock_user_timer_set	iecsock.c	/^void iecsock_user_timer_set(struct iecsock *s, $/;"	f
 iecsock_user_timer_set	newiecsock/iecsock.c	/^void iecsock_user_timer_set(struct iecsock *s, $/;"	f
-iecsock_user_timer_set	oldiecsock/iecsock.c	/^void iecsock_user_timer_set(struct iecsock *s,$/;"	f
 iecsock_user_timer_start	iecsock.c	/^void iecsock_user_timer_start(struct iecsock *s, struct timeval *tv)$/;"	f
 iecsock_user_timer_start	newiecsock/iecsock.c	/^void iecsock_user_timer_start(struct iecsock *s, struct timeval *tv)$/;"	f
-iecsock_user_timer_start	oldiecsock/iecsock.c	/^void iecsock_user_timer_start(struct iecsock *s, struct timeval *tv)$/;"	f
 iecsock_user_timer_stop	iecsock.c	/^void iecsock_user_timer_stop(struct iecsock *s)$/;"	f
 iecsock_user_timer_stop	newiecsock/iecsock.c	/^void iecsock_user_timer_stop(struct iecsock *s)$/;"	f
-iecsock_user_timer_stop	oldiecsock/iecsock.c	/^void iecsock_user_timer_stop(struct iecsock *s)$/;"	f
 input	libevent/include/event.h	/^	struct evbuffer *input;$/;"	m	struct:bufferevent	typeref:struct:bufferevent::evbuffer
 input_buffer	libevent/include/evhttp.h	/^	struct evbuffer *input_buffer;	\/* read data *\/$/;"	m	struct:evhttp_request	typeref:struct:evhttp_request::evbuffer
 input_headers	libevent/include/evhttp.h	/^	struct evkeyvalq *input_headers;$/;"	m	struct:evhttp_request	typeref:struct:evhttp_request::evkeyvalq
 io	iecsock.h	/^	struct bufferevent *io;$/;"	m	struct:iecsock	typeref:struct:iecsock::bufferevent
 io	newiecsock/iecsock.h	/^	struct bufferevent *io;$/;"	m	struct:iecsock	typeref:struct:iecsock::bufferevent
-io	oldiecsock/iecsock.h	/^	struct bufferevent *io;$/;"	m	struct:iecsock	typeref:struct:iecsock::bufferevent
 ioa	iec104.h	/^	u_short		ioa;	\/* information object address *\/$/;"	m	struct:iec_object
 iv	iec104_types.h	/^	u_char		iv	:1; \/* valid\/invalid *\/$/;"	m	struct:iec_type1
 iv	iec104_types.h	/^	u_char		iv	:1; \/* valid\/invalid *\/$/;"	m	struct:iec_type11
@@ -728,24 +664,19 @@ k	iecsock.h	/^	u_short		k;$/;"	m	struct:iecsock_options
 k	iecsock.h	/^	u_short		w, k;$/;"	m	struct:iecsock
 k	newiecsock/iecsock.h	/^	u_short		k;$/;"	m	struct:iecsock_options
 k	newiecsock/iecsock.h	/^	u_short		w, k;$/;"	m	struct:iecsock
-k	oldiecsock/iecsock.h	/^	u_short		k;$/;"	m	struct:iecsock_options
-k	oldiecsock/iecsock.h	/^	u_short		w, k;$/;"	m	struct:iecsock
 key	libevent/include/event.h	/^	char *key;$/;"	m	struct:evkeyval
 kind	libevent/include/evhttp.h	/^	enum evhttp_request_kind kind;$/;"	m	struct:evhttp_request	typeref:enum:evhttp_request::evhttp_request_kind
 left	iecsock.h	/^	u_char		left;$/;"	m	struct:iecsock
 left	newiecsock/iecsock.h	/^	u_char		left;$/;"	m	struct:iecsock
-left	oldiecsock/iecsock.h	/^	u_char		left;$/;"	m	struct:iecsock
 len	client.c	/^	short len;$/;"	m	struct:asduhead	file:
 len	iecsock.h	/^	u_char		len;$/;"	m	struct:iecsock
 len	newiecsock/iecsock.h	/^	u_char		len;$/;"	m	struct:iecsock
-len	oldiecsock/iecsock.h	/^	u_char		len;$/;"	m	struct:iecsock
 length	iecsock.h	/^		u_char	length;$/;"	m	struct:iec_buf::iechdr
 length	newiecsock/iecsock.h	/^		u_char	length;$/;"	m	struct:iec_buf::iechdr
-length	oldiecsock/iecsock.h	/^		u_char	length;$/;"	m	struct:iec_buf::iechdr
+limlistsize	client.c	/^static int limlistsize = 12; \/\/ Предельный Размер списка asdulist, при превышении которого перестаем читать с stdin $/;"	v	file:
 line_count	libevent/bin/event_rpcgen.py	/^line_count = 0$/;"	v
 listen_readcb	iecsock.c	/^static void listen_readcb(int sock, short what, void *arg)$/;"	f	file:
 listen_readcb	newiecsock/iecsock.c	/^static void listen_readcb(int sock, short what, void *arg)$/;"	f	file:
-listen_readcb	oldiecsock/iecsock.c	/^static void listen_readcb(int sock, short what, void *arg)$/;"	f	file:
 low	libevent/include/event.h	/^	size_t low;$/;"	m	struct:event_watermark
 main	client.c	/^int main(int argc, char **argv)$/;"	f
 main	libevent/bin/event_rpcgen.py	/^def main(argv):$/;"	f
@@ -772,15 +703,12 @@ next	libevent/include/evhttp.h	/^	TAILQ_ENTRY(evhttp_request) next;$/;"	m	struct
 next	libevent/include/evrpc.h	/^	TAILQ_ENTRY(evrpc) next;$/;"	m	struct:evrpc
 next	libevent/include/evrpc.h	/^	TAILQ_ENTRY(evrpc_request_wrapper) next;$/;"	m	struct:evrpc_request_wrapper
 nquestions	libevent/include/evdns.h	/^	int nquestions;$/;"	m	struct:evdns_server_request
-nr	iecsock.h	/^				u_short	nr:15;$/;"	m	struct:iec_buf::iechdr::__anon3::iec_i
-nr	iecsock.h	/^				u_short	nr:15;$/;"	m	struct:iec_buf::iechdr::__anon3::iec_s
-nr	newiecsock/iecsock.h	/^				u_short	nr:15;$/;"	m	struct:iec_buf::iechdr::__anon7::iec_i
-nr	newiecsock/iecsock.h	/^				u_short	nr:15;$/;"	m	struct:iec_buf::iechdr::__anon7::iec_s
-nr	oldiecsock/iecsock.h	/^				u_short	nr:15;$/;"	m	struct:iec_buf::iechdr::__anon5::iec_i
-nr	oldiecsock/iecsock.h	/^				u_short	nr:15;$/;"	m	struct:iec_buf::iechdr::__anon5::iec_s
-ns	iecsock.h	/^				u_short	ns:15;$/;"	m	struct:iec_buf::iechdr::__anon3::iec_i
-ns	newiecsock/iecsock.h	/^				u_short	ns:15;$/;"	m	struct:iec_buf::iechdr::__anon7::iec_i
-ns	oldiecsock/iecsock.h	/^				u_short	ns:15;$/;"	m	struct:iec_buf::iechdr::__anon5::iec_i
+nr	iecsock.h	/^				u_short	nr:15;$/;"	m	struct:iec_buf::iechdr::__anon2::iec_i
+nr	iecsock.h	/^				u_short	nr:15;$/;"	m	struct:iec_buf::iechdr::__anon2::iec_s
+nr	newiecsock/iecsock.h	/^				u_short	nr:15;$/;"	m	struct:iec_buf::iechdr::__anon4::iec_i
+nr	newiecsock/iecsock.h	/^				u_short	nr:15;$/;"	m	struct:iec_buf::iechdr::__anon4::iec_s
+ns	iecsock.h	/^				u_short	ns:15;$/;"	m	struct:iec_buf::iechdr::__anon2::iec_i
+ns	newiecsock/iecsock.h	/^				u_short	ns:15;$/;"	m	struct:iec_buf::iechdr::__anon4::iec_i
 nt	iec104_types.h	/^	u_char		nt	:1; \/* not topical\/topical *\/$/;"	m	struct:iec_type1
 nt	iec104_types.h	/^	u_char		nt	:1; \/* not topical\/topical *\/$/;"	m	struct:iec_type11
 nt	iec104_types.h	/^	u_char		nt	:1; \/* not topical\/topical *\/$/;"	m	struct:iec_type13
@@ -793,7 +721,7 @@ nt	iec104_types.h	/^	u_char		nt	:1; \/* not topical\/topical *\/$/;"	m	struct:ie
 nt	iec104_types.h	/^	u_char		nt	:1; \/* not topical\/topical *\/$/;"	m	struct:iec_type9
 ntoread	libevent/include/evhttp.h	/^	ev_int64_t ntoread;$/;"	m	struct:evhttp_request
 num	iec104_types.h	/^	u_char		num	:7; \/* number of information objects *\/$/;"	m	struct:iec_unit_id
-o	iec104.h	/^	} o;	$/;"	m	struct:iec_object	typeref:union:iec_object::__anon1
+o	iec104.h	/^	} o;	$/;"	m	struct:iec_object	typeref:union:iec_object::__anon5
 off	libevent/include/event.h	/^	size_t off;$/;"	m	struct:evbuffer
 orig_buffer	libevent/include/event.h	/^	u_char *orig_buffer;$/;"	m	struct:evbuffer
 output	libevent/include/event.h	/^	struct evbuffer *output;$/;"	m	struct:bufferevent	typeref:struct:bufferevent::evbuffer
@@ -811,18 +739,14 @@ pn	iec104_types.h	/^	u_char		pn	:1; \/* positive\/negative app. confirmation *\/
 pool	libevent/include/evrpc.h	/^        struct evrpc_pool *pool;$/;"	m	struct:evrpc_request_wrapper	typeref:struct:evrpc_request_wrapper::evrpc_pool
 proto_debug	iecsock.c	47;"	d	file:
 proto_debug	newiecsock/iecsock.c	47;"	d	file:
-proto_debug	oldiecsock/iecsock.c	47;"	d	file:
 questions	libevent/include/evdns.h	/^	struct evdns_server_question **questions;$/;"	m	struct:evdns_server_request	typeref:struct:evdns_server_request::evdns_server_question
 raw	iecsock.h	/^		u_char	raw[0];$/;"	m	struct:iec_buf::iechdr
 raw	newiecsock/iecsock.h	/^		u_char	raw[0];$/;"	m	struct:iec_buf::iechdr
-raw	oldiecsock/iecsock.h	/^		u_char	raw[0];$/;"	m	struct:iec_buf::iechdr
 rbuf	client.c	/^static unsigned char rbuf[1024];$/;"	v	file:
 rbuflen	client.c	/^static unsigned int rbuflen;$/;"	v	file:
-re	libevent/bin/event_rpcgen.py	/^import re$/;"	i
 readcb	libevent/include/event.h	/^	evbuffercb readcb;$/;"	m	struct:bufferevent
 recv_cnt	iecsock.h	/^	u_long recv_cnt, xmit_cnt;$/;"	m	struct:iecsock
 recv_cnt	newiecsock/iecsock.h	/^	u_long recv_cnt, xmit_cnt;$/;"	m	struct:iecsock
-recv_cnt	oldiecsock/iecsock.h	/^	u_long recv_cnt, xmit_cnt;$/;"	m	struct:iecsock
 remote_host	libevent/include/evhttp.h	/^	char *remote_host;$/;"	m	struct:evhttp_request
 remote_port	libevent/include/evhttp.h	/^	u_short remote_port;$/;"	m	struct:evhttp_request
 reply	libevent/include/evrpc.h	/^	void *reply;$/;"	m	struct:evrpc_req_generic
@@ -849,23 +773,18 @@ res	iec104_types.h	/^	u_char		res	:3;$/;"	m	struct:iec_type35
 res	iec104_types.h	/^	u_char		res	:3;$/;"	m	struct:iec_type36
 res	iec104_types.h	/^	u_char		res	:3;$/;"	m	struct:iec_type7
 res	iec104_types.h	/^	u_char		res	:3;$/;"	m	struct:iec_type9
-res	iecsock.h	/^				u_char	res:1;$/;"	m	struct:iec_buf::iechdr::__anon3::iec_i
-res	newiecsock/iecsock.h	/^				u_char	res:1;$/;"	m	struct:iec_buf::iechdr::__anon7::iec_i
-res	oldiecsock/iecsock.h	/^				u_char	res:1;$/;"	m	struct:iec_buf::iechdr::__anon5::iec_i
+res	iecsock.h	/^				u_char	res:1;$/;"	m	struct:iec_buf::iechdr::__anon2::iec_i
+res	newiecsock/iecsock.h	/^				u_char	res:1;$/;"	m	struct:iec_buf::iechdr::__anon4::iec_i
 res1	iec104_types.h	/^	u_char		res1	:1;$/;"	m	struct:cp56time2a
-res1	iecsock.h	/^				u_char	res1;$/;"	m	struct:iec_buf::iechdr::__anon3::iec_u
-res1	iecsock.h	/^				u_short	res1:15;$/;"	m	struct:iec_buf::iechdr::__anon3::iec_s
-res1	newiecsock/iecsock.h	/^				u_char	res1;$/;"	m	struct:iec_buf::iechdr::__anon7::iec_u
-res1	newiecsock/iecsock.h	/^				u_short	res1:15;$/;"	m	struct:iec_buf::iechdr::__anon7::iec_s
-res1	oldiecsock/iecsock.h	/^				u_char	res1;$/;"	m	struct:iec_buf::iechdr::__anon5::iec_u
-res1	oldiecsock/iecsock.h	/^				u_short	res1:15;$/;"	m	struct:iec_buf::iechdr::__anon5::iec_s
+res1	iecsock.h	/^				u_char	res1;$/;"	m	struct:iec_buf::iechdr::__anon2::iec_u
+res1	iecsock.h	/^				u_short	res1:15;$/;"	m	struct:iec_buf::iechdr::__anon2::iec_s
+res1	newiecsock/iecsock.h	/^				u_char	res1;$/;"	m	struct:iec_buf::iechdr::__anon4::iec_u
+res1	newiecsock/iecsock.h	/^				u_short	res1:15;$/;"	m	struct:iec_buf::iechdr::__anon4::iec_s
 res2	iec104_types.h	/^	u_char		res2	:2;$/;"	m	struct:cp56time2a
-res2	iecsock.h	/^				u_char	res2:1;$/;"	m	struct:iec_buf::iechdr::__anon3::iec_s
-res2	iecsock.h	/^				u_short	res2;$/;"	m	struct:iec_buf::iechdr::__anon3::iec_u
-res2	newiecsock/iecsock.h	/^				u_char	res2:1;$/;"	m	struct:iec_buf::iechdr::__anon7::iec_s
-res2	newiecsock/iecsock.h	/^				u_short	res2;$/;"	m	struct:iec_buf::iechdr::__anon7::iec_u
-res2	oldiecsock/iecsock.h	/^				u_char	res2:1;$/;"	m	struct:iec_buf::iechdr::__anon5::iec_s
-res2	oldiecsock/iecsock.h	/^				u_short	res2;$/;"	m	struct:iec_buf::iechdr::__anon5::iec_u
+res2	iecsock.h	/^				u_char	res2:1;$/;"	m	struct:iec_buf::iechdr::__anon2::iec_s
+res2	iecsock.h	/^				u_short	res2;$/;"	m	struct:iec_buf::iechdr::__anon2::iec_u
+res2	newiecsock/iecsock.h	/^				u_char	res2:1;$/;"	m	struct:iec_buf::iechdr::__anon4::iec_s
+res2	newiecsock/iecsock.h	/^				u_short	res2;$/;"	m	struct:iec_buf::iechdr::__anon4::iec_u
 res3	iec104_types.h	/^	u_char		res3	:4;$/;"	m	struct:cp56time2a
 res4	iec104_types.h	/^	u_char		res4	:1;	$/;"	m	struct:cp56time2a
 response_code	libevent/include/evhttp.h	/^	int response_code;		\/* HTTP Response code *\/$/;"	m	struct:evhttp_request
@@ -881,9 +800,8 @@ sb	iec104_types.h	/^	u_char		sb	:1; \/* substituted\/not substituted *\/$/;"	m	s
 sb	iec104_types.h	/^	u_char		sb	:1; \/* substituted\/not substituted *\/$/;"	m	struct:iec_type36
 sb	iec104_types.h	/^	u_char		sb	:1; \/* substituted\/not substituted *\/$/;"	m	struct:iec_type7
 sb	iec104_types.h	/^	u_char		sb	:1; \/* substituted\/not substituted *\/$/;"	m	struct:iec_type9
-sc	iecsock.h	/^			} sc;$/;"	m	union:iec_buf::iechdr::__anon3	typeref:struct:iec_buf::iechdr::__anon3::iec_s
-sc	newiecsock/iecsock.h	/^			} sc;$/;"	m	union:iec_buf::iechdr::__anon7	typeref:struct:iec_buf::iechdr::__anon7::iec_s
-sc	oldiecsock/iecsock.h	/^			} sc;$/;"	m	union:iec_buf::iechdr::__anon5	typeref:struct:iec_buf::iechdr::__anon5::iec_s
+sc	iecsock.h	/^			} sc;$/;"	m	union:iec_buf::iechdr::__anon2	typeref:struct:iec_buf::iechdr::__anon2::iec_s
+sc	newiecsock/iecsock.h	/^			} sc;$/;"	m	union:iec_buf::iechdr::__anon4	typeref:struct:iec_buf::iechdr::__anon4::iec_s
 signal_add	libevent/include/event.h	513;"	d
 signal_del	libevent/include/event.h	516;"	d
 signal_initialized	libevent/include/event.h	518;"	d
@@ -891,7 +809,6 @@ signal_pending	libevent/include/event.h	517;"	d
 signal_set	libevent/include/event.h	514;"	d
 sock	iecsock.h	/^	int		sock;		\/* socket descriptor *\/$/;"	m	struct:iecsock
 sock	newiecsock/iecsock.h	/^	int		sock;		\/* socket descriptor *\/$/;"	m	struct:iecsock
-sock	oldiecsock/iecsock.h	/^	int		sock;		\/* socket descriptor *\/$/;"	m	struct:iecsock
 sp	iec104_types.h	/^	u_char		sp	:1; \/* single point information *\/$/;"	m	struct:iec_type1
 sp	iec104_types.h	/^	u_char		sp	:1; \/* single point information *\/$/;"	m	struct:iec_type30
 sq	iec104_types.h	/^	u_char		sq	:1; \/* sequenced\/not sequenced address *\/$/;"	m	struct:iec_unit_id
@@ -914,101 +831,73 @@ st8	iec104_types.h	/^	u_char		st8	:1;$/;"	m	struct:iec_stcd
 st9	iec104_types.h	/^	u_char		st9	:1;$/;"	m	struct:iec_stcd
 start	iecsock.h	/^		u_char	start;$/;"	m	struct:iec_buf::iechdr
 start	newiecsock/iecsock.h	/^		u_char	start;$/;"	m	struct:iec_buf::iechdr
-start	oldiecsock/iecsock.h	/^		u_char	start;$/;"	m	struct:iec_buf::iechdr
-start_act	iecsock.h	/^				u_char	start_act:1;$/;"	m	struct:iec_buf::iechdr::__anon3::iec_u
-start_act	newiecsock/iecsock.h	/^				u_char	start_act:1;$/;"	m	struct:iec_buf::iechdr::__anon7::iec_u
-start_act	oldiecsock/iecsock.h	/^				u_char	start_act:1;$/;"	m	struct:iec_buf::iechdr::__anon5::iec_u
-start_con	iecsock.h	/^				u_char	start_con:1;$/;"	m	struct:iec_buf::iechdr::__anon3::iec_u
-start_con	newiecsock/iecsock.h	/^				u_char	start_con:1;$/;"	m	struct:iec_buf::iechdr::__anon7::iec_u
-start_con	oldiecsock/iecsock.h	/^				u_char	start_con:1;$/;"	m	struct:iec_buf::iechdr::__anon5::iec_u
+start_act	iecsock.h	/^				u_char	start_act:1;$/;"	m	struct:iec_buf::iechdr::__anon2::iec_u
+start_act	newiecsock/iecsock.h	/^				u_char	start_act:1;$/;"	m	struct:iec_buf::iechdr::__anon4::iec_u
+start_con	iecsock.h	/^				u_char	start_con:1;$/;"	m	struct:iec_buf::iechdr::__anon2::iec_u
+start_con	newiecsock/iecsock.h	/^				u_char	start_con:1;$/;"	m	struct:iec_buf::iechdr::__anon4::iec_u
 stcd	iec104_types.h	/^	struct iec_stcd	stcd;$/;"	m	struct:iec_type33	typeref:struct:iec_type33::iec_stcd
 stcd	iec104_types.h	/^	struct iec_stcd	stcd;$/;"	m	struct:iec_type7	typeref:struct:iec_type7::iec_stcd
 stdin_read	client.c	/^static void stdin_read(int fd, short events, void *opaque)$/;"	f	file:
-stop_act	iecsock.h	/^				u_char	stop_act:1;$/;"	m	struct:iec_buf::iechdr::__anon3::iec_u
-stop_act	newiecsock/iecsock.h	/^				u_char	stop_act:1;$/;"	m	struct:iec_buf::iechdr::__anon7::iec_u
-stop_act	oldiecsock/iecsock.h	/^				u_char	stop_act:1;$/;"	m	struct:iec_buf::iechdr::__anon5::iec_u
-stop_con	iecsock.h	/^				u_char	stop_con:1;$/;"	m	struct:iec_buf::iechdr::__anon3::iec_u
-stop_con	newiecsock/iecsock.h	/^				u_char	stop_con:1;$/;"	m	struct:iec_buf::iechdr::__anon7::iec_u
-stop_con	oldiecsock/iecsock.h	/^				u_char	stop_con:1;$/;"	m	struct:iec_buf::iechdr::__anon5::iec_u
+stdinclose	client.c	/^int stdinclose = 0;$/;"	v
+stop_act	iecsock.h	/^				u_char	stop_act:1;$/;"	m	struct:iec_buf::iechdr::__anon2::iec_u
+stop_act	newiecsock/iecsock.h	/^				u_char	stop_act:1;$/;"	m	struct:iec_buf::iechdr::__anon4::iec_u
+stop_con	iecsock.h	/^				u_char	stop_con:1;$/;"	m	struct:iec_buf::iechdr::__anon2::iec_u
+stop_con	newiecsock/iecsock.h	/^				u_char	stop_con:1;$/;"	m	struct:iec_buf::iechdr::__anon4::iec_u
 stopdt	iecsock.h	/^	u_char		stopdt:1;	\/* monitor direction 0=active 1=inactive *\/$/;"	m	struct:iecsock
 stopdt	newiecsock/iecsock.h	/^	u_char		stopdt:1;	\/* monitor direction 0=active 1=inactive *\/$/;"	m	struct:iecsock
-stopdt	oldiecsock/iecsock.h	/^	u_char		stopdt:1;	\/* monitor direction 0=active 1=inactive *\/$/;"	m	struct:iecsock
 su	iec104_types.h	/^	u_char		su	:1;$/;"	m	struct:cp56time2a
-sys	libevent/bin/event_rpcgen.py	/^import sys$/;"	i
 t	iec104_types.h	/^	u_char		t	:1; \/* test *\/$/;"	m	struct:iec_unit_id
 t0	iecsock.h	/^	u_short		t0, t1, t2, t3;$/;"	m	struct:iecsock
 t0	iecsock.h	/^	u_short		t0;$/;"	m	struct:iecsock_options
 t0	newiecsock/iecsock.h	/^	u_short		t0, t1, t2, t3;$/;"	m	struct:iecsock
 t0	newiecsock/iecsock.h	/^	u_short		t0;$/;"	m	struct:iecsock_options
-t0	oldiecsock/iecsock.h	/^	u_short		t0, t1, t2, t3;$/;"	m	struct:iecsock
-t0	oldiecsock/iecsock.h	/^	u_short		t0;$/;"	m	struct:iecsock_options
 t0_timer	iecsock.h	/^	struct event	t0_timer;$/;"	m	struct:iecsock	typeref:struct:iecsock::event
 t0_timer	newiecsock/iecsock.h	/^	struct event	t0_timer;$/;"	m	struct:iecsock	typeref:struct:iecsock::event
-t0_timer	oldiecsock/iecsock.h	/^	struct event	t0_timer;$/;"	m	struct:iecsock	typeref:struct:iecsock::event
 t0_timer_run	iecsock.c	/^static void t0_timer_run(int nofd, short what, void *arg)$/;"	f	file:
 t0_timer_run	newiecsock/iecsock.c	/^static void t0_timer_run(int nofd, short what, void *arg)$/;"	f	file:
-t0_timer_run	oldiecsock/iecsock.c	/^static void t0_timer_run(int nofd, short what, void *arg)$/;"	f	file:
 t0_timer_stop	iecsock_internal.h	43;"	d
 t1	iecsock.h	/^	u_short		t0, t1, t2, t3;$/;"	m	struct:iecsock
 t1	iecsock.h	/^	u_short		t1;$/;"	m	struct:iecsock_options
 t1	newiecsock/iecsock.h	/^	u_short		t0, t1, t2, t3;$/;"	m	struct:iecsock
 t1	newiecsock/iecsock.h	/^	u_short		t1;$/;"	m	struct:iecsock_options
-t1	oldiecsock/iecsock.h	/^	u_short		t0, t1, t2, t3;$/;"	m	struct:iecsock
-t1	oldiecsock/iecsock.h	/^	u_short		t1;$/;"	m	struct:iecsock_options
 t1_timer	iecsock.h	/^	struct event	t1_timer;$/;"	m	struct:iecsock	typeref:struct:iecsock::event
 t1_timer	newiecsock/iecsock.h	/^	struct event	t1_timer;$/;"	m	struct:iecsock	typeref:struct:iecsock::event
-t1_timer	oldiecsock/iecsock.h	/^	struct event	t1_timer;$/;"	m	struct:iecsock	typeref:struct:iecsock::event
 t1_timer_pending	iecsock_internal.h	39;"	d
 t1_timer_run	iecsock.c	/^static void t1_timer_run(int nofd, short what, void *arg)$/;"	f	file:
 t1_timer_run	newiecsock/iecsock.c	/^static void t1_timer_run(int nofd, short what, void *arg)$/;"	f	file:
-t1_timer_run	oldiecsock/iecsock.c	/^static void t1_timer_run(int nofd, short what, void *arg)$/;"	f	file:
 t1_timer_start	iecsock.c	/^static void t1_timer_start(struct iecsock *s)$/;"	f	file:
 t1_timer_start	newiecsock/iecsock.c	/^static void t1_timer_start(struct iecsock *s)$/;"	f	file:
-t1_timer_start	oldiecsock/iecsock.c	/^static void t1_timer_start(struct iecsock *s)$/;"	f	file:
 t1_timer_stop	iecsock_internal.h	38;"	d
 t2	iecsock.h	/^	u_short		t0, t1, t2, t3;$/;"	m	struct:iecsock
 t2	iecsock.h	/^	u_short		t2;$/;"	m	struct:iecsock_options
 t2	newiecsock/iecsock.h	/^	u_short		t0, t1, t2, t3;$/;"	m	struct:iecsock
 t2	newiecsock/iecsock.h	/^	u_short		t2;$/;"	m	struct:iecsock_options
-t2	oldiecsock/iecsock.h	/^	u_short		t0, t1, t2, t3;$/;"	m	struct:iecsock
-t2	oldiecsock/iecsock.h	/^	u_short		t2;$/;"	m	struct:iecsock_options
 t2_timer	iecsock.h	/^	struct event	t2_timer;$/;"	m	struct:iecsock	typeref:struct:iecsock::event
 t2_timer	newiecsock/iecsock.h	/^	struct event	t2_timer;$/;"	m	struct:iecsock	typeref:struct:iecsock::event
-t2_timer	oldiecsock/iecsock.h	/^	struct event	t2_timer;$/;"	m	struct:iecsock	typeref:struct:iecsock::event
 t2_timer_pending	iecsock_internal.h	41;"	d
 t2_timer_run	iecsock.c	/^static void t2_timer_run(int nofd, short what, void *arg)$/;"	f	file:
 t2_timer_run	newiecsock/iecsock.c	/^static void t2_timer_run(int nofd, short what, void *arg)$/;"	f	file:
-t2_timer_run	oldiecsock/iecsock.c	/^static void t2_timer_run(int nofd, short what, void *arg)$/;"	f	file:
 t2_timer_start	iecsock.c	/^static void t2_timer_start(struct iecsock *s)$/;"	f	file:
 t2_timer_start	newiecsock/iecsock.c	/^static void t2_timer_start(struct iecsock *s)$/;"	f	file:
-t2_timer_start	oldiecsock/iecsock.c	/^static void t2_timer_start(struct iecsock *s)$/;"	f	file:
 t2_timer_stop	iecsock_internal.h	40;"	d
 t3	iecsock.h	/^	u_short		t0, t1, t2, t3;$/;"	m	struct:iecsock
 t3	iecsock.h	/^	u_short		t3;$/;"	m	struct:iecsock_options
 t3	newiecsock/iecsock.h	/^	u_short		t0, t1, t2, t3;$/;"	m	struct:iecsock
 t3	newiecsock/iecsock.h	/^	u_short		t3;$/;"	m	struct:iecsock_options
-t3	oldiecsock/iecsock.h	/^	u_short		t0, t1, t2, t3;$/;"	m	struct:iecsock
-t3	oldiecsock/iecsock.h	/^	u_short		t3;$/;"	m	struct:iecsock_options
 t3_timer	iecsock.h	/^	struct event	t3_timer;$/;"	m	struct:iecsock	typeref:struct:iecsock::event
 t3_timer	newiecsock/iecsock.h	/^	struct event	t3_timer;$/;"	m	struct:iecsock	typeref:struct:iecsock::event
-t3_timer	oldiecsock/iecsock.h	/^	struct event	t3_timer;$/;"	m	struct:iecsock	typeref:struct:iecsock::event
 t3_timer_pending	iecsock_internal.h	42;"	d
 t3_timer_run	iecsock.c	/^static void t3_timer_run(int nofd, short what, void *arg)$/;"	f	file:
 t3_timer_run	newiecsock/iecsock.c	/^static void t3_timer_run(int nofd, short what, void *arg)$/;"	f	file:
-t3_timer_run	oldiecsock/iecsock.c	/^static void t3_timer_run(int nofd, short what, void *arg)$/;"	f	file:
 t3_timer_start	iecsock.c	/^static void t3_timer_start(struct iecsock *s)$/;"	f	file:
 t3_timer_start	newiecsock/iecsock.c	/^static void t3_timer_start(struct iecsock *s)$/;"	f	file:
-t3_timer_start	oldiecsock/iecsock.c	/^static void t3_timer_start(struct iecsock *s)$/;"	f	file:
 t3_timer_stop	iecsock_internal.h	37;"	d
-test_act	iecsock.h	/^				u_char	test_act:1;$/;"	m	struct:iec_buf::iechdr::__anon3::iec_u
-test_act	newiecsock/iecsock.h	/^				u_char	test_act:1;$/;"	m	struct:iec_buf::iechdr::__anon7::iec_u
-test_act	oldiecsock/iecsock.h	/^				u_char	test_act:1;$/;"	m	struct:iec_buf::iechdr::__anon5::iec_u
-test_con	iecsock.h	/^				u_char	test_con:1;$/;"	m	struct:iec_buf::iechdr::__anon3::iec_u
-test_con	newiecsock/iecsock.h	/^				u_char	test_con:1;$/;"	m	struct:iec_buf::iechdr::__anon7::iec_u
-test_con	oldiecsock/iecsock.h	/^				u_char	test_con:1;$/;"	m	struct:iec_buf::iechdr::__anon5::iec_u
+test_act	iecsock.h	/^				u_char	test_act:1;$/;"	m	struct:iec_buf::iechdr::__anon2::iec_u
+test_act	newiecsock/iecsock.h	/^				u_char	test_act:1;$/;"	m	struct:iec_buf::iechdr::__anon4::iec_u
+test_con	iecsock.h	/^				u_char	test_con:1;$/;"	m	struct:iec_buf::iechdr::__anon2::iec_u
+test_con	newiecsock/iecsock.h	/^				u_char	test_con:1;$/;"	m	struct:iec_buf::iechdr::__anon4::iec_u
 testfr	iecsock.h	/^	u_char		testfr:1;	\/* test function 1=active 0=inactive *\/$/;"	m	struct:iecsock
 testfr	newiecsock/iecsock.h	/^	u_char		testfr:1;	\/* test function 1=active 0=inactive *\/$/;"	m	struct:iecsock
-testfr	oldiecsock/iecsock.h	/^	u_char		testfr:1;	\/* test function 1=active 0=inactive *\/$/;"	m	struct:iecsock
 time	iec104_types.h	/^	cp56time2a	time;$/;"	m	struct:iec_type30
 time	iec104_types.h	/^	cp56time2a	time;$/;"	m	struct:iec_type33
 time	iec104_types.h	/^	cp56time2a	time;$/;"	m	struct:iec_type34
@@ -1025,28 +914,25 @@ timer_send_frame	server.c	/^void timer_send_frame(struct iecsock *s, void *arg)$
 totallen	libevent/include/event.h	/^	size_t totallen;$/;"	m	struct:evbuffer
 transmit_wakeup	iecsock.h	/^	void (*transmit_wakeup)(struct iecsock *s);$/;"	m	struct:iechooks
 transmit_wakeup	newiecsock/iecsock.h	/^	void (*transmit_wakeup)(struct iecsock *s);$/;"	m	struct:iechooks
-transmit_wakeup	oldiecsock/iecsock.h	/^	void (*transmit_wakeup)(struct iecsock *s);$/;"	m	struct:iechooks
 type	iec104_types.h	/^	u_char		type;	\/* type identification *\/$/;"	m	struct:iec_unit_id
 type	iecsock.h	/^	u_char		type;$/;"	m	struct:iecsock
 type	libevent/include/evdns.h	/^	int type;$/;"	m	struct:evdns_server_question
 type	libevent/include/evhttp.h	/^	enum evhttp_cmd_type type;$/;"	m	struct:evhttp_request	typeref:enum:evhttp_request::evhttp_cmd_type
 type	newiecsock/iecsock.h	/^	u_char		type;$/;"	m	struct:iecsock
-type	oldiecsock/iecsock.h	/^	u_char		type;$/;"	m	struct:iecsock
-type1	iec104.h	/^		struct iec_type1	type1;$/;"	m	union:iec_object::__anon1	typeref:struct:iec_object::__anon1::iec_type1
-type11	iec104.h	/^		struct iec_type11	type11;$/;"	m	union:iec_object::__anon1	typeref:struct:iec_object::__anon1::iec_type11
-type13	iec104.h	/^		struct iec_type13	type13;$/;"	m	union:iec_object::__anon1	typeref:struct:iec_object::__anon1::iec_type13
-type30	iec104.h	/^		struct iec_type30	type30;$/;"	m	union:iec_object::__anon1	typeref:struct:iec_object::__anon1::iec_type30
-type33	iec104.h	/^		struct iec_type33	type33;$/;"	m	union:iec_object::__anon1	typeref:struct:iec_object::__anon1::iec_type33
-type34	iec104.h	/^		struct iec_type34	type34;$/;"	m	union:iec_object::__anon1	typeref:struct:iec_object::__anon1::iec_type34
-type35	iec104.h	/^		struct iec_type35	type35;$/;"	m	union:iec_object::__anon1	typeref:struct:iec_object::__anon1::iec_type35
-type36	iec104.h	/^		struct iec_type36	type36;$/;"	m	union:iec_object::__anon1	typeref:struct:iec_object::__anon1::iec_type36
-type7	iec104.h	/^		struct iec_type7	type7;$/;"	m	union:iec_object::__anon1	typeref:struct:iec_object::__anon1::iec_type7
-type9	iec104.h	/^		struct iec_type9	type9;$/;"	m	union:iec_object::__anon1	typeref:struct:iec_object::__anon1::iec_type9
+type1	iec104.h	/^		struct iec_type1	type1;$/;"	m	union:iec_object::__anon5	typeref:struct:iec_object::__anon5::iec_type1
+type11	iec104.h	/^		struct iec_type11	type11;$/;"	m	union:iec_object::__anon5	typeref:struct:iec_object::__anon5::iec_type11
+type13	iec104.h	/^		struct iec_type13	type13;$/;"	m	union:iec_object::__anon5	typeref:struct:iec_object::__anon5::iec_type13
+type30	iec104.h	/^		struct iec_type30	type30;$/;"	m	union:iec_object::__anon5	typeref:struct:iec_object::__anon5::iec_type30
+type33	iec104.h	/^		struct iec_type33	type33;$/;"	m	union:iec_object::__anon5	typeref:struct:iec_object::__anon5::iec_type33
+type34	iec104.h	/^		struct iec_type34	type34;$/;"	m	union:iec_object::__anon5	typeref:struct:iec_object::__anon5::iec_type34
+type35	iec104.h	/^		struct iec_type35	type35;$/;"	m	union:iec_object::__anon5	typeref:struct:iec_object::__anon5::iec_type35
+type36	iec104.h	/^		struct iec_type36	type36;$/;"	m	union:iec_object::__anon5	typeref:struct:iec_object::__anon5::iec_type36
+type7	iec104.h	/^		struct iec_type7	type7;$/;"	m	union:iec_object::__anon5	typeref:struct:iec_object::__anon5::iec_type7
+type9	iec104.h	/^		struct iec_type9	type9;$/;"	m	union:iec_object::__anon5	typeref:struct:iec_object::__anon5::iec_type9
 u_char	libevent/include/event.h	/^typedef unsigned char u_char;$/;"	t
 u_short	libevent/include/event.h	/^typedef unsigned short u_short;$/;"	t
-uc	iecsock.h	/^			} uc;$/;"	m	union:iec_buf::iechdr::__anon3	typeref:struct:iec_buf::iechdr::__anon3::iec_u
-uc	newiecsock/iecsock.h	/^			} uc;$/;"	m	union:iec_buf::iechdr::__anon7	typeref:struct:iec_buf::iechdr::__anon7::iec_u
-uc	oldiecsock/iecsock.h	/^			} uc;$/;"	m	union:iec_buf::iechdr::__anon5	typeref:struct:iec_buf::iechdr::__anon5::iec_u
+uc	iecsock.h	/^			} uc;$/;"	m	union:iec_buf::iechdr::__anon2	typeref:struct:iec_buf::iechdr::__anon2::iec_u
+uc	newiecsock/iecsock.h	/^			} uc;$/;"	m	union:iec_buf::iechdr::__anon4	typeref:struct:iec_buf::iechdr::__anon4::iec_u
 uframe_func	iecsock_internal.h	/^enum uframe_func {$/;"	g
 uframe_func	iecsock_internal.h	/^static inline enum uframe_func uframe_func(struct iechdr *h)$/;"	f
 uframe_func_to_string	iecsock_internal.h	/^static inline char * uframe_func_to_string(enum uframe_func func)$/;"	f
@@ -1054,44 +940,33 @@ uri	libevent/include/evhttp.h	/^	char *uri;			\/* uri after HTTP request was par
 uri	libevent/include/evrpc.h	/^	const char* uri;$/;"	m	struct:evrpc
 user	iecsock.h	/^	struct event user;$/;"	m	struct:iecsock	typeref:struct:iecsock::event
 user	newiecsock/iecsock.h	/^	struct event user;$/;"	m	struct:iecsock	typeref:struct:iecsock::event
-user	oldiecsock/iecsock.h	/^	struct event user;$/;"	m	struct:iecsock	typeref:struct:iecsock::event
 userarg	iecsock.h	/^	void	*userarg;$/;"	m	struct:iecsock
 userarg	newiecsock/iecsock.h	/^	void	*userarg;$/;"	m	struct:iecsock
-userarg	oldiecsock/iecsock.h	/^	void	*userarg;$/;"	m	struct:iecsock
 usercb	iecsock.h	/^	void	(*usercb)(struct iecsock *s, void *arg);$/;"	m	struct:iecsock
 usercb	newiecsock/iecsock.h	/^	void	(*usercb)(struct iecsock *s, void *arg);$/;"	m	struct:iecsock
-usercb	oldiecsock/iecsock.h	/^	void	(*usercb)(struct iecsock *s, void *arg);$/;"	m	struct:iecsock
 userdone	libevent/include/evhttp.h	/^	    userdone:1;                 \/* the user has sent all data *\/$/;"	m	struct:evhttp_request
 va	iecsock.h	/^	u_short		va, vr, vs, va_peer;$/;"	m	struct:iecsock
 va	newiecsock/iecsock.h	/^	u_short		va, vr, vs, va_peer;$/;"	m	struct:iecsock
-va	oldiecsock/iecsock.h	/^	u_short		va, vr, vs, va_peer;$/;"	m	struct:iecsock
 va_peer	iecsock.h	/^	u_short		va, vr, vs, va_peer;$/;"	m	struct:iecsock
 va_peer	newiecsock/iecsock.h	/^	u_short		va, vr, vs, va_peer;$/;"	m	struct:iecsock
-va_peer	oldiecsock/iecsock.h	/^	u_short		va, vr, vs, va_peer;$/;"	m	struct:iecsock
 value	libevent/include/event.h	/^	char *value;$/;"	m	struct:evkeyval
 vr	iecsock.h	/^	u_short		va, vr, vs, va_peer;$/;"	m	struct:iecsock
 vr	newiecsock/iecsock.h	/^	u_short		va, vr, vs, va_peer;$/;"	m	struct:iecsock
-vr	oldiecsock/iecsock.h	/^	u_short		va, vr, vs, va_peer;$/;"	m	struct:iecsock
 vs	iecsock.h	/^	u_short		va, vr, vs, va_peer;$/;"	m	struct:iecsock
 vs	newiecsock/iecsock.h	/^	u_short		va, vr, vs, va_peer;$/;"	m	struct:iecsock
-vs	oldiecsock/iecsock.h	/^	u_short		va, vr, vs, va_peer;$/;"	m	struct:iecsock
 w	iecsock.h	/^	u_short		w, k;$/;"	m	struct:iecsock
 w	iecsock.h	/^	u_short		w;$/;"	m	struct:iecsock_options
 w	newiecsock/iecsock.h	/^	u_short		w, k;$/;"	m	struct:iecsock
 w	newiecsock/iecsock.h	/^	u_short		w;$/;"	m	struct:iecsock_options
-w	oldiecsock/iecsock.h	/^	u_short		w, k;$/;"	m	struct:iecsock
-w	oldiecsock/iecsock.h	/^	u_short		w;$/;"	m	struct:iecsock_options
 wday	iec104_types.h	/^	u_char		wday	:3;$/;"	m	struct:cp56time2a
 white	libevent/bin/event_rpcgen.py	/^white = re.compile(r'^\\s+')$/;"	v
 wm_read	libevent/include/event.h	/^	struct event_watermark wm_read;$/;"	m	struct:bufferevent	typeref:struct:bufferevent::event_watermark
 wm_write	libevent/include/event.h	/^	struct event_watermark wm_write;$/;"	m	struct:bufferevent	typeref:struct:bufferevent::event_watermark
 write_q	iecsock.h	/^	struct iec_buf_queue write_q;	\/* write queue *\/$/;"	m	struct:iecsock	typeref:struct:iecsock::iec_buf_queue
 write_q	newiecsock/iecsock.h	/^	struct iec_buf_queue write_q;	\/* write queue *\/$/;"	m	struct:iecsock	typeref:struct:iecsock::iec_buf_queue
-write_q	oldiecsock/iecsock.h	/^	struct iec_buf_queue write_q;	\/* write queue *\/$/;"	m	struct:iecsock	typeref:struct:iecsock::iec_buf_queue
 writecb	libevent/include/event.h	/^	evbuffercb writecb;$/;"	m	struct:bufferevent
 xfree	xalloc.c	/^xfree(void *ptr)$/;"	f
 xmalloc	xalloc.c	/^xmalloc(size_t size)$/;"	f
 xmit_cnt	iecsock.h	/^	u_long recv_cnt, xmit_cnt;$/;"	m	struct:iecsock
 xmit_cnt	newiecsock/iecsock.h	/^	u_long recv_cnt, xmit_cnt;$/;"	m	struct:iecsock
-xmit_cnt	oldiecsock/iecsock.h	/^	u_long recv_cnt, xmit_cnt;$/;"	m	struct:iecsock
 year	iec104_types.h	/^	u_char		year	:7;$/;"	m	struct:cp56time2a

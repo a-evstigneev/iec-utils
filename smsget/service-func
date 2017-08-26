@@ -1,11 +1,12 @@
 logmsg()
 {
 	local msg; msg=$1
-	printf '\t%s\n' "$1" 
+	printf '\t%s\n' "$msg" 
 }
 
 logmsgtime()
 {
-	local msg; msg=$1
-	printf '%s\n' "[ `date '+%F %T'` ] `basename "$0"`: $msg"
+	local msg pid; msg=$1
+	pid=$(echo $$)
+	printf '%s\n' "$(LANG=en date '+%b %d %T') $(cat /etc/hostname) $(basename "$0")[${pid}]: $msg"
 }

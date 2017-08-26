@@ -7,10 +7,10 @@ set -e
 
 # Must be a valid filename
 NAME="iecd"
-PIDFILE=/var/iecque/$NAME.pid
+PIDFILE=/opt/iecd/$NAME.pid
 
 # Full path to executable
-DAEMON="/opt/iecd/iecloop.sh"
+DAEMON="/usr/bin/setsid /opt/iecd/iecloop.sh"
 
 # Options
 DAEMON_OPTS=""
