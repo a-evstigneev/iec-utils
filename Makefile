@@ -1,20 +1,27 @@
-.PHONY: all iecproxy asdusend asduconv quemngr clean
+bindir = ./bin
+installdir = /opt/iecd_with_proxy
 
-bindir = bin
+.PHONY: all iecproxy asdusend quemngr ieclink scripts clean install
 
-all: iecproxy asdusend asduconv quemngr
+all: iecproxy asdusend quemngr ieclink scripts
 
 iecproxy: 
+	$(MAKE) -C $@
+
+ieclink:
 	$(MAKE) -C $@
 
 asdusend:
 	$(MAKE) -C $@
 
+scripts:
+	cp -r ./$@/* $(bindir)
+
 quemngr:
 	$(MAKE) -C $@
 
-asduconv:
-	cp ./asduconv/$@.sh $(bindir)/$@.sh
+install:
+	cp -r $(bindir)/* $(installdir) 
 
 clean:
 	cd $(bindir); rm -rf *
