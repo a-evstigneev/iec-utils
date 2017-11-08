@@ -63,7 +63,7 @@ void sig_chld(int signo)
 int
 main(int argc, char *argv[])
 {
-	char *sockpath, *iecclient, *destination;
+	char *sockpath, *ieclink, *destination;
 	int sockfd = -1, connfd = -1;
     
 	int i, n, nready, gopt, ret;
@@ -85,7 +85,7 @@ main(int argc, char *argv[])
 				destination = optarg;
 				break;
 			case 'l':
-				iecclient = optarg;
+				ieclink = optarg;
 				break;
 			case '?':
 			default:
@@ -103,8 +103,8 @@ main(int argc, char *argv[])
 			perror("environment variable IECSERVER not defined");
 			exit(EXIT_FAILURE);
 		}
-	if (iecclient == NULL) 
-		if ( (iecclient = getenv("IECLINK")) == NULL) {
+	if (ieclink == NULL) 
+		if ( (ieclink = getenv("IECLINK")) == NULL) {
 			perror("environment variable IECLINK not defined");
 			exit(EXIT_FAILURE);
 		}
@@ -136,7 +136,7 @@ main(int argc, char *argv[])
 		dup(pipefd2[1]);
 		close(pipefd2[1]);
 		
-		if (execl(iecclient, "iecclient", destination, NULL) < 0) 
+		if (execl(ieclink, "ieclink", destination, NULL) < 0) 
 			perror("exec() error"); 
 		exit(EXIT_FAILURE);
 	}

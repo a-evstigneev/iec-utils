@@ -10,4 +10,4 @@ headers = iec104.h iec104_types.h iecsock.h iecsock_internal.h xalloc.h
 all: $(target)
 
 $(target): $(src) $(headers)
-	gcc -o $(bindir)/$(target) $(src) -I$(libeventdir)/include -L$(libeventdir)/lib -levent -Wl,-rpath,$(libeventdir)/lib 
+	gcc -o $(bindir)/$(target) $(src) -static -I$(libeventdir)/include -L$(libeventdir)/lib -levent -Wl,-rpath,$(libeventdir)/lib 

@@ -11,7 +11,7 @@ export FIFOTRIGGER="${MSGDIR}/fifotr"
 export BROKERSEND="${IECDIR}/broker.sh"
 export GSMDEV="/dev/ttyUSB0"
 export IECSERVER="10.90.90.40"
-export IECLINK="${IECDIR}/iecclient"
+export IECLINK="${IECDIR}/ieclink"
 export IECSOCK="${IECDIR}/iecsock"
 
 cd $IECDIR
