@@ -25,7 +25,7 @@ extern "C" {
 #endif
 
 #define IEC104_BUF_LEN		255
-#define	IEC_PORT_DEFAULT	2404
+#define	IEC_PORT_DEFAULT	48321
 #define IEC104_CTRL_LEN		4
 #define IEC104_ASDU_MAX		249
 

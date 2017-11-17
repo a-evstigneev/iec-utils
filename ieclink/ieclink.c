@@ -203,9 +203,19 @@ void disconnect_hook(struct iecsock *s, short reason)
 
 void data_received_hook(struct iecsock *s, struct iec_buf *b)
 {	
+	int i;
+
 	fprintf(stderr, "%s [%d]: data_len=%d Success\n", __FUNCTION__, getpid(), b->data_len);
-	free(b);
 	
+	for (i = 0; i < b->data_len; ++i) {
+		fprintf(stderr, "%d ", b->data[i]);
+		//fprintf(stderr, "%02X", b->data[i]);
+	
+	}
+	fprintf(stderr, "\n");
+	fflush(stderr);
+	free(b);
+
 	return;
 }
 
