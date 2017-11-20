@@ -10,17 +10,20 @@ export PHONEBOOK="${IECDIR}/phonebook"
 export FIFOTRIGGER="${MSGDIR}/fifotr"
 export BROKERSEND="${IECDIR}/broker.sh"
 export GSMDEV="/dev/ttyUSB0"
-export IECSERVER="89.239.185.109"
-export IECPORT="48321"
+#export IECSERVER="89.239.185.109"
+#export IECPORT="48321"
+export IECSERVER="10.90.90.40"
+export IECPORT="2404"
 export IECLINK="${IECDIR}/ieclink"
 export IECSOCK="${IECDIR}/iecsock"
+export IECDB="${IECDIR}/iecdb"
 
 cd $IECDIR
 cp /dev/null quemngr.log
 cp /dev/null smsget.log
-cp /dev/null iecclient.log
+cp /dev/null iecproxy.log
 
-./iecproxy -s $IECSOCK -d $IECSERVER -l $IECLINK 2>./iecproxy.log &
+./iecproxy -u $IECSOCK -s $IECSERVER -p $IECPORT -l $IECLINK 2>./iecproxy.log &
 
 ./quemngr -d 3 -l ./quemngr.log &
 

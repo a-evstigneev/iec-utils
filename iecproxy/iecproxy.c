@@ -14,8 +14,6 @@
 #define BACKLOG 1 
 #define FD_MAX 3
 
-char endmsg[] = {'>', '\n', '\0'}; 
-
 int 
 new_usocket(const char *path)
 {
@@ -63,7 +61,7 @@ void sig_chld(int signo)
 int
 main(int argc, char *argv[])
 {
-	char *sockpath, *ieclink, *destination;
+	char *unixsock, *ieclink, *iecserver, *iecport;
 	int sockfd = -1, connfd = -1;
     
 	int i, n, nready, gopt, ret;
@@ -76,13 +74,16 @@ main(int argc, char *argv[])
 	struct pollfd fdread[FD_MAX];
 
 	// s - path of unix socket, d - ip address of iecserver
-	while ( (gopt = getopt(argc, argv, ":s:d:l:")) != -1) { 
+	while ( (gopt = getopt(argc, argv, ":u:s:p:l:")) != -1) { 
 		switch(gopt) {
-			case 's':
-				sockpath = optarg; 
+			case 'u':
+				unixsock = optarg; 
 				break;
-			case 'd':
-				destination = optarg;
+			case 's':
+				iecserver = optarg;
+				break;
+			case 'p':
+				iecport = optarg;
 				break;
 			case 'l':
 				ieclink = optarg;
@@ -93,14 +94,19 @@ main(int argc, char *argv[])
 		}
 	}
 	
-	if (sockpath == NULL) 
-		if ( (sockpath = getenv("IECSOCK")) == NULL) {
+	if (unixsock == NULL) 
+		if ( (unixsock = getenv("IECSOCK")) == NULL) {
 			perror("environment variable IECSOCK not defined");
 			exit(EXIT_FAILURE);
 		}
-	if (destination == NULL) 
-		if ( (destination = getenv("IECSEVER"))) {
+	if (iecserver == NULL) 
+		if ( (iecserver = getenv("IECSERVER"))) {
 			perror("environment variable IECSERVER not defined");
+			exit(EXIT_FAILURE);
+		}
+	if (iecport == NULL) 
+		if ( (iecport = getenv("IECPORT"))) {
+			perror("environment variable IECPORT not defined");
 			exit(EXIT_FAILURE);
 		}
 	if (ieclink == NULL) 
@@ -110,7 +116,7 @@ main(int argc, char *argv[])
 		}
 	
 	/* delete old unix socket */
-    unlink(sockpath);
+    unlink(unixsock);
 
 	/* start iecclient */
 	if ( (pipe(pipefd1)) < 0) {
@@ -135,8 +141,8 @@ main(int argc, char *argv[])
 		close(STDOUT_FILENO);
 		dup(pipefd2[1]);
 		close(pipefd2[1]);
-		
-		if (execl(ieclink, "ieclink", destination, NULL) < 0) 
+		fprintf(stderr, "%s %s\n", iecserver, iecport);		
+		if (execl(ieclink, "ieclink", iecserver, iecport, NULL) < 0) 
 			perror("exec() error"); 
 		exit(EXIT_FAILURE);
 	}
@@ -158,7 +164,7 @@ main(int argc, char *argv[])
 			if ( (n = read(fdread[0].fd, buf, 2)) > 0) {
 				switch (buf[0]) {
 					case '+':
-						fdread[1].fd = new_usocket(sockpath);
+						fdread[1].fd = new_usocket(unixsock);
 						fdread[1].events = POLLIN;
 						break;
 					case '-':
@@ -168,7 +174,7 @@ main(int argc, char *argv[])
 							connfd = -1;
 						}
 						close(fdread[1].fd);
-						unlink(sockpath);
+						unlink(unixsock);
 						fdread[1].fd = -1;
 						break;
 					case '<':

@@ -9,4 +9,3 @@ all: $(target)
 
 $(target): $(src) $(headers)
 	gcc -o $(bindir)/$(target) -D DEBON $(src)
-	cp -r ./work $(bindir)

@@ -257,8 +257,10 @@ int main(int argc, char **argv)
 	addr.sin_family = AF_INET;
 	addr.sin_port = htons(IEC_PORT_DEFAULT);
 	
-	if (argc > 1 && inet_pton(AF_INET, argv[1], &addr.sin_addr) > 0) 
+	if (argc > 2 && inet_pton(AF_INET, argv[1], &addr.sin_addr) > 0 && atoi(argv[2]) > 0) {
+		addr.sin_port = htons(atoi(argv[2]));
 		iecsock_connect(&addr);
+	}
 	else
 		iecsock_connect(NULL);
 	
