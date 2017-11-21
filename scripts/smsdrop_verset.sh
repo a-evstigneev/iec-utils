@@ -62,9 +62,18 @@ smsconv=$(/bin/echo -n -e `/bin/echo $sms | sed -r 's/.{2}/\\\\x&/g'` | iconv -f
 filename=$(mktemp -u -p "${MSGDIR}/drop" "${comaddr}_XXXXXX")
 
 if printf '%s\n' "$smsconv" | smsparse "$filename" "$comaddr"; then
-#	true
 	if sync $filename; then
-		mv "$filename" "${MSGDIR}/drop/`stat -c %i $filename`"
+		inodename="${MSGDIR}/drop/`stat -c %i $filename`"
+		mv "$filename" "$inodename"
+		
+		# Create files that will store the signal values for a general interrogation
+		while read comaddr objaddr type value; do
+			if ! [ -d $IECDB/$comaddr ]; then
+				mkdir -p $IECDB/$comaddr
+			fi
+			echo "$type $value" > $IECDB/$comaddr/$objaddr
+		done < $inodename
+		
 		printf "1" > $FIFOTRIGGER
 	else
 		exit 1

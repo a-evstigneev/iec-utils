@@ -14,6 +14,37 @@
 #define BACKLOG 1 
 #define FD_MAX 3
 
+ssize_t
+readline(int fd, void *buf, size_t maxlen)
+{
+	ssize_t n, rc;
+	char c, *ptr;
+
+	ptr = buf;
+	for (n = 1; n < maxlen; n++) {
+		again:
+			if ( (rc = read(fd, &c , 1)) == 1) {
+				*ptr++ = c;
+				if (c == '\n')
+					break;
+			}
+			else if (rc == 0) {
+				if (n == 1)
+					return 0;
+				else
+					break;
+			}
+			else {
+				if (errno == EINTR)
+					goto again;
+				return -1;
+			}
+	}
+
+	*ptr = 0;
+	return n;
+}
+		
 int 
 new_usocket(const char *path)
 {
@@ -161,7 +192,7 @@ main(int argc, char *argv[])
 		nready = poll(fdread, FD_MAX, -1); 
 		
 		if (fdread[0].revents & POLLIN) {
-			if ( (n = read(fdread[0].fd, buf, 2)) > 0) {
+			if ( (n = readline(fdread[0].fd, buf, BUF_SIZE)) > 0) {
 				switch (buf[0]) {
 					case '+':
 						fdread[1].fd = new_usocket(unixsock);
