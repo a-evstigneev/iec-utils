@@ -22,6 +22,7 @@ quemngr:
 	$(MAKE) -C $@
 
 install:
+	rm -rf /opt/iecd_with_proxy/*
 	cp -r $(bindir)/* $(installdir) 
 	mkdir -p $(workdir)/drop
 	mkdir -p $(workdir)/fail

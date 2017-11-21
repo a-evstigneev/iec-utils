@@ -96,13 +96,15 @@ main(int argc, char *argv[])
 	int sockfd = -1, connfd = -1;
     
 	int i, n, nready, gopt, ret;
-	
+		
 	int pipefd1[2], pipefd2[2];
 	int childpid;
 	
-	char buf[BUF_SIZE] = {0};
+	char buf[BUF_SIZE] = {0}, asdu[BUF_SIZE] = {0};
 	
 	struct pollfd fdread[FD_MAX];
+	
+	FILE *fp;
 
 	// s - path of unix socket, d - ip address of iecserver
 	while ( (gopt = getopt(argc, argv, ":u:s:p:l:")) != -1) { 
@@ -212,6 +214,17 @@ main(int argc, char *argv[])
 						dprintf(connfd, "<\n");
 						close(connfd);
 						connfd = -1;
+						break;
+					case '6':
+						fprintf(stderr, "%s", buf);
+						dprintf(pipefd1[1], "64010600FFFF00000014\n");
+						fp = popen("/opt/iecd_with_proxy/ginterrog.sh", "r");
+						while (fgets(asdu, BUF_SIZE, fp) != NULL) {
+							dprintf(pipefd1[1], "%s", asdu);
+						}
+						pclose(fp);
+						dprintf(pipefd1[1], "64010A00FFFF00000014\n");
+						dprintf(pipefd1[1], ">\n");
 						break;
 					default:
 						;

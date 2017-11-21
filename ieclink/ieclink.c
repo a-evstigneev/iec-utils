@@ -209,11 +209,15 @@ void data_received_hook(struct iecsock *s, struct iec_buf *b)
 	
 	for (i = 0; i < b->data_len; ++i) {
 		fprintf(stderr, "%d ", b->data[i]);
-		//fprintf(stderr, "%02X", b->data[i]);
+		fprintf(stdout, "%02X", b->data[i]);
 	
 	}
 	fprintf(stderr, "\n");
+	fprintf(stdout, "\n");
+
 	fflush(stderr);
+	fflush(stdout);
+	
 	free(b);
 
 	return;
