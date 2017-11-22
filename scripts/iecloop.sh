@@ -23,7 +23,7 @@ cp /dev/null quemngr.log
 cp /dev/null smsget.log
 cp /dev/null iecproxy.log
 
-./iecproxy -u $IECSOCK -s $IECSERVER -p $IECPORT -l $IECLINK 2>./iecproxy.log &
+./iecproxy -u $IECSOCK -s $IECSERVER -p $IECPORT -l $IECLINK -g $IECDIR/ginterrog.sh 2>./iecproxy.log &
 
 ./quemngr -d 3 -l ./quemngr.log &
 

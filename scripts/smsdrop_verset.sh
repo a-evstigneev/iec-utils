@@ -68,10 +68,10 @@ if printf '%s\n' "$smsconv" | smsparse "$filename" "$comaddr"; then
 		
 		# Create files that will store the signal values for a general interrogation
 		while read comaddr objaddr type value; do
-			if ! [ -d $IECDB/$comaddr ]; then
-				mkdir -p $IECDB/$comaddr
+			if ! [ -d $IECDB/$comaddr/$type ]; then
+				mkdir -p $IECDB/$comaddr/$type
 			fi
-			echo "$type $value" > $IECDB/$comaddr/$objaddr
+			echo $value > $IECDB/$comaddr/$type/$objaddr
 		done < $inodename
 		
 		printf "1" > $FIFOTRIGGER

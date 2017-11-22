@@ -207,15 +207,10 @@ void data_received_hook(struct iecsock *s, struct iec_buf *b)
 
 	fprintf(stderr, "%s [%d]: data_len=%d Success\n", __FUNCTION__, getpid(), b->data_len);
 	
-	for (i = 0; i < b->data_len; ++i) {
-		fprintf(stderr, "%d ", b->data[i]);
+	for (i = 0; i < b->data_len; ++i)
 		fprintf(stdout, "%02X", b->data[i]);
-	
-	}
-	fprintf(stderr, "\n");
-	fprintf(stdout, "\n");
 
-	fflush(stderr);
+	fprintf(stdout, "\n");
 	fflush(stdout);
 	
 	free(b);

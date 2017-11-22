@@ -13,6 +13,10 @@
 #define BUF_SIZE 512
 #define BACKLOG 1 
 #define FD_MAX 3
+#define END_INIT	 "46010400000000000000" 
+#define ACT_INTERROG "64010600FFFF00000014"
+#define CON_INTERROG "64010700FFFF00000014"
+#define END_INTERROG "64010A00FFFF00000014"
 
 ssize_t
 readline(int fd, void *buf, size_t maxlen)
@@ -76,6 +80,24 @@ new_usocket(const char *path)
 	return sockfd;
 }
 
+int
+ginterrog(int fdw, const char *script_path)
+{
+	FILE *fp;
+	char asdu[BUF_SIZE] = {0};
+
+	dprintf(fdw, "%s\n", CON_INTERROG);
+	fp = popen(script_path, "r");
+	while (fgets(asdu, BUF_SIZE, fp) != NULL) {
+		dprintf(fdw, "%s", asdu);
+	}
+	pclose(fp);
+	dprintf(fdw, "%s\n", END_INTERROG);
+	dprintf(fdw, ">\n");
+	
+	return 0;
+}
+
 #if 0
 void sig_chld(int signo) 
 {
@@ -92,7 +114,7 @@ void sig_chld(int signo)
 int
 main(int argc, char *argv[])
 {
-	char *unixsock, *ieclink, *iecserver, *iecport;
+	char *unixsock, *ieclink, *iecserver, *iecport, *gi_script;
 	int sockfd = -1, connfd = -1;
     
 	int i, n, nready, gopt, ret;
@@ -100,14 +122,12 @@ main(int argc, char *argv[])
 	int pipefd1[2], pipefd2[2];
 	int childpid;
 	
-	char buf[BUF_SIZE] = {0}, asdu[BUF_SIZE] = {0};
+	char buf[BUF_SIZE] = {0};
 	
 	struct pollfd fdread[FD_MAX];
 	
-	FILE *fp;
-
-	// s - path of unix socket, d - ip address of iecserver
-	while ( (gopt = getopt(argc, argv, ":u:s:p:l:")) != -1) { 
+	// u - path to unix socket, s - ip address of iecserver, p - port of iecserver, l - ieclink path, g - general interrogation script
+	while ( (gopt = getopt(argc, argv, ":u:s:p:l:g:")) != -1) { 
 		switch(gopt) {
 			case 'u':
 				unixsock = optarg; 
@@ -121,6 +141,8 @@ main(int argc, char *argv[])
 			case 'l':
 				ieclink = optarg;
 				break;
+			case 'g':
+				gi_script = optarg;
 			case '?':
 			default:
 				break;
@@ -195,39 +217,37 @@ main(int argc, char *argv[])
 		
 		if (fdread[0].revents & POLLIN) {
 			if ( (n = readline(fdread[0].fd, buf, BUF_SIZE)) > 0) {
-				switch (buf[0]) {
-					case '+':
-						fdread[1].fd = new_usocket(unixsock);
-						fdread[1].events = POLLIN;
-						break;
-					case '-':
-						if (connfd > 0) {
-							dprintf(connfd, "-\n");
+				
+				if (strncmp(END_INIT, buf, 8) == 0)
+					fprintf(stderr, "iecproxy: got M_EI_NA_1 (cot=4) %s", buf);
+				else if (strncmp(ACT_INTERROG, buf, n-1) == 0) {
+					fprintf(stderr, "iecproxy: got C_IC_NA_1 (cot=6) %s", buf);
+					ginterrog(pipefd1[1], gi_script);
+				}
+				else { 
+					switch (buf[0]) {
+						case '+':
+							fdread[1].fd = new_usocket(unixsock);
+							fdread[1].events = POLLIN;
+							break;
+						case '-':
+							if (connfd > 0) {
+								dprintf(connfd, "-\n");
+								close(connfd);
+								connfd = -1;
+							}
+							close(fdread[1].fd);
+							unlink(unixsock);
+							fdread[1].fd = -1;
+							break;
+						case '<':
+							dprintf(connfd, "<\n");
 							close(connfd);
 							connfd = -1;
-						}
-						close(fdread[1].fd);
-						unlink(unixsock);
-						fdread[1].fd = -1;
-						break;
-					case '<':
-						dprintf(connfd, "<\n");
-						close(connfd);
-						connfd = -1;
-						break;
-					case '6':
-						fprintf(stderr, "%s", buf);
-						dprintf(pipefd1[1], "64010600FFFF00000014\n");
-						fp = popen("/opt/iecd_with_proxy/ginterrog.sh", "r");
-						while (fgets(asdu, BUF_SIZE, fp) != NULL) {
-							dprintf(pipefd1[1], "%s", asdu);
-						}
-						pclose(fp);
-						dprintf(pipefd1[1], "64010A00FFFF00000014\n");
-						dprintf(pipefd1[1], ">\n");
-						break;
-					default:
-						;
+							break;
+						default:
+							break;
+					}
 				}
 			}
 			if (--nready <= 0)
