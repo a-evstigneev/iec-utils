@@ -48,11 +48,21 @@ fi
 #fi
 
 sms=$(echo $sms | sed 's/ gradus C//')
-
 filename=$(mktemp -u -p "${MSGDIR}/drop" "${comaddr}_XXXXXX")
+
 if printf '%s\n' "$sms" | smsparse "$filename" "$comaddr"; then
 	if sync $filename; then
-		mv "$filename" "${MSGDIR}/drop/`stat -c %i $filename`"
+		inodename="${MSGDIR}/drop/`stat -c %i $filename`"
+ 		mv "$filename" "$inodename"
+
+		# Create files that will store the signal values for a general interrogation
+		while read comaddr objaddr type value; do
+			if ! [ -d $IECDB/$comaddr/$type ]; then
+				mkdir -p $IECDB/$comaddr/$type
+			fi
+			echo $value > $IECDB/$comaddr/$type/$objaddr
+		done < $inodename
+		
 		printf "1" > $FIFOTRIGGER
 	else
 		exit 1
