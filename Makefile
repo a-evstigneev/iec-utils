@@ -1,5 +1,5 @@
 bindir = ./bin
-installdir = /opt/iecd_with_proxy
+installdir = /opt/iecd
 workdir = $(installdir)/work
 
 

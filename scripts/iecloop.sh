@@ -2,7 +2,7 @@
 
 trap 'kill -- -$$; exit 0' TERM
 
-export IECDIR="/opt/iecd_with_proxy"
+export IECDIR="/opt/iecd"
 export MSGDIR="${IECDIR}/work"
 export LOGFILE="${IECDIR}/iecd.log"
 export PIDFILE="${IECDIR}/iecd.pid"

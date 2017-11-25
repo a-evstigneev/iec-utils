@@ -7,10 +7,10 @@ set -e
 
 # Must be a valid filename
 NAME="iecd"
-PIDFILE=/opt/iecd_with_proxy/$NAME.pid
+PIDFILE=/opt/iecd/$NAME.pid
 
 # Full path to executable
-DAEMON="/usr/bin/setsid /opt/iecd_with_proxy/iecloop.sh"
+DAEMON="/usr/bin/setsid /opt/iecd/iecloop.sh"
 
 # Options
 DAEMON_OPTS=""
@@ -21,7 +21,7 @@ USER=artem
 # Work direction
 WORK_DIR="/"
 
-export PATH="${PATH:+$PATH:}/usr/sbin:/sbin:/opt/iecd_with_proxy"
+export PATH="${PATH:+$PATH:}/usr/sbin:/sbin:/opt/iecd"
 
 case "$1" in
   start)
