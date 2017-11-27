@@ -196,7 +196,7 @@ main(int argc, char *argv[])
 		close(STDOUT_FILENO);
 		dup(pipefd2[1]);
 		close(pipefd2[1]);
-		fprintf(stderr, "%s %s\n", iecserver, iecport);		
+
 		if (execl(ieclink, "ieclink", iecserver, iecport, NULL) < 0) 
 			perror("exec() error"); 
 		exit(EXIT_FAILURE);
@@ -219,9 +219,9 @@ main(int argc, char *argv[])
 			if ( (n = readline(fdread[0].fd, buf, BUF_SIZE)) > 0) {
 				
 				if (strncmp(END_INIT, buf, 8) == 0)
-					fprintf(stderr, "iecproxy: got M_EI_NA_1 (cot=4) %s", buf);
+					fprintf(stderr, "iecproxy: received M_EI_NA_1 (cot=4) %s", buf);
 				else if (strncmp(ACT_INTERROG, buf, n-1) == 0) {
-					fprintf(stderr, "iecproxy: got C_IC_NA_1 (cot=6) %s", buf);
+					fprintf(stderr, "iecproxy: received C_IC_NA_1 (cot=6) %s", buf);
 					ginterrog(pipefd1[1], gi_script);
 				}
 				else { 

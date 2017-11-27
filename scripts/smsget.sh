@@ -126,11 +126,11 @@ shift $(($OPTIND - 1))
 # Test gsm-equipment
 if [ $check ]; then
 	if [ -z $gsmdev ]; then
-		logmsgtime "Target device $gsmdev is not specified"
+		logmsgtime "Target device is not specified"
 		usage
 		exit 1
 	elif [ ! -c $gsmdev ]; then 
-		logmsgtime "Device $gsmdev does not character"
+		logmsgtime "Device $gsmdev is not a character device"
 		exit 1
 	fi
 fi

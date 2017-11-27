@@ -111,11 +111,13 @@ static void stdin_read(int fd, short events, void *opaque)
 			}
 			discard:
 				if (cp == end && asdulen != 0) {
+					fprintf(stderr, "%s: received a new message from iecproxy\n", __FUNCTION__);	
+					
 					if (iecsock_can_queue(s)) {
 						iec_asdu_send(s, asdubuf, asdulen);
 					}
 					else {
-						fprintf(stderr, "%s [%d]: window size exhausted, save ASDU in asdulist\n", __FUNCTION__, getpid());
+						fprintf(stderr, "%s: window size overflowed, save ASDU in asdulist\n", __FUNCTION__);
 						struct asduhead *h;
 						h = xmalloc(sizeof(*h) + asdulen);
 						h->next = NULL;
@@ -130,7 +132,7 @@ static void stdin_read(int fd, short events, void *opaque)
 			if (*pbuf == '>') {
 				rbuflen = 0;
 				endmsg = 1;
-				fprintf(stderr, "%s [%d]: end of message \">\" reached\n", __FUNCTION__, getpid());	
+				fprintf(stderr, "%s: received \">\" end of message from iecproxy\n", __FUNCTION__);	
 				return;	
 			}
 			
@@ -153,7 +155,7 @@ static void stdin_read(int fd, short events, void *opaque)
 			rbuflen = 0;
 		
 		if (curlistsize == limlistsize) {
-			fprintf(stderr, "%s [%d]: limit size of asdulist reached, disable reading from stdin\n", __FUNCTION__, getpid());
+			fprintf(stderr, "%s: limit size of asdulist reached, disable reading from stdin\n", __FUNCTION__);
 			event_del(&s->user);
 			return;
 		}
@@ -162,7 +164,7 @@ static void stdin_read(int fd, short events, void *opaque)
 
 static void iec_kick_callback(struct iecsock *s)
 {
-	fprintf(stderr, "%s [%d]: Sucess 0x%lu\n", __FUNCTION__, getpid(), (unsigned long) s);
+	fprintf(stderr, "%s: Sucess 0x%lu\n", __FUNCTION__, (unsigned long) s);
 	struct asduhead *p = NULL, *next = NULL;
 	
 	for (p = asdulist; p != NULL; p = next) {
@@ -179,11 +181,15 @@ static void iec_kick_callback(struct iecsock *s)
 	if ( (p == NULL) && (endmsg == 0)) {
 		asdulistlast = &asdulist;
 		event_add(&s->user, NULL);
-		fprintf(stderr, "%s [%d]: asdulist is empty, set event_add(&s->user, NULL)\n", __FUNCTION__, getpid());
+		fprintf(stderr, "%s: asdulist is empty, set event_add(&s->user, NULL)\n", __FUNCTION__);
 	}
 	else if ( (p == NULL) && (endmsg == 1)) {
 		fprintf(stdout, "<\n");	
 		fflush(stdout);
+
+		fprintf(stderr, "%s: confirmation received, send \"<\" for iecproxy\n", __FUNCTION__);	
+		fflush(stdout);
+
 		event_add(&s->user, NULL);
 		endmsg = 0;
 	}
@@ -193,7 +199,7 @@ static void iec_kick_callback(struct iecsock *s)
 
 void disconnect_hook(struct iecsock *s, short reason)
 {	
-	fprintf(stderr, "%s [%d]: what=0x%02x\n", __FUNCTION__, getpid(), reason);
+	fprintf(stderr, "%s: what=0x%02x\n", __FUNCTION__, reason);
 
 	fprintf(stdout, "-\n"); 
 	fflush(stdout);
@@ -205,7 +211,7 @@ void data_received_hook(struct iecsock *s, struct iec_buf *b)
 {	
 	int i;
 
-	fprintf(stderr, "%s [%d]: data_len=%d Success\n", __FUNCTION__, getpid(), b->data_len);
+	fprintf(stderr, "%s: data_len=%d Success\n", __FUNCTION__, b->data_len);
 	
 	for (i = 0; i < b->data_len; ++i)
 		fprintf(stdout, "%02X", b->data[i]);
@@ -224,7 +230,7 @@ void activation_hook(struct iecsock *s)
 	u_long flags;
 	int ret;
 
-	fprintf(stderr, "%s [%d]: Sucess 0x%lu\n", __FUNCTION__, getpid(), (unsigned long) s);
+	fprintf(stderr, "%s: Sucess 0x%lu\n", __FUNCTION__, (unsigned long) s);
 	
 	event_set(&s->user, 0, EV_READ, stdin_read, s);
 	event_add(&s->user, NULL);
@@ -237,7 +243,7 @@ void activation_hook(struct iecsock *s)
 
 void connect_hook(struct iecsock *s)
 {	
-	fprintf(stderr, "%s [%d]: Sucess 0x%lu\n", __FUNCTION__, getpid(), (unsigned long) s);
+	fprintf(stderr, "%s: Sucess 0x%lu\n", __FUNCTION__, (unsigned long) s);
 }
 
 int main(int argc, char **argv)

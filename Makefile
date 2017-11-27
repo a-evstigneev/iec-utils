@@ -23,7 +23,7 @@ quemngr:
 	$(MAKE) -C $@
 
 install:
-	rm -rf /opt/iecd_with_proxy/*
+	rm -rf $(installdir)/*
 	cp -r $(bindir)/* $(installdir) 
 	mkdir -p $(workdir)/drop
 	mkdir -p $(workdir)/fail
@@ -33,6 +33,7 @@ install:
 	mkdir -p $(workdir)/df/0h0m45s
 	mkdir -p $(workdir)/df/0h0m60s
 	mkdir -p $(installdir)/iecdb
+	mkdir -p $(installdir)/log
 
 clean:
 	cd $(bindir); rm -rf *

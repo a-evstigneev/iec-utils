@@ -88,7 +88,7 @@ init(void)
 		;
 	else {
 		logstream = stderr;
-		daemon_proc = 0;
+		daemon_proc = 1;
 	}
 	
 	if ( (msgdir = getenv("MSGDIR")) == NULL)
