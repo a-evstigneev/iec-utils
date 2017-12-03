@@ -1,11 +1,11 @@
-#!/bin/dash
+#!/bin/sh
 
 tmpdir=$(mktemp -d /tmp/XXXXX.broker)
-test -n "${MSGDIR}" && actdir=${MSGDIR}/act
+crts_name=$1
 
 sendfile()
 {
-	${IECDIR}/asduconv.sh -c 3 $1 | ${IECDIR}/asdusend -s $IECSOCK 
+	asduconv -c 3 $1 | asdusend -s $VARDIR/$crts_name/socket 
 }
 
 jobslist=${tmpdir}/jobslist
@@ -13,7 +13,7 @@ sendfiles=${tmpdir}/sendfiles
 
 success="Transfer was successful"
 fail="Transfer failed"
-conf="Ok"
+confirm="Ok"
 
 cleanup() 
 {
@@ -51,7 +51,7 @@ sigchld()
 			esac
 		fi
 	done <<-EOF
-		$(sed 's/^.* \([0-9].*\)/\1/' <${jobslist})	
+		$(sed 's/^.* \([0-9].*\)/\1/' <$jobslist)	
 	EOF
 	trap 'sigchld' CHLD
 }
@@ -61,8 +61,8 @@ trap 'sigchld' CHLD
 
 while true; do 
 	if read filename; then 
-		printf '%s\n' "$filename 1 $conf"
-		sendfile ${actdir}/$filename 2>>${IECDIR}/iecclient.log 1>&2 & 
+		printf '%s\n' "$filename 1 $confirm"
+		sendfile ./act/$filename 2>>$LOGDIR/${crts_name}/iecbroker.log 1>&2 & 
 		printf '%s %s\n' $! $filename >> $sendfiles
 	fi
 done

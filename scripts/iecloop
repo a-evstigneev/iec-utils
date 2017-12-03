@@ -1,0 +1,60 @@
+#!/bin/sh
+
+trap 'kill -- -$$; exit 0' TERM
+
+export IECDIR="/opt/iecd"
+export IECDB="$IECDIR/iecdb"
+export LOGDIR="$IECDIR/log"
+export VARDIR="$IECDIR/var"
+export SMSDROP="$VARDIR/smsdrop"
+export RUNDIR="$VARDIR/run"
+
+export GSMDEV="/dev/ttyUSB0"
+
+export RTU_LIST="$IECDIR/rtu_list.conf"
+export CRTS_LIST="$IECDIR/crts_list.conf"
+
+test -x $IECDIR/smsget || exit 0
+test -x $IECDIR/smsdrop_verset || exit 0
+test -x $IECDIR/smsdrop_granit || exit 0
+test -x $IECDIR/quemngr || exit 0
+test -x $IECDIR/iecbroker || exit 0
+test -x $IECDIR/asduconv || exit 0
+test -x $IECDIR/asdusend || exit 0
+test -x $IECDIR/ginterrog || exit 0
+test -x $IECDIR/iecproxy || exit 0
+test -x $IECDIR/ieclink || exit 0
+#test -x /usr/sbin/watchdog || exit 0
+
+cd $VARDIR
+while read crts_name crts_address crts_port; do
+	mkdir -p $LOGDIR/$crts_name
+	mkdir $crts_name && cd $crts_name
+	mkdir -p \
+		./work/drop \
+		./work/fail \
+		./work/in \
+		./work/act \
+		./work/df/0h0m30s \
+		./work/df/0h0m45s \
+		./work/df/0h0m60s
+	
+	quemngr	-n $crts_name -w ./work -t ./trigger -b iecbroker -d 3 2>$LOGDIR/$crts_name/quemngr.log &
+	iecproxy -u ./socket -s $crts_address -p $crts_port -l ieclink -g ginterrog 2>$LOGDIR/$crts_name/iecproxy.log &
+	cd ..
+done <<-EOF
+	$(cat $CRTS_LIST | grep -v '^#' | sed '/^$/d')
+EOF
+
+exec 2>$LOGDIR/smsget.log 1>&2
+
+if smsget -c -F $GSMDEV; then
+	stty raw -echo -F $GSMDEV
+	smsget -d -F $GSMDEV
+	while true; do
+		smsget -g -F $GSMDEV
+		sleep 15 
+	done 
+else
+	exit 1
+fi

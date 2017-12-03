@@ -149,27 +149,6 @@ main(int argc, char *argv[])
 		}
 	}
 	
-	if (unixsock == NULL) 
-		if ( (unixsock = getenv("IECSOCK")) == NULL) {
-			perror("environment variable IECSOCK not defined");
-			exit(EXIT_FAILURE);
-		}
-	if (iecserver == NULL) 
-		if ( (iecserver = getenv("IECSERVER"))) {
-			perror("environment variable IECSERVER not defined");
-			exit(EXIT_FAILURE);
-		}
-	if (iecport == NULL) 
-		if ( (iecport = getenv("IECPORT"))) {
-			perror("environment variable IECPORT not defined");
-			exit(EXIT_FAILURE);
-		}
-	if (ieclink == NULL) 
-		if ( (ieclink = getenv("IECLINK")) == NULL) {
-			perror("environment variable IECLINK not defined");
-			exit(EXIT_FAILURE);
-		}
-	
 	/* delete old unix socket */
     unlink(unixsock);
 
@@ -197,7 +176,7 @@ main(int argc, char *argv[])
 		dup(pipefd2[1]);
 		close(pipefd2[1]);
 
-		if (execl(ieclink, "ieclink", iecserver, iecport, NULL) < 0) 
+		if (execlp(ieclink, ieclink, iecserver, iecport, NULL) < 0) 
 			perror("exec() error"); 
 		exit(EXIT_FAILURE);
 	}
@@ -241,6 +220,8 @@ main(int argc, char *argv[])
 							fdread[1].fd = -1;
 							break;
 						case '<':
+							if (connfd < 0)
+								break;
 							dprintf(connfd, "<\n");
 							close(connfd);
 							connfd = -1;

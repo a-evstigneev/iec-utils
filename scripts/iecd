@@ -1,16 +1,14 @@
 #!/bin/sh
 
-# Derived from https://gist.github.com/sodik82/4f4aafdb52e84102b75d
-
 set -e
 . /lib/lsb/init-functions
 
 # Must be a valid filename
-NAME="iecd"
-PIDFILE=/opt/iecd/$NAME.pid
+NAME="iecloop"
+PIDFILE=/opt/iecd/var/run/$NAME.pid
 
 # Full path to executable
-DAEMON="/usr/bin/setsid /opt/iecd/iecloop.sh"
+DAEMON="/usr/bin/setsid /opt/iecd/$NAME"
 
 # Options
 DAEMON_OPTS=""

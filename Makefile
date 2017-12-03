@@ -1,11 +1,15 @@
 bindir = ./bin
 installdir = /opt/iecd
-workdir = $(installdir)/work
 
+.PHONY: all quemngr asdusend iecproxy ieclink scripts clean install
 
-.PHONY: all iecproxy asdusend quemngr ieclink scripts clean install
+all: quemngr asdusend iecproxy ieclink scripts
 
-all: iecproxy asdusend quemngr ieclink scripts
+quemngr:
+	$(MAKE) -C $@
+
+asdusend:
+	$(MAKE) -C $@
 
 iecproxy: 
 	$(MAKE) -C $@
@@ -13,27 +17,14 @@ iecproxy:
 ieclink:
 	$(MAKE) -C $@
 
-asdusend:
-	$(MAKE) -C $@
-
 scripts:
 	cp -r ./$@/* $(bindir)
-
-quemngr:
-	$(MAKE) -C $@
 
 install:
 	rm -rf $(installdir)/*
 	cp -r $(bindir)/* $(installdir) 
-	mkdir -p $(workdir)/drop
-	mkdir -p $(workdir)/fail
-	mkdir -p $(workdir)/in
-	mkdir -p $(workdir)/act
-	mkdir -p $(workdir)/df/0h0m30s
-	mkdir -p $(workdir)/df/0h0m45s
-	mkdir -p $(workdir)/df/0h0m60s
-	mkdir -p $(installdir)/iecdb
-	mkdir -p $(installdir)/log
+	mkdir -p $(installdir)/iecdb $(installdir)/log
+	mkdir -p $(installdir)/var/smsdrop $(installdir)/var/run
 
 clean:
 	cd $(bindir); rm -rf *

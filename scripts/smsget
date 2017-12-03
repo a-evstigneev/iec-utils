@@ -1,6 +1,6 @@
-#!/bin/dash
+#!/bin/sh
 
-. ${IECDIR}/service-func
+. $IECDIR/service-func
 
 usage() 
 {
@@ -60,18 +60,18 @@ smssep()
 		id=$(echo $id | sed 's/+CMGL: //')
 		sms=$(echo $sms | sed 's/\r$//')
 		num=$(echo $num | sed 's/"//g; s/+//')
-		logmsg "Read sms_id = ${id}, number = ${num}, sms = ${sms}"
+		logmsg "Read sms_id = $id, number = $num, sms = $sms"
 	
-		comaddr=$(grep -q $num $PHONEBOOK && grep $num $PHONEBOOK | awk '{ print $2 }')
+		comaddr=$(grep -q $num $RTU_LIST && grep $num $RTU_LIST | awk '{ print $1 }')
 		if [ $comaddr ]; then
-			senddevice=$(grep $num $PHONEBOOK | awk '{ print $3 }')
+			senddevice=$(grep $num $RTU_LIST | awk '{ print $3 }')
 			
 			case $senddevice in
 			granit)
-				printf '%s\n' "$sms" | ./smsdrop_granit.sh $comaddr &
+				printf '%s\n' "$sms" | smsdrop_granit $comaddr &
 			;;
 			verset)
-				printf '%s\n' "$sms" | ./smsdrop_verset.sh $comaddr &
+				printf '%s\n' "$sms" | smsdrop_verset $comaddr &
 			;;
 			esac
 			wait %1
@@ -80,6 +80,22 @@ smssep()
 			0)
 				logmsg "Sms id $id was written synchronously to disk"
 				listid="${listid}${id} "
+				
+				# Нам надо активировать триггер каждого экземпляра quemngr 
+				while read crts_name rest; do
+					filename="$VARDIR/$crts_name/work/drop/msg"
+					cp $SMSDROP/msg $filename
+					inodename="$VARDIR/$crts_name/work/drop/`stat -c %i $filename`"
+					
+					if sync $filename; then
+						mv "$filename" "$inodename"
+					fi
+					
+					printf "1" > $VARDIR/$crts_name/work/trigger
+				done <<-EOF
+					$(cat $CRTS_LIST | grep -v '^#' | sed '/^$/d')
+				EOF
+				rm $SMSDROP/msg
 			;;
 			1)
 				logmsg "Synchronous recording to disk failed"

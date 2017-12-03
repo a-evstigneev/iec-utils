@@ -60,10 +60,7 @@ int countq;
 
 struct heap *timerheap;
 
-char *logfile, *fifolog;
 int debuglevel;
-
-char *msgdir, *fifotrig, *brokersend;
 
 char *drop	= "./drop/";
 char *fail	= "./fail/";
@@ -80,26 +77,6 @@ init(void)
 	char dir[PATH_MAX] = {0};
 	int i, j, timeout;
 	struct timeval now;
-	
-	daemon_proc = 1;
-	if (logfile && (logstream = fopen(logfile, "w")))
-		;
-	else if (fifolog && (logstream = fopen(fifolog, "a")))
-		;
-	else {
-		logstream = stderr;
-		daemon_proc = 1;
-	}
-	
-	if ( (msgdir = getenv("MSGDIR")) == NULL)
-		ERR_QUIT("environment variable MSGDIR is not defined");
-	else if ( (fifotrig = getenv("FIFOTRIGGER")) == NULL)
-		ERR_QUIT("environment variable FIFOTRIGGER is not defined");
-	else if ( (brokersend = getenv("BROKERSEND")) == NULL)
-		ERR_QUIT("environment variable BROKERSEND is not defined");
-	
-	if (chdir(msgdir) < 0)
-		ERR_SYS("failed to change working directory to %s", msgdir);
 	
 	countq = queue_add();
 	quelist[countq].dir = act;
@@ -269,7 +246,8 @@ main(int argc, char *argv[])
 	
 	struct pollfd fds[2];
 	int trigfd, ret;
-
+	char *workdir, *trigger, *brokersend, *crts_name;
+		
 	int childpid, gopt;
 	
 	int code, indq;
@@ -285,24 +263,36 @@ main(int argc, char *argv[])
 	
 	progname = argv[0];
 
-	while ( (gopt = getopt(argc, argv, ":d:l:f:")) != -1) {
+	while ( (gopt = getopt(argc, argv, ":n:w:t:b:d:")) != -1) {
 		switch(gopt) {
+			case 'n':
+				crts_name = optarg;
+				break;
+			case 'w':
+				workdir = optarg;
+				break;
+			case 't':
+				trigger = optarg;
+				break;
+			case 'b':
+				brokersend = optarg;
+				break;
 			case 'd':
 				debuglevel = atoi(optarg); 
-				break;
-			case 'l':
-				logfile = optarg;
-				break;
-			case 'f':
-				fifolog = optarg;
 				break;
 			case '?':
 			default:
 			break;
 		}
 	}
+
+	logstream = stderr;
+	daemon_proc = 1;
 	
-	init();
+	if (chdir(workdir) < 0)
+		ERR_SYS("failed to change working directory to %s", workdir);
+
+	init(); // Переименовать в initque()
 	
 	if ( (pipe(pipefd1)) < 0)
 		ERR_SYS("can`t create pipefd1", progname);
@@ -322,17 +312,18 @@ main(int argc, char *argv[])
 		close(STDOUT_FILENO);
 		dup(pipefd2[1]);
 		close(pipefd2[1]);
-		if (execl(brokersend, "brokersend", NULL) < 0)
+		if (execlp(brokersend, brokersend, crts_name, NULL) < 0) // brokersend должен запускаться с использованием PATH
 			ERR_SYS("error exec %s", brokersend); 
+		exit(EXIT_FAILURE);
 	}
 	
 	close(pipefd1[0]);
 	close(pipefd2[1]);
 
-	if ( (mkfifo(fifotrig, FILEMODE) < 0) && (errno != EEXIST))
-		ERR_SYS("can`t create fifo %s", fifotrig);
-	if ( (trigfd = open(fifotrig, O_RDONLY | O_NONBLOCK)) < 0)
-		ERR_SYS("error open %s", fifotrig);
+	if ( (mkfifo(trigger, FILEMODE) < 0) && (errno != EEXIST))
+		ERR_SYS("can`t create fifo %s", trigger);
+	if ( (trigfd = open(trigger, O_RDONLY | O_NONBLOCK)) < 0)
+		ERR_SYS("error open %s", trigger);
 	
 	if ( (flags = fcntl(pipefd2[0], F_GETFL, 0)) < 0)
 		ERR_SYS("error get F_GETFL pipefd2", progname);
@@ -414,12 +405,12 @@ main(int argc, char *argv[])
 			LOG_MSG(2, "trigger changed state");
 			if (fds[0].revents & POLLIN) {
 				close(trigfd);
-				if (unlink(fifotrig) < 0)
-					ERR_SYS("error delete file %s", fifotrig);
-				if ( (mkfifo(fifotrig, FILEMODE) < 0) && (errno != EEXIST))
-					ERR_SYS("can`t create fifo %s", fifotrig);
-				if ( (trigfd = open(fifotrig, O_RDONLY | O_NONBLOCK)) < 0)
-					ERR_SYS("error open %s", fifotrig);
+				if (unlink(trigger) < 0)
+					ERR_SYS("error delete file %s", trigger);
+				if ( (mkfifo(trigger, FILEMODE) < 0) && (errno != EEXIST))
+					ERR_SYS("can`t create fifo %s", trigger);
+				if ( (trigfd = open(trigger, O_RDONLY | O_NONBLOCK)) < 0)
+					ERR_SYS("error open %s", trigger);
 				scan_drop();
 			}
 			if (fds[1].revents & POLLIN) {

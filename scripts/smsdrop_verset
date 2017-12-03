@@ -1,4 +1,4 @@
-#!/bin/dash
+#!/bin/sh
 
 smsparse()
 {
@@ -58,23 +58,19 @@ if [ ! -z $1 ]; then
 fi
 
 read sms
-smsconv=$(/bin/echo -n -e `/bin/echo $sms | sed -r 's/.{2}/\\\\x&/g'` | iconv -f UCS-2BE)
-filename=$(mktemp -u -p "${MSGDIR}/drop" "${comaddr}_XXXXXX")
+smsconv=$(/bin/echo -n -e `/bin/echo $sms | sed -r 's/.{2}/\\\\x&/g'` | /usr/bin/iconv -f UCS-2BE)
+filename=$(mktemp -u -p "$SMSDROP" "${comaddr}_XXXXXX")
 
 if printf '%s\n' "$smsconv" | smsparse "$filename" "$comaddr"; then
 	if sync $filename; then
-		inodename="${MSGDIR}/drop/`stat -c %i $filename`"
-		mv "$filename" "$inodename"
-		
 		# Create files that will store the signal values for a general interrogation
 		while read comaddr objaddr type value; do
 			if ! [ -d $IECDB/$comaddr/$type ]; then
 				mkdir -p $IECDB/$comaddr/$type
 			fi
 			echo $value > $IECDB/$comaddr/$type/$objaddr
-		done < $inodename
-		
-		printf "1" > $FIFOTRIGGER
+		done < $filename
+		mv $filename $SMSDROP/msg
 	else
 		exit 1
 	fi
