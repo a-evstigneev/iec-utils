@@ -33,7 +33,8 @@ readreply()
 			continue
 		fi
 		
-		logmsg "$line"
+		logmsg "$line" | sed 's/\r$//'
+		
 		if echo "$line" | grep -e "OK" -e "ERROR" 1>/dev/null 2>&1; then
 			break
 		fi
@@ -53,12 +54,17 @@ smssep()
 				exit 1
 			fi
 			break
+		elif echo "$id" | grep -q 'ERROR'; then
+			logmsgtime "Error was detected on the device $GSMDEV"
+			exit 1
+		elif echo "$id" | grep -v -q "CMGL"; then
+			logmsgtime "Undefined message $id from device $GSMDEV"
+			exit 1
 		fi
 		
 		read sms
 		
 		id=$(echo $id | sed 's/+CMGL: //')
-		sms=$(echo $sms | sed 's/\r$//')
 		num=$(echo $num | sed 's/"//g; s/+//')
 		logmsg "Read sms_id = $id, number = $num, sms = $sms"
 	
@@ -117,7 +123,7 @@ smssep()
 		atsend 4 "AT+CMGD=$i"
 		logmsg "Delete sms id $i"
 		readreply 3
-		atsend 4 "AT+CMGD=$i"
+#		atsend 4 "AT+CMGD=$i"
 	done
 }
 
