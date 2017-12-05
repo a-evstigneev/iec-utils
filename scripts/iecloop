@@ -29,7 +29,7 @@ test -x $IECDIR/ieclink || exit 0
 cd $VARDIR
 while read crts_name crts_address crts_port; do
 	mkdir -p $LOGDIR/$crts_name
-	mkdir $crts_name && cd $crts_name
+	mkdir -p $crts_name; cd $crts_name
 	mkdir -p \
 		./work/drop \
 		./work/fail \
@@ -45,6 +45,8 @@ while read crts_name crts_address crts_port; do
 done <<-EOF
 	$(cat $CRTS_LIST | grep -v '^#' | sed '/^$/d')
 EOF
+
+cd $IECDIR
 
 exec 2>$LOGDIR/smsget.log 1>&2
 

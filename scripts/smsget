@@ -25,17 +25,17 @@ atsend()
 
 readreply()
 {
-	local fd
+	local fd string
 	fd=$1
 
-	while read <&"$fd" line; do
-		if echo "$line" | grep '^[[:space:]]\{1\}' 1>/dev/null 2>&1; then
+	while read <&"$fd" string; do
+		if echo "$string" | grep '^[[:space:]]\{1\}' 1>/dev/null 2>&1; then
 			continue
 		fi
 		
-		logmsg "$line" | sed 's/\r$//'
+		logmsg "$string" | sed 's/\r$//'
 		
-		if echo "$line" | grep -e "OK" -e "ERROR" 1>/dev/null 2>&1; then
+		if echo "$string" | grep -e "OK" -e "ERROR" 1>/dev/null 2>&1; then
 			break
 		fi
 	done
@@ -43,29 +43,34 @@ readreply()
 
 smssep()
 {
-	local listid smsnum comaddr
+	local string listid smsnum comaddr
 	
 	listid=""; smsnum=0; comaddr=""
 	
-	while IFS="," read id stat num sp date; do
-		if echo "$id" | grep -q 'OK'; then
+	while read string; do
+		if echo "$string" | grep -q 'OK'; then
 			if [ $smsnum -eq 0 ]; then
 				logmsgtime "Sms list is empty"
-				exit 1
+				exit 0 
 			fi
 			break
-		elif echo "$id" | grep -q 'ERROR'; then
+		elif echo "$string" | grep -q 'ERROR'; then
 			logmsgtime "Error was detected on the device $GSMDEV"
 			exit 1
-		elif echo "$id" | grep -v -q "CMGL"; then
-			logmsgtime "Undefined message $id from device $GSMDEV"
+		elif echo "$string" | grep -v -q "CMGL"; then
+			logmsgtime "Undefined string \"$string\" from device $GSMDEV"
 			exit 1
 		fi
 		
+		IFS="," read id stat num sp date <<-EOF
+			$string
+		EOF
+
 		read sms
 		
 		id=$(echo $id | sed 's/+CMGL: //')
 		num=$(echo $num | sed 's/"//g; s/+//')
+		
 		logmsg "Read sms_id = $id, number = $num, sms = $sms"
 	
 		comaddr=$(grep -q $num $RTU_LIST && grep $num $RTU_LIST | awk '{ print $1 }')
