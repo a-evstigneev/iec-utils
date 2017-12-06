@@ -1,1 +1,3 @@
+#!/bin/sh
+
 date '+%S%3N:%_M:%_k:%e:%u:%_m:%y' | sed 's/^0*//g; s/ //g'
