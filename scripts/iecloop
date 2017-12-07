@@ -26,27 +26,23 @@ test -x $IECDIR/iecproxy || exit 0
 test -x $IECDIR/ieclink || exit 0
 #test -x /usr/sbin/watchdog || exit 0
 
-cd $VARDIR
+cd $IECDIR
 while read crts_name crts_address crts_port; do
 	mkdir -p $LOGDIR/$crts_name
-	mkdir -p $crts_name; cd $crts_name
-	mkdir -p \
-		./work/drop \
-		./work/fail \
-		./work/in \
-		./work/act \
-		./work/df/0h0m30s \
-		./work/df/0h0m45s \
-		./work/df/0h0m60s
+	mkdir -p $VARDIR/$crts_name/work/drop
+	mkdir -p $VARDIR/$crts_name/work/fail
+	mkdir -p $VARDIR/$crts_name/work/in
+	mkdir -p $VARDIR/$crts_name/work/act
+	mkdir -p $VARDIR/$crts_name/work/df/0h0m30s
+	mkdir -p $VARDIR/$crts_name/work/df/0h0m45s
+	mkdir -p $VARDIR/$crts_name/work/df/0h0m60s
 	
-	quemngr	-n $crts_name -w ./work -t ./trigger -b iecbroker -d 3 2>$LOGDIR/$crts_name/quemngr.log &
-	iecproxy -u ./socket -s $crts_address -p $crts_port -l ieclink -g ginterrog 2>$LOGDIR/$crts_name/iecproxy.log &
-	cd ..
+	quemngr	-n $crts_name -w $VARDIR/$crts_name/work -t $VARDIR/$crts_name/work/trigger -b iecbroker -d 3 2>$LOGDIR/$crts_name/quemngr.log &
+	
+	iecproxy -u $VARDIR/$crts_name/socket -s $crts_address -p $crts_port -l ieclink -g ginterrog 2>$LOGDIR/$crts_name/iecproxy.log &
 done <<-EOF
 	$(cat $CRTS_LIST | grep -v '^#' | sed '/^$/d')
 EOF
-
-cd $IECDIR
 
 exec 2>$LOGDIR/smsget.log 1>&2
 

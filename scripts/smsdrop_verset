@@ -7,6 +7,8 @@ smsparse()
 		BEGIN {
 			FS=" "; FILE = file; COMADDR = comaddr; 
 			TYPE["M_SP_NA_1"] = 1
+			TYPE["M_SP_TB_1"] = 30
+			cmd="/bin/date '+%S%3N:%_M:%_k:%e:%u:%_m:%y' | /bin/sed 's/^0*//g; s/ //g'";
 		}
 		
 		{ 
@@ -45,8 +47,10 @@ smsparse()
 			# Invalid data
 			if ( value == 0 && objaddr == 0)
 				exit 2
-				
-			printf("%s %s %s %s\n", COMADDR, objaddr, TYPE["M_SP_NA_1"], value) >> FILE
+			
+			cmd | getline timestamp; close(cmd)
+			
+			printf("%s %s %s %s %s %s\n", COMADDR, objaddr, TYPE["M_SP_TB_1"], value, "not_use", timestamp) >> FILE
 			close(file)
 		}
 	' 
@@ -64,11 +68,11 @@ filename=$(mktemp -u -p "$SMSDROP" "${comaddr}_XXXXXX")
 if printf '%s\n' "$smsconv" | smsparse "$filename" "$comaddr"; then
 	if sync $filename; then
 		# Create files that will store the signal values for a general interrogation
-		while read comaddr objaddr type value; do
+		while read comaddr objaddr type value qds timestamp; do
 			if ! [ -d $IECDB/$comaddr/$type ]; then
 				mkdir -p $IECDB/$comaddr/$type
 			fi
-			echo $value > $IECDB/$comaddr/$type/$objaddr
+			echo $value $qds > $IECDB/$comaddr/$type/$objaddr
 		done < $filename
 		mv $filename $SMSDROP/msg
 	else

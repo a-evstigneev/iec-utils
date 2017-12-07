@@ -8,7 +8,9 @@ transform_asdu()
 	
 	awk -v cot=$1 '
 	BEGIN {
-		ASDU[1]; ASDU[13]; ASDU[30]; 
+		# 1 - M_SP_NA_1, 13 - M_ME_NC_1, 30 - M_SP_TB_1, 36 - M_ME_TF_1
+		
+		ASDU[1]; ASDU[13]; ASDU[30]; ASDU[36]; 
 		ASDU_TYPE; ASDU_COUNT; ASDU_ADDR; OBJ_ADDR; SQ; NUMHR; DATA; COT = cot;
 		
 		cmd="/usr/bin/printf %a " 2; cmd | getline twohex; close(cmd)
@@ -33,29 +35,39 @@ transform_asdu()
 	END { print_asdu() }
 
 	function assemble_asdu() {
-		if ( (length(DATA) + length(iehex($3))) > 498) {
-			print_asdu(); init_elem()
-		}
-		else if ($2 == OBJ_ADDR + 1) {
-			if ((SQ == 0) && (ASDU_COUNT == 1)) {
-				SQ = 1; ++ASDU_COUNT; OBJ_ADDR = $2; DATA = DATA iehex($3)
+		if ( ($3 == 30) || ($3 == 36)) {
+			if ((length(DATA) + length(form_obj($2, $3))) > 498) {
+				print_asdu(); init_elem()
 			}
-			else if (SQ == 1) {
-				++ASDU_COUNT; OBJ_ADDR = $2; DATA = DATA iehex($3)
-			}
-			else if ((SQ == 0) && (ASDU_COUNT > 1)) {
-				print_asdu(); init_elem()  
-			}
-		}
-		else if ((length(DATA) + length(form_obj($2, $3))) > 498) {
-			print_asdu(); init_elem()
-		}
-		else if ($2 != OBJ_ADDR + 1) {
-			if (SQ == 0) {
+			else {
 				++ASDU_COUNT; OBJ_ADDR = $2; DATA = DATA form_obj($2, $3)
 			}
-			else if (SQ == 1) {
+		}
+		else {	
+			if ( (length(DATA) + length(iehex($3))) > 498) {
 				print_asdu(); init_elem()
+			}
+			else if ($2 == OBJ_ADDR + 1) {
+				if ((SQ == 0) && (ASDU_COUNT == 1)) {
+					SQ = 1; ++ASDU_COUNT; OBJ_ADDR = $2; DATA = DATA iehex($3)
+				}
+				else if (SQ == 1) {
+					++ASDU_COUNT; OBJ_ADDR = $2; DATA = DATA iehex($3)
+				}
+				else if ((SQ == 0) && (ASDU_COUNT > 1)) {
+					print_asdu(); init_elem()  
+				}
+			}
+			else if ((length(DATA) + length(form_obj($2, $3))) > 498) {
+				print_asdu(); init_elem()
+			}
+			else if ($2 != OBJ_ADDR + 1) {
+				if (SQ == 0) {
+					++ASDU_COUNT; OBJ_ADDR = $2; DATA = DATA form_obj($2, $3)
+				}
+				else if (SQ == 1) {
+					print_asdu(); init_elem()
+				}
 			}
 		}
 	}
@@ -84,7 +96,9 @@ transform_asdu()
 		else if (type == 13) 
 			strhex = float2hex($4) int2hex(qds($5), 1)
 		else if (type == 30)
-			strhex = int2hex($4, 1) int2hex(CP56Time2a($5, 1), 7)
+			strhex = int2hex($4 + qds($5), 1) int2hex(CP56Time2a($6, 1, 0), 7)
+		else if (type == 36)
+			strhex = float2hex($4) int2hex(qds($5), 1) int2hex(CP56Time2a($6, 1, 0), 7)
 		return strhex
 	}
 
@@ -147,10 +161,10 @@ transform_asdu()
 		}
 	}
 
-	function CP56Time2a(timestr, sparebit,	sum, elem, i, n)
+	function CP56Time2a(timestr, sparebit, subit,	sum, elem)
 	{
-		n = split(timestr, elem, ":")
-		sum = elem[1] + (elem[2] + sparebit*2^6)*2^16 + elem[3]*2^24 + (elem[4] + elem[5]*2^5)*2^32 + elem[6]*2^40 + elem[7]*2^48
+		split(timestr, elem, ":")
+		sum = elem[1] + (elem[2] + sparebit*2^6)*2^16 + (elem[3] + subit*2^7)*2^24 + (elem[4] + elem[5]*2^5)*2^32 + elem[6]*2^40 + elem[7]*2^48
 		
 		return sum
 	}
