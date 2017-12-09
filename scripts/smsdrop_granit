@@ -8,8 +8,10 @@ smsparse()
 	awk -v file=$1 -v comaddr=$2 '
 		BEGIN {
 			FS=","; FILE = file; COMADDR = comaddr; 
-			TYPE["M_SP_NA_1"] = 1
-			TYPE["M_ME_NC_1"] = 13
+			TYPE["M_SP_TB_1"] = 30
+			TYPE["M_ME_TF_1"] = 36
+			cmd="/bin/date \047+%S%3N:%_M:%_k:%e:%u:%_m:%y\047 | /bin/sed \047s/^0*//g; s/ //g\047"
+
 		}
 		
 		{ 
@@ -24,9 +26,11 @@ smsparse()
 					$i = substr($i, index($i, "=") + 1)
 			}
 			
+			cmd | getline timestamp; close(cmd)	
+
 			for (i = 1; i < NF; ++i )
-				printf("%s %s %s %s\n", COMADDR, i, TYPE["M_SP_NA_1"], $i) >> FILE
-			printf("%s %s %s %s\n", COMADDR, 1, TYPE["M_ME_NC_1"], $NF) >> FILE
+				printf("%s %s %s %s %s %s\n", COMADDR, i, TYPE["M_SP_TB_1"], $i, "not_used", timestamp) >> FILE
+			printf("%s %s %s %s %s %s\n", COMADDR, 1, TYPE["M_ME_TF_1"], $NF, "not_used", timestamp) >> FILE
 			close(file)
 		}
 	' 
@@ -57,6 +61,15 @@ if printf '%s\n' "$sms" | smsparse "$filename" "$comaddr"; then
 
 		# Create files that will store the signal values for a general interrogation
 		while read comaddr objaddr type value; do
+			case $type in
+				30)
+					type=1
+					;;
+				36)
+					type=13
+					;;
+			esac
+			
 			if ! [ -d $IECDB/$comaddr/$type ]; then
 				mkdir -p $IECDB/$comaddr/$type
 			fi

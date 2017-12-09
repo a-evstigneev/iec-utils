@@ -6,9 +6,8 @@ smsparse()
 	awk -v file=$1 -v comaddr=$2 '
 		BEGIN {
 			FS=" "; FILE = file; COMADDR = comaddr; 
-			TYPE["M_SP_NA_1"] = 1
 			TYPE["M_SP_TB_1"] = 30
-			cmd="/bin/date '+%S%3N:%_M:%_k:%e:%u:%_m:%y' | /bin/sed 's/^0*//g; s/ //g'";
+			cmd="/bin/date \047+%S%3N:%_M:%_k:%e:%u:%_m:%y\047 | /bin/sed \047s/^0*//g; s/ //g\047"
 		}
 		
 		{ 
@@ -50,7 +49,7 @@ smsparse()
 			
 			cmd | getline timestamp; close(cmd)
 			
-			printf("%s %s %s %s %s %s\n", COMADDR, objaddr, TYPE["M_SP_TB_1"], value, "not_use", timestamp) >> FILE
+			printf("%s %s %s %s %s %s\n", COMADDR, objaddr, TYPE["M_SP_TB_1"], value, "not_used", timestamp) >> FILE
 			close(file)
 		}
 	' 
@@ -69,6 +68,7 @@ if printf '%s\n' "$smsconv" | smsparse "$filename" "$comaddr"; then
 	if sync $filename; then
 		# Create files that will store the signal values for a general interrogation
 		while read comaddr objaddr type value qds timestamp; do
+			type=1
 			if ! [ -d $IECDB/$comaddr/$type ]; then
 				mkdir -p $IECDB/$comaddr/$type
 			fi
