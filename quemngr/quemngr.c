@@ -13,6 +13,7 @@
 #include <time.h>
 #include <sys/time.h>
 #include <syslog.h>
+#include <signal.h>
 
 #include "xalloc.h"
 #include "quecontrol.h"
@@ -57,6 +58,8 @@ extern int daemon_proc;
 
 extern struct msglist *quelist;
 int countq;
+
+pid_t childpid;
 
 struct heap *timerheap;
 
@@ -238,6 +241,27 @@ check_response(ino_t inode, int retval, char *description)
 	return 0;
 }
 
+void sig_term(int signum)
+{
+	if (childpid > 0) 
+		kill(childpid, SIGTERM);
+	if (childpid == 0)
+		exit(0);
+}
+
+void sig_chld(int signum)
+{
+	pid_t pid;
+	int stat;
+
+	pid = waitpid(-1, &stat, WNOHANG);
+	
+	if (pid == childpid) {
+		childpid = 0;
+		raise(SIGTERM);
+	}
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -248,7 +272,7 @@ main(int argc, char *argv[])
 	int trigfd, ret;
 	char *workdir, *trigger, *brokersend, *crts_name;
 		
-	int childpid, gopt;
+	int gopt;
 	
 	int code, indq;
 	char description[DESCMAX] = {0};	
@@ -291,6 +315,9 @@ main(int argc, char *argv[])
 	
 	if (chdir(workdir) < 0)
 		ERR_SYS("failed to change working directory to %s", workdir);
+	
+	signal(SIGTERM, sig_term);
+	signal(SIGCHLD, sig_chld);
 
 	init(); // Переименовать в initque()
 	

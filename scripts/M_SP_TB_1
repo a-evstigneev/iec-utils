@@ -1,3 +1,0 @@
-#!/bin/sh
-
-/bin/date '+%S%3N:%_M:%_k:%e:%u:%_m:%y' | /bin/sed 's/^0*//g; s/ //g'

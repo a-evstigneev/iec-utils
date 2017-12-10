@@ -18,6 +18,8 @@
 #define CON_INTERROG "64010700FFFF00000014"
 #define END_INTERROG "64010A00FFFF00000014"
 
+pid_t childpid;
+
 ssize_t
 readline(int fd, void *buf, size_t maxlen)
 {
@@ -98,18 +100,26 @@ ginterrog(int fdw, const char *script_path)
 	return 0;
 }
 
-#if 0
-void sig_chld(int signo) 
+void sig_term(int signum)
 {
-	pid_t pid;
+	if (childpid > 0)  
+		kill(childpid, SIGTERM);
+	if (childpid == 0)
+		exit(0);
+}
+
+void sig_chld(int signum)
+{
+    pid_t pid;
 	int stat;
 
-	pid = wait(&stat);
+	pid = waitpid(-1, &stat, WNOHANG);
 	
-	exit(2);
+	if (pid == childpid) {
+		childpid = 0;
+		raise(SIGTERM);
+	}
 }
-#endif
-
 
 int
 main(int argc, char *argv[])
@@ -120,7 +130,6 @@ main(int argc, char *argv[])
 	int i, n, nready, gopt, ret;
 		
 	int pipefd1[2], pipefd2[2];
-	int childpid;
 	
 	char buf[BUF_SIZE] = {0};
 	
@@ -148,6 +157,9 @@ main(int argc, char *argv[])
 				break;
 		}
 	}
+	
+	signal(SIGTERM, sig_term);
+	signal(SIGCHLD, sig_chld);
 	
 	/* delete old unix socket */
     unlink(unixsock);
@@ -180,6 +192,7 @@ main(int argc, char *argv[])
 			perror("exec() error"); 
 		exit(EXIT_FAILURE);
 	}
+	
 	close(pipefd1[0]);
 	close(pipefd2[1]);
 
