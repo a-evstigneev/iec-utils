@@ -3,7 +3,10 @@ installdir = /opt/iecd
 
 .PHONY: all quemngr asdusend iecproxy ieclink scripts clean install
 
-all: quemngr asdusend iecproxy ieclink scripts
+all: mkdirbin quemngr asdusend iecproxy ieclink scripts
+
+mkdirbin:
+	mkdir -p ./bin
 
 quemngr:
 	$(MAKE) -C $@
