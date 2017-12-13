@@ -1,18 +1,14 @@
 #!/bin/sh
 
-trap 'kill -- -$$; exit 0' TERM
-
 export IECDIR="/opt/iecd"
 export IECDB="$IECDIR/iecdb"
 export LOGDIR="$IECDIR/log"
 export VARDIR="$IECDIR/var"
 export SMSDROP="$VARDIR/smsdrop"
 export RUNDIR="$VARDIR/run"
-
-export GSMDEV="/dev/ttyUSB0"
-
 export RTU_LIST="$IECDIR/rtu_list.conf"
 export CRTS_LIST="$IECDIR/crts_list.conf"
+export GSMDEV="/dev/ttyUSB0"
 
 test -x $IECDIR/smsget || exit 0
 test -x $IECDIR/smsdrop_verset || exit 0
@@ -25,6 +21,27 @@ test -x $IECDIR/ginterrog || exit 0
 test -x $IECDIR/iecproxy || exit 0
 test -x $IECDIR/ieclink || exit 0
 #test -x /usr/sbin/watchdog || exit 0
+
+
+tmpfile=$(mktemp -p $RUNDIR childpids.XXXXXX)
+
+sigterm()
+{
+	local pid 
+	trap '' TERM CHLD
+	
+	jobs -p >$tmpfile
+	while read pid; do
+		kill $pid
+	done <<-EOF
+		$(cat $tmpfile)
+	EOF
+
+	trap '-' TERM
+}
+
+trap 'rm -rf $RUNDIR/*; exit 0' EXIT
+trap 'sigterm' TERM
 
 cd $IECDIR
 while read crts_name crts_address crts_port; do
@@ -49,10 +66,9 @@ exec 2>$LOGDIR/smsget.log 1>&2
 if smsget -c -F $GSMDEV; then
 	stty raw -echo -F $GSMDEV
 	smsget -d -F $GSMDEV
-	while true; do
-		smsget -g -F $GSMDEV
-		sleep 15 
-	done 
+	smsget -t 10 -g -F $GSMDEV & 
 else
 	exit 1
 fi
+
+wait

@@ -1,16 +1,16 @@
 #!/bin/sh
 
-. $IECDIR/service-func
-timesleep=10
+timesleep=10 #default value
+#. $IECDIR/service-func
+. /home/artem/github/iec-utils/scripts/service-func
 
 usage() 
 {
-	echo "Usage: $0 [-idcgt] -F DEVICE"
+	echo "Usage: $0 [-idcg] -F DEVICE"
 	echo " "
 	echo "  -i  Device information."
 	echo "  -d  Device initialization."
 	echo "  -c  Device check."
-	echo "  -t	Time to sleep." 
 	echo "  -g  Receiving messages from the device."
 	echo "  -F  Name of gsm-device (example: /dev/ttyUSB0)"
 	echo " "
@@ -142,14 +142,14 @@ if [ $# -eq 0 ]; then
 fi
 
 
-while getopts "cdghit:F:" opt; do
+while getopts "cdghis:F:" opt; do
 	case $opt in
 	F) gsmdev=$OPTARG ;;
 	i) info=1 ;;
 	d) devinit=1 ;;
 	g) get=1 ;;
 	c) check=1 ;;
-	t) timesleep=$OPTARG ;;
+	s) timesleep=$OPTARG ;;
 	*) usage; exit ;;
 	esac
 done
