@@ -32,7 +32,7 @@ sigterm()
 	
 	jobs -p >$tmpfile
 	while read pid; do
-		kill $pid
+		kill $pid >/dev/null 2>&1
 	done <<-EOF
 		$(cat $tmpfile)
 	EOF
@@ -61,14 +61,12 @@ done <<-EOF
 	$(cat $CRTS_LIST | grep -v '^#' | sed '/^$/d')
 EOF
 
-exec 2>$LOGDIR/smsget.log 1>&2
+exec 2>$LOGDIR/smsget.log
 
 if smsget -c -F $GSMDEV; then
 	stty raw -echo -F $GSMDEV
 	smsget -d -F $GSMDEV
 	smsget -t 10 -g -F $GSMDEV & 
-else
-	exit 1
 fi
 
 wait

@@ -1,7 +1,7 @@
 #!/bin/sh
 
 . $IECDIR/service-func
-timesleep=10
+sleeptime=10
 
 usage() 
 {
@@ -31,13 +31,13 @@ readreply()
 	fd=$1
 
 	while read <&"$fd" string; do
-		if echo "$string" | grep '^[[:space:]]\{1\}' 1>/dev/null 2>&1; then
+		if /usr/bin/printf '%s\n' "$string" | grep '^[[:space:]]\{1\}' >/dev/null 2>&1; then
 			continue
 		fi
 		
-		logmsg "$string" | sed 's/\r$//'
+		/usr/bin/printf '\t%s\n' "$string" | sed 's/\r$//'
 		
-		if echo "$string" | grep -e "OK" -e "ERROR" 1>/dev/null 2>&1; then
+		if /usr/bin/printf '%s\n' "$string" | grep -e "OK" -e "ERROR" >/dev/null 2>&1; then
 			break
 		fi
 	done
@@ -106,7 +106,7 @@ smssep()
 						mv "$filename" "$inodename"
 					fi
 					
-					printf "1" > $VARDIR/$crts_name/work/trigger
+					/usr/bin/printf "1" > $VARDIR/$crts_name/work/trigger
 				done <<-EOF
 					$(cat $CRTS_LIST | grep -v '^#' | sed '/^$/d')
 				EOF
@@ -128,19 +128,19 @@ smssep()
 		smsnum=$(($smsnum + 1))
 	done
 	
-	for i in $listid; do
-		atsend 4 "AT+CMGD=$i"
-		logmsg "Delete sms id $i"
-		readreply 3
-		sleep 1
-	done
+	echo "$listid"
+#	for i in $listid; do
+#		atsend 4 "AT+CMGD=$i"
+#		logmsg "Delete sms id $i"
+#		readreply 3
+#		sleep 1
+#	done
 }
 
 if [ $# -eq 0 ]; then
 	usage
 	exit 0
 fi
-
 
 while getopts "cdghit:F:" opt; do
 	case $opt in
@@ -149,7 +149,7 @@ while getopts "cdghit:F:" opt; do
 	d) devinit=1 ;;
 	g) get=1 ;;
 	c) check=1 ;;
-	t) timesleep=$OPTARG ;;
+	t) sleeptime=$OPTARG ;;
 	*) usage; exit ;;
 	esac
 done
@@ -168,37 +168,71 @@ if [ $check ]; then
 	fi
 fi
 
-
-exec 3<$gsmdev 4>$gsmdev
-
 # Info about gsm-equipment
 if [ $info ]; then
-	logmsgtime "Information about $gsmdev"
-	for cmd in "AT#LSCRIPT" "AT+CREG?" "AT+CPIN?" "AT+CSQ" "AT+CREG?" "AT+COPS?"; do
-		atsend 4 $cmd
-		sleep 1
-		readreply 3
-	done
+	if [ -c $gsmdev ]; then
+		exec 3<$gsmdev 4>$gsmdev
+		logmsgtime "Information about $gsmdev"
+	
+		for cmd in "AT#LSCRIPT" "AT+CREG?" "AT+CPIN?" "AT+CSQ" "AT+CREG?" "AT+COPS?"; do
+			atsend 4 $cmd
+			sleep 1
+			readreply 3 >&2
+		done
+		exec 3<&- 4>&-
+	fi
 fi
 
 # Gsm device init
 if [ $devinit ]; then
-	logmsgtime "Gsm device $gsmdev initialization"
-	for cmd in 'AT+CSCS="GSM"' "AT+CSMS=0" 'AT+CMGF=1' 'AT+CPMS="SM","SM","SM"' 'AT+CNMI=2,0,0,0,0'; do
-		logmsg $cmd
-		atsend 4 $cmd
-		sleep 1
-		readreply 3
-	done
+	if [ -c $gsmdev ]; then 
+		exec 3<$gsmdev 4>$gsmdev
+		logmsgtime "Gsm device $gsmdev initialization"
+		
+		for cmd in 'AT+CSCS="GSM"' "AT+CSMS=0" 'AT+CMGF=1' 'AT+CPMS="SM","SM","SM"' 'AT+CNMI=2,0,0,0,0'; do
+			logmsg $cmd
+			atsend 4 $cmd
+			sleep 1
+			readreply 3 >&2
+		done
+		exec 3<&- 4>&-
+	fi
 fi
 
 # Get sms from gsm-equipment
 if [ $get ]; then
 	while true; do
-		logmsgtime "Get sms list from $gsmdev"
-		atsend 4 'AT+CMGL="ALL"'
-		sleep 4
-		readreply 3 | smssep
-		sleep $timesleep
+		if [ -c $gsmdev ]; then
+			exec 3<$gsmdev 4>$gsmdev
+			logmsgtime "Get sms list from $gsmdev"
+			atsend 4 'AT+CMGL="ALL"'
+			sleep 4
+			
+			if [ -c $gsmdev ]; then
+				smslistdel=$(readreply 3 | smssep)
+				
+				if ! [ -z "$smslistdel" ]; then  
+					for i in $smslistdel; do
+						atsend 4 "AT+CMGD=$i"
+						logmsg "Delete sms id $i"
+						readreply 3
+						sleep 1
+					done
+				fi
+				
+				smslistdel=""
+
+				exec 3<&- 4>&-
+			else
+				logmsgtime "Device $gsmdev is not available"
+				exec 3<&- 4>&-
+			fi	
+				
+			sleep $sleeptime
+		else
+			logmsgtime "Device $gsmdev is not available now"
+			exec 3<&- 4>&-
+			sleep $sleeptime 
+		fi
 	done
 fi

@@ -3,7 +3,7 @@ logmsg()
 	local msg 
 	
 	msg=$1
-	printf '\t%s\n' "$msg" 
+	/usr/bin/printf '\t%s\n' "$msg" >&2 
 }
 
 logmsgtime()
@@ -12,5 +12,5 @@ logmsgtime()
 	
 	msg=$1
 	pid=$(echo $$)
-	printf '%s\n' "$(LANG=en date '+%b %d %T') $(cat /etc/hostname) $(basename "$0")[${pid}]: $msg"
+	/usr/bin/printf '%s\n' "$(LANG=en date '+%b %d %T') $(cat /etc/hostname) $(basename "$0")[${pid}]: $msg" >&2
 }
