@@ -63,7 +63,7 @@ EOF
 
 exec 2>$LOGDIR/smsget.log
 
-if smsget -c -F $GSMDEV; then
+if [ -c $GSMDEV ]; then
 	stty raw -echo -F $GSMDEV
 	smsget -d -F $GSMDEV
 	smsget -t 10 -g -F $GSMDEV & 
