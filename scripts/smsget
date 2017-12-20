@@ -32,11 +32,11 @@ readreply()
 	fd=$1
 
 	while read <&"$fd" string; do
-		if /usr/bin/printf '%s\n' "$string" | grep '^[[:space:]]\{1\}' >/dev/null 2>&1; then
+		if /usr/bin/printf '%s\n' "$string" | grep '^[[:space:]]\{1,\}' >/dev/null 2>&1; then
 			continue
 		fi
 		
-		/usr/bin/printf '%s\n' "$string" | sed 's/\r$//'
+		/usr/bin/printf '%s\n' "$string" | sed 's/\r$//' | sed '/^$/d'
 		
 		if /usr/bin/printf '%s\n' "$string" | grep -e "OK" -e "ERROR" >/dev/null 2>&1; then
 			break
@@ -232,9 +232,9 @@ if [ $get ]; then
 						;;
 					*)
 						for i in $smsiddel; do
-							if  rwdev "$gsmdev" "AT+CMGD=$i" result; then
+							if  rwdev "$gsmdev" "AT+CMGD=$i" reply; then
 								logmsg "Delete sms id $i"
-								logmsg "$result"
+								logmsg "$reply"
 							else
 								logmsgtime "Device $gsmdev is not available"
 								break
