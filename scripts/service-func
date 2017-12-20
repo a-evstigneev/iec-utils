@@ -3,7 +3,7 @@ logmsg()
 	local msg 
 	
 	msg=$1
-	/usr/bin/printf '\t%s\n' "$msg" >&2 
+	/usr/bin/printf '%s\n' "$msg" >&2 
 }
 
 logmsgtime()
