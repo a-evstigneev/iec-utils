@@ -226,6 +226,7 @@ if [ $get ]; then
 						;;
 					"error")
 						logmsgtime "Error was detected on the device $gsmdev"
+						sleep 7
 						;;
 					"undef")
 						logmsgtime "Undefined string \"$response\" from device $gsmdev"	
