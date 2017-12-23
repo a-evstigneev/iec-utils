@@ -19,46 +19,46 @@ usage()
 
 smssep()
 {
-	local _line _listid _smsnum _comaddr _crts_name _inode
-	local _id _stat _num _sp _date _sms _senddev _filename
+	local string listid smsnum comaddr
+	local id stat num sp date
 
-	_listid=""; _smsnum=0; _comaddr=""
+	listid=""; smsnum=0; comaddr=""
 	
-	while read _line; do
-		if echo "$_line" | grep -q 'OK'; then
-			if [ $_smsnum -eq 0 ]; then
-				_listid="empty"
+	while read string; do
+		if echo "$string" | grep -q 'OK'; then
+			if [ $smsnum -eq 0 ]; then
+				listid="empty"
 			fi
 			break
-		elif echo "$_line" | grep -q 'ERROR'; then
-			_listid="error"
+		elif echo "$string" | grep -q 'ERROR'; then
+			listid="error"
 			break
-		elif echo "$_line" | grep -v -q "CMGL"; then
-			_listid="undef"
+		elif echo "$string" | grep -v -q "CMGL"; then
+			listid="undef"
 			break
 		fi
 		
-		IFS="," read _id _stat _num _sp _date <<-EOF
-			$_line
+		IFS="," read id stat num sp date <<-EOF
+			$string
 		EOF
 
-		read _sms
+		read sms
 		
-		_id=$(echo $_id | sed 's/+CMGL: //')
-		_num=$(echo $_num | sed 's/"//g; s/+//')
+		id=$(echo $id | sed 's/+CMGL: //')
+		num=$(echo $num | sed 's/"//g; s/+//')
 		
-		logmsg "Read sms_id = $_id, number = $_num, sms = $_sms"
+		logmsg "Read sms_id = $id, number = $num, sms = $sms"
 	
-		_comaddr=$(grep -q $_num $RTU_LIST && grep $_num $RTU_LIST | awk '{ print $1 }')
-		if [ $_comaddr ]; then
-			_senddev=$(grep $_num $RTU_LIST | awk '{ print $3 }')
+		comaddr=$(grep -q $num $RTU_LIST && grep $num $RTU_LIST | awk '{ print $1 }')
+		if [ $comaddr ]; then
+			senddevice=$(grep $num $RTU_LIST | awk '{ print $3 }')
 			
-			case $_senddev in
+			case $senddevice in
 			granit)
-				/usr/bin/printf '%s\n' "$_sms" | smsdrop_granit $_comaddr &
+				/usr/bin/printf '%s\n' "$sms" | smsdrop_granit $comaddr &
 				;;
 			verset)
-				/usr/bin/printf '%s\n' "$_sms" | smsdrop_verset $_comaddr &
+				/usr/bin/printf '%s\n' "$sms" | smsdrop_verset $comaddr &
 				;;
 			esac
 			
@@ -66,20 +66,20 @@ smssep()
 			
 			case $? in
 			0)
-				logmsg "Sms id $_id was written synchronously to disk"
-				_listid="${_listid}${_id} "
+				logmsg "Sms id $id was written synchronously to disk"
+				listid="${listid}${id} "
 				
-				# Trigger activation for each instance quemngr
-				while read _crts_name rest; do
-					_filename="$VARDIR/$_crts_name/work/drop/msg"
-					cp $SMSDROP/msg $_filename
-					_inode="$VARDIR/$_crts_name/work/drop/`stat -c %i $_filename`"
+				# Нам надо активировать триггер каждого экземпляра quemngr 
+				while read crts_name rest; do
+					filename="$VARDIR/$crts_name/work/drop/msg"
+					cp $SMSDROP/msg $filename
+					inodename="$VARDIR/$crts_name/work/drop/`stat -c %i $filename`"
 					
-					if sync $_filename; then
-						mv "$_filename" "$_inode"
+					if sync $filename; then
+						mv "$filename" "$inodename"
 					fi
 					
-					/usr/bin/printf "1" > $VARDIR/$_crts_name/work/trigger
+					/usr/bin/printf "1" > $VARDIR/$crts_name/work/trigger
 				done <<-EOF
 					$(cat $CRTS_LIST | grep -v '^#' | sed '/^$/d')
 				EOF
@@ -90,56 +90,62 @@ smssep()
 			;;
 			2)
 				logmsg "Sms message format is incorrect"
-				_listid="${_listid}${_id} "
+				listid="${listid}${id} "
 			;;
 			esac
 		else
-			logmsg "Phone number $_num is not valid"
-			_listid="${_listid}${_id} "
+			logmsg "Phone number $num is not valid"
+			listid="${listid}${id} "
 		fi
 		
-		_smsnum=$(($_smsnum + 1))
+		smsnum=$(($smsnum + 1))
 	done
 	
-	echo "$_listid"
+	echo "$listid"
 }
 
 atsend()
 {
-	local _fd _cmd
-	_fd=$1
-	_cmd=$2
+	local fd cmd
+	fd=$1
+	cmd=$2
 	
-	/usr/bin/printf '%s\r\n' $_cmd 2>/dev/null >&"$_fd"	
+	/usr/bin/printf '%s\r\n' $cmd 2>/dev/null >&"$fd"	
 }
 
 readreply()
 {
-	local _fd _reply _childpid
-	_fd=$1
+	local fd string
+	fd=$1
 
-	trap ' ' ALRM
+	trap 'sigalarm=1' ALRM
 	
 	( sh -c 'sleep 2; kill -s ALRM $PPID >/dev/null 2>&1' ) &
-	_childpid=$!
+	childpid=$!
 	
-	while read <&"$_fd" _reply; do
-		kill $_childpid >/dev/null 2>&1
+	echo "Parent=$PPID, self_pid=$$, child=$childpid" >./STRINGS
+
+	while read <&"$fd" string; do
+		kill $childpid >/dev/null 2>&1
 		
-		if /usr/bin/printf '%s\n' "$_reply" | grep '^[[:space:]]\{1,\}' >/dev/null 2>&1; then
-			( sh -c 'sleep 2; kill -s ALRM $PPID >/dev/null 2>&1' ) &
-			_childpid=$!
+		if /usr/bin/printf '%s\n' "$string" | grep '^[[:space:]]\{1,\}' >/dev/null 2>&1; then
+			( 
+				sh -c 'sleep 2; kill -s ALRM $PPID >/dev/null 2>&1' 
+			) &
+			childpid=$!
 			continue
 		fi
 		
-		/usr/bin/printf '%s\n' "$_reply" | sed 's/\r$//' | sed '/^$/d'
+		/usr/bin/printf '%s\n' "$string" | sed 's/\r$//' | sed '/^$/d'
 		
-		if /usr/bin/printf '%s\n' "$_reply" | grep -e "OK" -e "ERROR" >/dev/null 2>&1; then
+		if /usr/bin/printf '%s\n' "$string" | grep -e "OK" -e "ERROR" >/dev/null 2>&1; then
 			break
 		fi
 		
-		( sh -c 'sleep 2; kill -s ALRM $PPID >/dev/null 2>&1' ) &
-		_childpid=$!
+		(
+			sh -c "sleep 2; kill -s ALRM $PPID >/dev/null 2>&1"
+		) &
+		childpid=$!
 	done
 }
 
@@ -193,23 +199,6 @@ devinit()
 }
 
 
-devinfo()
-{
-	local _dev _cmd _result
-	_dev=$1
-
-	for _cmd in "AT#LSCRIPT" "AT+CREG?" "AT+CPIN?" "AT+CSQ" "AT+CREG?" "AT+COPS?"; do
-		if rwdev $_dev "$_cmd" _result; then
-			logmsg "$_cmd"
-			logmsg "$_result"
-		else
-			return 1
-		fi
-	done
-	
-	return 0
-}
-
 if [ $# -eq 0 ]; then
 	usage
 	exit 0
@@ -232,10 +221,18 @@ shift $(($OPTIND - 1))
 # Info about gsm-equipment
 if [ $info ]; then
 	logmsgtime "Information about $gsmdev"
-	if ! devinfo $gsmdev; then
-		logmsgtime "Device $gsmdev is not available now"
-		exit 1
-	fi
+	for cmd in "AT#LSCRIPT" "AT+CREG?" "AT+CPIN?" "AT+CSQ" "AT+CREG?" "AT+COPS?"; do
+		if rwdev $gsmdev "$cmd" result; then
+			logmsg "$cmd"
+			logmsg "$result"
+		else
+			logmsgtime "Device $gsmdev is not available now"
+			exit 1
+		fi
+	done
+	
+	result=""
+	
 	exit 0
 fi
 
@@ -246,6 +243,18 @@ if [ $devinit ]; then
 		logmsgtime "Device $gsmdev is not available now"
 		exit 1
 	fi
+#	for cmd in 'AT+CSCS="GSM"' "AT+CSMS=0" 'AT+CMGF=1' 'AT+CPMS="SM","SM","SM"' 'AT+CNMI=2,0,0,0,0'; do
+#		if rwdev $gsmdev "$cmd" result; then
+#			logmsg "$cmd"
+#			logmsg "$result"
+#		else
+#			logmsgtime "Device $gsmdev is not available now"
+#			exit 1
+#		fi
+#	done
+	
+#	result=""
+	
 	exit 0
 fi
 

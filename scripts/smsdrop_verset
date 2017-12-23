@@ -61,7 +61,7 @@ if [ ! -z $1 ]; then
 fi
 
 read sms
-smsconv=$(/bin/echo -n -e `/bin/echo $sms | sed -r 's/.{2}/\\\\x&/g'` | /usr/bin/iconv -f UCS-2BE)
+smsconv=$(/bin/echo -n -e `/bin/echo $sms | sed -r 's/.{2}/\\\\x&/g'` | /usr/bin/iconv -f UCS-2BE 2>/dev/null)
 filename=$(mktemp -u -p "$SMSDROP" "${comaddr}_XXXXXX")
 
 if printf '%s\n' "$smsconv" | smsparse "$filename" "$comaddr"; then
