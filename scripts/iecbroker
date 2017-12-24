@@ -2,12 +2,6 @@
 
 tmpdir=$(mktemp -d /tmp/XXXXX.broker)
 crts_name=$1
-
-sendfile()
-{
-	asduconv -c 3 $1 | asdusend -s $VARDIR/$crts_name/socket 
-}
-
 jobslist=${tmpdir}/jobslist
 sendfiles=${tmpdir}/sendfiles
 
@@ -15,9 +9,9 @@ success="Transfer was successful"
 fail="Transfer failed"
 confirm="Ok"
 
-cleanup() 
+sendfile()
 {
-	rm -rf ${tmpdir}
+	asduconv -c 3 $1 | asdusend -s $VARDIR/$crts_name/socket 
 }
 
 sigchld()
@@ -57,7 +51,7 @@ sigchld()
 }
 
 trap 'sigchld' CHLD
-#trap 'cleanup; exit 1' INT QUIT PIPE TERM 
+trap 'rm -rf ${tmpdir}; exit 0' TERM 
 
 while true; do 
 	if read filename; then 

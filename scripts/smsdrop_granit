@@ -4,10 +4,10 @@
 
 smsparse()
 {
-	local file comaddr
-	awk -v file=$1 -v comaddr=$2 '
+	local _file _comaddr
+	awk -v _file=$1 -v _comaddr=$2 '
 		BEGIN {
-			FS=","; FILE = file; COMADDR = comaddr; 
+			FS=","; FILE = _file; COMADDR = _comaddr; 
 			TYPE["M_SP_TB_1"] = 30
 			TYPE["M_ME_TF_1"] = 36
 			cmd="/bin/date \047+%S%3N:%_M:%_k:%e:%u:%_m:%y\047 | /bin/sed \047s/^0*//g; s/ //g\047"
