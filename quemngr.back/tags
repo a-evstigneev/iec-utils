@@ -1,0 +1,123 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+ACT	quemngr.c	/^enum quenum {ACT, IN};$/;"	e	enum:quenum	file:
+ADDTIMER	quemngr.c	45;"	d	file:
+ARGROW	quecontrol.c	/^enum {ARINIT = 4, ARGROW = 2};$/;"	e	enum:__anon1	file:
+ARINIT	quecontrol.c	/^enum {ARINIT = 4, ARGROW = 2};$/;"	e	enum:__anon1	file:
+ARRAY_H	quecontrol.h	2;"	d
+BUFMAX	quecontrol.h	5;"	d
+CURDIR	quecontrol.h	7;"	d
+DELTAUSEC	quemngr.c	26;"	d	file:
+DESCMAX	quecontrol.h	4;"	d
+ERR_QUIT	logging.h	9;"	d
+ERR_SYS	logging.h	15;"	d
+FILEMODE	quecontrol.h	9;"	d
+GETFILENAME	quemngr.c	35;"	d	file:
+HEAPFUNC_H	heapfunc.h	2;"	d
+IN	quemngr.c	/^enum quenum {ACT, IN};$/;"	e	enum:quenum	file:
+LOGGING_H	logging.h	2;"	d
+LOG_DAEMON	logging.c	14;"	d	file:
+LOG_ERR	logging.h	6;"	d
+LOG_INFO	logging.h	7;"	d
+LOG_MSG	quemngr.c	29;"	d	file:
+LOG_MSG	quemngr.c	32;"	d	file:
+MAXBUF	syslogclient/syslogclient.c	17;"	d	file:
+MOVEFILE	quemngr.c	37;"	d	file:
+MSGMAX	logging.c	13;"	d	file:
+PARENTDIR	quecontrol.h	8;"	d
+SIZERINGBUF	syslogclient/syslogclient.c	19;"	d	file:
+TIMEOUT	syslogclient/syslogclient.c	18;"	d	file:
+TIMERHEAPSIZE	quemngr.c	25;"	d	file:
+UTILS_H	utils.h	2;"	d
+WINDEFSIZE	quemngr.c	24;"	d	file:
+WINSIZE	quemngr.c	23;"	d	file:
+_XALLOC_H	xalloc.h	2;"	d
+act	quemngr.c	/^char *act	= ".\/act\/";$/;"	v
+bindir	Makefile	/^bindir = ..\/bin$/;"	m
+brokersend	quemngr.c	/^char *msgdir, *fifotrig, *brokersend;$/;"	v
+calctimeout	utils.c	/^calctimeout(const char *dir)$/;"	f
+check_response	quemngr.c	/^check_response(ino_t inode, int retval, char *description)$/;"	f
+conf	quecontrol.h	/^	int conf;$/;"	m	struct:msglist
+connectnb	syslogclient/syslogclient.c	/^connectnb(int sockfd, const struct sockaddr *addr, socklen_t addrlen, int timeout)$/;"	f
+countq	quemngr.c	/^int countq;$/;"	v
+daemon_proc	logging.c	/^int daemon_proc;$/;"	v
+debuglevel	quemngr.c	/^int debuglevel;$/;"	v
+deltail	syslogclient/syslogclient.c	/^deltail(struct ringbuf *st)$/;"	f
+df	quemngr.c	/^char *df	= ".\/df\/";$/;"	v
+dir	quecontrol.h	/^	char *dir;$/;"	m	struct:msglist
+drop	quemngr.c	/^char *drop	= ".\/drop\/";$/;"	v
+elem_add	quecontrol.c	/^elem_add(struct msglist *list, struct msg *elem)$/;"	f
+elem_del	quecontrol.c	/^elem_del(struct msglist *list, ino_t inode)$/;"	f
+elem_find	quecontrol.c	/^elem_find(struct msglist *list, ino_t inode)$/;"	f
+elem_new	quecontrol.c	/^elem_new(ino_t inode, struct timeval modtime, int state)$/;"	f
+fail	quemngr.c	/^char *fail	= ".\/fail\/";$/;"	v
+fifolog	quemngr.c	/^char *logfile, *fifolog;$/;"	v
+fifotrig	quemngr.c	/^char *msgdir, *fifotrig, *brokersend;$/;"	v
+fsyncdir	utils.c	/^fsyncdir(const char *dir)$/;"	f
+getmonotime	utils.c	/^getmonotime(struct timeval *tv) $/;"	f
+head	syslogclient/syslogclient.c	/^	short head;$/;"	m	struct:ringbuf	file:
+headers	Makefile	/^headers = heapfunc.h logging.h quecontrol.h utils.h xalloc.h$/;"	m
+heap	heapfunc.h	/^struct heap {$/;"	s
+heap_create	heapfunc.c	/^heap_create(int maxsize)$/;"	f
+heap_extract_min	heapfunc.c	/^heap_extract_min(struct heap *h)$/;"	f
+heap_heapify	heapfunc.c	/^heap_heapify(struct heap *h, int index)$/;"	f	file:
+heap_insert	heapfunc.c	/^heap_insert(struct heap *h, struct timeval key, int indq)$/;"	f
+heap_min	heapfunc.c	/^heap_min(struct heap *h)$/;"	f
+heapnode	heapfunc.h	/^struct heapnode {$/;"	s
+heapnode_swap	heapfunc.c	/^heapnode_swap(struct heapnode *a, struct heapnode *b)$/;"	f	file:
+in	quemngr.c	/^char *in	= ".\/in\/";$/;"	v
+indq	heapfunc.h	/^	int indq;$/;"	m	struct:heapnode
+init	quemngr.c	/^init(void)$/;"	f
+inode	quecontrol.h	/^	ino_t inode;$/;"	m	struct:msg
+key	heapfunc.h	/^	struct timeval key;$/;"	m	struct:heapnode	typeref:struct:heapnode::timeval
+logfile	quemngr.c	/^char *logfile, *fifolog;$/;"	v
+logmsg	logging.c	/^logmsg(const char *file, const char *func, int line, int errnoflag, int level, const char *fmt, ...)$/;"	f
+logstream	logging.c	/^FILE *logstream; $/;"	v
+main	quemngr.c	/^main(int argc, char *argv[])$/;"	f
+main	syslogclient/syslogclient.c	/^main(int argc, char **argv)$/;"	f
+maxsize	heapfunc.h	/^	int maxsize;$/;"	m	struct:heap
+modtime	quecontrol.h	/^	struct timeval modtime;$/;"	m	struct:msg	typeref:struct:msg::timeval
+msg	quecontrol.h	/^	struct msg **msg;$/;"	m	struct:msglist	typeref:struct:msglist::msg
+msg	quecontrol.h	/^struct msg {$/;"	s
+msg	syslogclient/syslogclient.c	/^	char *msg[SIZERINGBUF];$/;"	m	struct:ringbuf	file:
+msgdir	quemngr.c	/^char *msgdir, *fifotrig, *brokersend;$/;"	v
+msglist	quecontrol.h	/^struct msglist {$/;"	s
+mtimecomp	quecontrol.c	/^mtimecomp(const void *msg1, const void *msg2)$/;"	f	file:
+mvfile	utils.c	/^mvfile(const char *src, const char *dst)$/;"	f
+nmax	quecontrol.h	/^	int nmax;$/;"	m	struct:msglist
+nodecount	heapfunc.h	/^	int nodecount;$/;"	m	struct:heap
+nodes	heapfunc.h	/^	struct heapnode *nodes;$/;"	m	struct:heap	typeref:struct:heap::heapnode
+port	syslogclient/syslogclient.c	/^char *usock, *servaddr, *port;$/;"	v
+progname	logging.c	/^char *progname;$/;"	v
+pushmsg	syslogclient/syslogclient.c	/^pushmsg(struct ringbuf *st, const char *msg)$/;"	f
+quecount	quecontrol.c	/^static short quecount;$/;"	v	file:
+quelist	quecontrol.c	/^struct msglist *quelist;$/;"	v	typeref:struct:msglist
+quenum	quemngr.c	/^enum quenum {ACT, IN};$/;"	g	file:
+queue_add	quecontrol.c	/^queue_add(void) $/;"	f
+queue_comp	quecontrol.c	/^queue_comp(const void *queue1, const void *queue2)$/;"	f
+queue_restore	quecontrol.c	/^queue_restore(struct msglist *list, int index)$/;"	f
+queue_sort	quecontrol.c	/^queue_sort(struct msglist *list)$/;"	f
+readtail	syslogclient/syslogclient.c	/^readtail(struct ringbuf *st)$/;"	f
+ringbuf	syslogclient/syslogclient.c	/^struct ringbuf {$/;"	s	file:
+scan_drop	quemngr.c	/^scan_drop(void)$/;"	f
+send	quecontrol.h	/^	int send;$/;"	m	struct:msglist
+servaddr	syslogclient/syslogclient.c	/^char *usock, *servaddr, *port;$/;"	v
+sfd	syslogclient/syslogclient.c	/^int ufd, sfd;$/;"	v
+size	syslogclient/syslogclient.c	/^	short size;$/;"	m	struct:ringbuf	file:
+src	Makefile	/^src = heapfunc.c logging.c quecontrol.c quemngr.c utils.c xalloc.c$/;"	m
+state	quecontrol.h	/^	int	state;$/;"	m	struct:msg
+store	syslogclient/syslogclient.c	/^struct ringbuf store;$/;"	v	typeref:struct:ringbuf
+tail	syslogclient/syslogclient.c	/^	short tail;$/;"	m	struct:ringbuf	file:
+target	Makefile	/^target = quemngr$/;"	m
+timeout	quecontrol.h	/^	int timeout;$/;"	m	struct:msglist
+timerheap	quemngr.c	/^struct heap *timerheap;$/;"	v	typeref:struct:heap
+total	quecontrol.h	/^	int total;$/;"	m	struct:msglist
+ufd	syslogclient/syslogclient.c	/^int ufd, sfd;$/;"	v
+usock	syslogclient/syslogclient.c	/^char *usock, *servaddr, *port;$/;"	v
+xfree	xalloc.c	/^xfree(void *ptr)$/;"	f
+xmalloc	xalloc.c	/^xmalloc(size_t size)$/;"	f
+xresize	xalloc.c	/^void *xresize(void *vp, size_t size)$/;"	f

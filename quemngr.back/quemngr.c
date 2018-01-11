@@ -270,7 +270,7 @@ main(int argc, char *argv[])
 	
 	struct pollfd fds[2];
 	int trigfd, ret;
-	char *workdir, *trigger, *brokersend, *crts_name, *worker;
+	char *workdir, *trigger, *brokersend, *crts_name;
 		
 	int gopt;
 	
@@ -287,7 +287,7 @@ main(int argc, char *argv[])
 	
 	progname = argv[0];
 
-	while ( (gopt = getopt(argc, argv, ":n:d:t:s:l:")) != -1) {
+	while ( (gopt = getopt(argc, argv, ":n:w:t:b:d:")) != -1) {
 		switch(gopt) {
 			case 'n':
 				crts_name = optarg;
@@ -298,7 +298,7 @@ main(int argc, char *argv[])
 			case 't':
 				trigger = optarg;
 				break;
-			case 's':
+			case 'w':
 				worker = optarg;
 				break;
 			case 'l':
@@ -339,8 +339,8 @@ main(int argc, char *argv[])
 		close(STDOUT_FILENO);
 		dup(pipefd2[1]);
 		close(pipefd2[1]);
-		if (execlp(worker, worker, crts_name, NULL) < 0) // brokersend должен запускаться с использованием PATH
-			ERR_SYS("error exec %s", worker); 
+		if (execlp(brokersend, brokersend, crts_name, NULL) < 0) // brokersend должен запускаться с использованием PATH
+			ERR_SYS("error exec %s", brokersend); 
 		exit(EXIT_FAILURE);
 	}
 	

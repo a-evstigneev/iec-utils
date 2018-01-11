@@ -14,7 +14,7 @@ test -x $IECDIR/smsget || exit 0
 test -x $IECDIR/smsdrop_verset || exit 0
 test -x $IECDIR/smsdrop_granit || exit 0
 test -x $IECDIR/quemngr || exit 0
-test -x $IECDIR/iecbroker || exit 0
+test -x $IECDIR/worker || exit 0
 test -x $IECDIR/asduconv || exit 0
 test -x $IECDIR/asdusend || exit 0
 test -x $IECDIR/ginterrog || exit 0
@@ -54,7 +54,7 @@ while read crts_name crts_address crts_port; do
 	mkdir -p $VARDIR/$crts_name/work/df/0h0m45s
 	mkdir -p $VARDIR/$crts_name/work/df/0h0m60s
 	
-	quemngr	-n $crts_name -w $VARDIR/$crts_name/work -t $VARDIR/$crts_name/work/trigger -b iecbroker -d 3 2>$LOGDIR/$crts_name/quemngr.log &
+	quemngr	-n $crts_name -d $VARDIR/$crts_name/work -t $VARDIR/$crts_name/work/trigger -s worker -l 3 2>$LOGDIR/$crts_name/quemngr.log &
 	
 	iecproxy -u $VARDIR/$crts_name/socket -s $crts_address -p $crts_port -l ieclink -g ginterrog 2>$LOGDIR/$crts_name/iecproxy.log &
 done <<-EOF

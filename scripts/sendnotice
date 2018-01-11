@@ -1,0 +1,7 @@
+#!/bin/sh
+
+msg=$1
+
+if [ -x /usr/bin/msmtp ]; then
+	/bin/echo -e "Subject: gsm-modev fault\r\n\r\n$msg\n" | msmtp -a komisyk -t komisyk@mail.ru >/dev/null 2>&1
+fi
