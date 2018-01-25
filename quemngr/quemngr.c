@@ -71,6 +71,9 @@ char *df	= "./df/";
 char *act	= "./act/";
 char *in	= "./in/";
 
+int signalpipe[2];
+
+
 int
 init(void)
 {
@@ -262,13 +265,18 @@ void sig_chld(int signum)
 	}
 }
 
+void sig_hup(int signum) {
+	char ch = 'H';
+	write(signalpipe[1], &ch, 1); 	
+}
+
 int
 main(int argc, char *argv[])
 {
 	int pipefd1[2], pipefd2[2], flags;
 	FILE *pipestream = NULL;
 	
-	struct pollfd fds[2];
+	struct pollfd fds[3];
 	int trigfd, ret;
 	char *workdir, *trigger, *brokersend, *crts_name, *worker;
 		
@@ -318,8 +326,13 @@ main(int argc, char *argv[])
 	
 	signal(SIGTERM, sig_term);
 	signal(SIGCHLD, sig_chld);
+	signal(SIGHUP, sig_hup);
 
 	init(); // Переименовать в initque()
+	
+	if (pipe(signalpipe) != 0) {
+		ERR_SYS("syslog error", progname);
+	}	
 	
 	if ( (pipe(pipefd1)) < 0)
 		ERR_SYS("can`t create pipefd1", progname);
@@ -358,7 +371,11 @@ main(int argc, char *argv[])
 		ERR_SYS("error set F_SETFL to pipefd2", progname);
 	if ( (pipestream = fdopen(pipefd2[0], "r")) == NULL)
 		ERR_SYS("error fdopen pipefd2", progname);
-
+	
+	
+	//signalpipe
+	fds[2].fd = signalpipe[0];
+	fds[2].events = POLLIN;
 
 	for (;;) {
 		fds[0].fd = -1;
@@ -429,6 +446,16 @@ main(int argc, char *argv[])
 			} 
 		}
 		else {
+			if (fds[2].revents & POLLIN) {
+				char c;
+				read(signalpipe[0], &c, 1);
+				switch(c) {
+					case 'H': /* sighup */
+						LOG_MSG(2, "signal SIGHUP was received\n");
+					break;
+				}
+			}
+			
 			LOG_MSG(2, "trigger changed state");
 			if (fds[0].revents & POLLIN) {
 				close(trigfd);
