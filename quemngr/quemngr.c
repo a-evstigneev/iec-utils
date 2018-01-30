@@ -14,6 +14,7 @@
 #include <sys/time.h>
 #include <syslog.h>
 #include <signal.h>
+#include <sys/ioctl.h>
 
 #include "xalloc.h"
 #include "quecontrol.h"
@@ -43,11 +44,11 @@ do { \
 		ERR_SYS("error move file %s to %s", src, dst); \
 } while (0)
 
-#define ADDTIMER(queind) \
+#define ADDTIMER(queind, inode) \
 do { \
 	getmonotime(&now); \
 	now.tv_sec += quelist[queind].timeout; \
-	heap_insert(timerheap, now, queind); \
+	heap_insert(timerheap, now, queind, inode); \
 } while (0)
 
 enum quenum {ACT, IN};
@@ -72,7 +73,10 @@ char *act	= "./act/";
 char *in	= "./in/";
 
 int signalpipe[2];
+int nsig;
 
+FILE *pipestream = NULL;
+int pipefd1[2], pipefd2[2], flags;
 
 int
 init(void)
@@ -120,7 +124,7 @@ init(void)
 		if (i != IN) {
 			for (j = 0; j < quelist[i].total; ++j) {
 				getmonotime(&now);
-				heap_insert(timerheap, now, i);
+				heap_insert(timerheap, now, i, 0); // Надо сюда будет забивать корректные inode при востановлении
 			}
 		}
 	}
@@ -224,7 +228,7 @@ check_response(ino_t inode, int retval, char *description)
 				quelist[state].send--; 
 				LOG_MSG(2, "queue=%d, total=%d, send=%d, conf=%d", state, quelist[state].total, quelist[state].send, quelist[state].conf);
 				LOG_MSG(2, "queue=%d, total=%d, send=%d, conf=%d", state+2, quelist[state+2].total, quelist[state+2].send, quelist[state+2].conf);
-				ADDTIMER(state+2); 
+				ADDTIMER(state+2, inode); 
 				LOG_MSG(2, "timer for queue %d added", state+2);
 			}
 			else {	
@@ -236,12 +240,23 @@ check_response(ino_t inode, int retval, char *description)
 				quelist[state].send--; 
 				LOG_MSG(2, "queue=%d, total=%d, send=%d, conf=%d", state, quelist[state].total, quelist[state].send, quelist[state].conf);
 				LOG_MSG(2, "queue=%d, total=%d, send=%d, conf=%d", state+1, quelist[state+1].total, quelist[state+1].send, quelist[state+1].conf);
-				ADDTIMER(state+1); 
+				ADDTIMER(state+1, inode); 
 				LOG_MSG(2, "timer for queue %d added", state+1);
 			}
 			break;
 	}
 	return 0;
+}
+
+void
+flag_signal(const char c)
+{
+	char ch = c;
+
+	if (write(signalpipe[1], &ch, 1) < 0) {
+		exit(EXIT_FAILURE);
+		; // обработка ошибок с выводом в stderr
+	}
 }
 
 void sig_term(int signum)
@@ -265,16 +280,67 @@ void sig_chld(int signum)
 	}
 }
 
-void sig_hup(int signum) {
-	char ch = 'H';
-	write(signalpipe[1], &ch, 1); 	
+void sig_hup(int signum) 
+{
+	flag_signal('H'); 
+}
+
+void sig_usr1(int signum) 
+{
+	flag_signal('U'); 
+}
+
+int
+flush_queue(void)
+{
+
+	char src[PATH_MAX] = {0};
+	char dst[PATH_MAX] = {0};
+	ino_t dfinode, rinode;
+	int queuesend, code;
+	char description[DESCMAX] = {0};	
+	
+	queuesend = countq;
+
+	while (queuesend > 1) {
+		while (quelist[queuesend].total > 0) {
+			if ( (quelist[queuesend].send < WINSIZE) && (quelist[queuesend].send < quelist[queuesend].total) && (quelist[queuesend].send == quelist[queuesend].conf)) { 
+				dfinode = GETFILENAME(queuesend);
+				MOVEFILE(queuesend, ACT, dfinode);
+				LOG_MSG(2, "Нашли файл %d в очереди %d", dfinode, queuesend);
+				elem_add(quelist+ACT, elem_new(dfinode, (struct timeval){0, 0}, queuesend));
+				
+				if (dprintf(pipefd1[1], "%ld\n", dfinode) < 0) 
+					ERR_SYS("error write %ld to pipefd1", dfinode);
+		
+				LOG_MSG(2, "Отправили файл %d в pipefd1", dfinode);
+				quelist[queuesend].send++;
+				
+				LOG_MSG(2, "queue=%d, total=%d, send=%d, conf=%d", queuesend, quelist[queuesend].total, quelist[queuesend].send, quelist[queuesend].conf);
+			}
+
+			while (fscanf(pipestream, "%ld %d %[^\n]", &rinode, &code, description) != EOF)    
+				check_response(rinode, code, description);
+		}
+		queuesend--;
+	}
+
+	LOG_MSG(2, "Сбросили все сообщения в отложенных очередях");
+	return 0;
+}
+
+int
+lock_send(void)
+{
+
+	return 0;
 }
 
 int
 main(int argc, char *argv[])
 {
-	int pipefd1[2], pipefd2[2], flags;
-	FILE *pipestream = NULL;
+//	int pipefd1[2], pipefd2[2], flags;
+//	FILE *pipestream = NULL;
 	
 	struct pollfd fds[3];
 	int trigfd, ret;
@@ -314,7 +380,7 @@ main(int argc, char *argv[])
 				break;
 			case '?':
 			default:
-			break;
+				break;
 		}
 	}
 
@@ -327,13 +393,12 @@ main(int argc, char *argv[])
 	signal(SIGTERM, sig_term);
 	signal(SIGCHLD, sig_chld);
 	signal(SIGHUP, sig_hup);
+	signal(SIGUSR1, sig_usr1);
 
 	init(); // Переименовать в initque()
 	
-	if (pipe(signalpipe) != 0) {
-		ERR_SYS("syslog error", progname);
-	}	
-	
+	if (pipe(signalpipe) < 0)
+		ERR_SYS("can`t create signalpipe", progname);
 	if ( (pipe(pipefd1)) < 0)
 		ERR_SYS("can`t create pipefd1", progname);
 	if ( (pipe(pipefd2)) < 0)
@@ -420,15 +485,27 @@ main(int argc, char *argv[])
 		} 
 		else
 			wait = -1;
-
-		ret = poll(fds, 2, wait);
+	
+	signal_received:
+		ret = poll(fds, 3, wait);
 		if (ret < 0 && errno != EINTR) { 
 			ERR_SYS("error poll", progname);
 		}
+		else if (ret < 0) {
+			goto signal_received;
+			// Надо переустанавливать таймер wait, если он был конечным
+		}
 		else if (ret == 0) {
+			int tempinode = minnode->inode;
 			indq = minnode->indq;
-			LOG_MSG(2, "timeout expired\n");
+			
 			wait = -1;
+			if (elem_find(quelist+indq, tempinode) < 0) { // Элемент не найден, извлекаем таймер из кучи (возможно можно упростить)
+				heap_extract_min(timerheap);
+				continue;
+			}
+							
+			LOG_MSG(2, "timeout expired\n");
 			if ( (quelist[indq].send < WINDEFSIZE) && (quelist[indq].send < quelist[indq].total) && (quelist[indq].send == quelist[indq].conf)) { 
 				LOG_MSG(2, "queue=%d, total=%d, send=%d, conf=%d", indq, quelist[indq].total, quelist[indq].send, quelist[indq].conf);
 				dfinode = GETFILENAME(indq);
@@ -445,18 +522,9 @@ main(int argc, char *argv[])
 				LOG_MSG(2, "min timer has been deleted from heap");
 			} 
 		}
-		else {
-			if (fds[2].revents & POLLIN) {
-				char c;
-				read(signalpipe[0], &c, 1);
-				switch(c) {
-					case 'H': /* sighup */
-						LOG_MSG(2, "signal SIGHUP was received\n");
-					break;
-				}
-			}
-			
+		else if (ret > 0) {
 			LOG_MSG(2, "trigger changed state");
+
 			if (fds[0].revents & POLLIN) {
 				close(trigfd);
 				if (unlink(trigger) < 0)
@@ -467,12 +535,38 @@ main(int argc, char *argv[])
 					ERR_SYS("error open %s", trigger);
 				scan_drop();
 			}
+
 			if (fds[1].revents & POLLIN) {
 				LOG_MSG(2, "data in the pipe are available");
 				while (fscanf(pipestream, "%ld %d %[^\n]", &rinode, &code, description) != EOF)    
 					check_response(rinode, code, description);
 			}
-		}
+
+			if (fds[2].revents & POLLIN) {
+				if (ioctl(signalpipe[0], FIONREAD, &nsig) != 0) {
+					exit(EXIT_FAILURE);
+					; // Обработка ошибок
+				}
+				while (--nsig >= 0) {
+					char c;
+					if (read(signalpipe[0], &c, 1) < 0 ) {
+						exit(EXIT_FAILURE);
+						; // Обработка ошибок
+					}
+					
+					switch(c) {
+						case 'H': /* sighup */
+							LOG_MSG(2, "signal SIGHUP received");
+							lock_send();
+							break;
+						case 'U': /* sigusr1 */
+							LOG_MSG(2, "signal SIGUSR1 received");
+							flush_queue();
+							break;
+					}
+				}
+			}
+		} 
 	}
 	
 	return 0;
