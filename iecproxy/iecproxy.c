@@ -122,11 +122,41 @@ void sig_chld(int signum)
 }
 
 int
+connect_hook(char *pid)
+{
+	int n = -1;
+	char command[BUF_SIZE] = {0};
+
+	if (pid != NULL) {
+		snprintf(command, BUF_SIZE, "%s %s", "connect_hook", pid);
+		n = system(command);
+	}
+
+	return n;
+}
+
+int
+disconnect_hook(char *pid)
+{
+	int n = -1;
+	char command[BUF_SIZE] = {0};
+	
+	if (pid != NULL) {
+		snprintf(command, BUF_SIZE, "%s %s", "disconnect_hook", pid);
+		n = system(command);
+	}
+
+	return n;
+}
+
+int
 main(int argc, char *argv[])
 {
 	char *unixsock, *ieclink, *iecserver, *iecport, *gi_script;
 	int sockfd = -1, connfd = -1;
     
+	char *quemngr_pid = NULL;
+
 	int i, n, nready, gopt, ret;
 		
 	int pipefd1[2], pipefd2[2];
@@ -160,6 +190,9 @@ main(int argc, char *argv[])
 	
 	signal(SIGTERM, sig_term);
 	signal(SIGCHLD, sig_chld);
+	
+	if ( (quemngr_pid = getenv("QUEMNGR_PID")) == NULL)
+		fprintf(stderr, "Variable QUEMNGR_PID not defined\n");
 	
 	/* delete old unix socket */
     unlink(unixsock);
@@ -221,6 +254,7 @@ main(int argc, char *argv[])
 						case '+':
 							fdread[1].fd = new_usocket(unixsock);
 							fdread[1].events = POLLIN;
+							connect_hook(quemngr_pid);
 							break;
 						case '-':
 							if (connfd > 0) {
@@ -231,6 +265,7 @@ main(int argc, char *argv[])
 							close(fdread[1].fd);
 							unlink(unixsock);
 							fdread[1].fd = -1;
+							disconnect_hook(quemngr_pid);
 							break;
 						case '<':
 							if (connfd < 0)

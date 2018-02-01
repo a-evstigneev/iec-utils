@@ -325,7 +325,6 @@ flush_queue(void)
 		queuesend--;
 	}
 
-	LOG_MSG(2, "Сбросили все сообщения в отложенных очередях");
 	return 0;
 }
 
@@ -493,19 +492,20 @@ main(int argc, char *argv[])
 		}
 		else if (ret < 0) {
 			goto signal_received;
-			// Надо переустанавливать таймер wait, если он был конечным
 		}
 		else if (ret == 0) {
 			int tempinode = minnode->inode;
 			indq = minnode->indq;
 			
+			LOG_MSG(2, "timeout expired\n");
 			wait = -1;
+			
 			if (elem_find(quelist+indq, tempinode) < 0) { // Элемент не найден, извлекаем таймер из кучи (возможно можно упростить)
 				heap_extract_min(timerheap);
+				LOG_MSG(2, "Inode в отложенных очередях не найден, удаляем таймер из кучи");
 				continue;
 			}
 							
-			LOG_MSG(2, "timeout expired\n");
 			if ( (quelist[indq].send < WINDEFSIZE) && (quelist[indq].send < quelist[indq].total) && (quelist[indq].send == quelist[indq].conf)) { 
 				LOG_MSG(2, "queue=%d, total=%d, send=%d, conf=%d", indq, quelist[indq].total, quelist[indq].send, quelist[indq].conf);
 				dfinode = GETFILENAME(indq);
@@ -523,9 +523,10 @@ main(int argc, char *argv[])
 			} 
 		}
 		else if (ret > 0) {
-			LOG_MSG(2, "trigger changed state");
-
+			LOG_MSG(2, "Один из дескрипторов готов на чтение");
+			
 			if (fds[0].revents & POLLIN) {
+				LOG_MSG(2, "trigger changed state");
 				close(trigfd);
 				if (unlink(trigger) < 0)
 					ERR_SYS("error delete file %s", trigger);
@@ -557,11 +558,17 @@ main(int argc, char *argv[])
 					switch(c) {
 						case 'H': /* sighup */
 							LOG_MSG(2, "signal SIGHUP received");
-							lock_send();
+							wait = -1;	
+							fds[0].fd = -1;
+							fds[1].fd = -1;
+							goto signal_received; // Выключаем все файловые дескрипторы кроме, fd[2].fd
 							break;
 						case 'U': /* sigusr1 */
 							LOG_MSG(2, "signal SIGUSR1 received");
+							fds[0].fd = trigfd;
+							fds[1].fd = pipefd2[0];
 							flush_queue();
+							LOG_MSG(2, "Сбросили все сообщения в отложенных очередях");
 							break;
 					}
 				}

@@ -56,7 +56,7 @@ while read crts_name crts_address crts_port; do
 	
 	quemngr	-n $crts_name -d $VARDIR/$crts_name/work -t $VARDIR/$crts_name/work/trigger -s worker -l 3 2>$LOGDIR/$crts_name/quemngr.log &
 	
-	iecproxy -u $VARDIR/$crts_name/socket -s $crts_address -p $crts_port -l ieclink -g ginterrog 2>$LOGDIR/$crts_name/iecproxy.log &
+	QUEMNGR_PID=$! iecproxy -u $VARDIR/$crts_name/socket -s $crts_address -p $crts_port -l ieclink -g ginterrog 2>$LOGDIR/$crts_name/iecproxy.log &
 done <<-EOF
 	$(cat $CRTS_LIST | grep -v '^#' | sed '/^$/d')
 EOF

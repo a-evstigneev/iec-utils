@@ -5,42 +5,42 @@
 !_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
 !_TAG_PROGRAM_VERSION	5.9~svn20110310	//
 ACT	quemngr.c	/^enum quenum {ACT, IN};$/;"	e	enum:quenum	file:
-ADDTIMER	quemngr.c	45;"	d	file:
+ADDTIMER	quemngr.c	47;"	d	file:
 ARGROW	quecontrol.c	/^enum {ARINIT = 4, ARGROW = 2};$/;"	e	enum:__anon1	file:
 ARINIT	quecontrol.c	/^enum {ARINIT = 4, ARGROW = 2};$/;"	e	enum:__anon1	file:
 ARRAY_H	quecontrol.h	2;"	d
 BUFMAX	quecontrol.h	5;"	d
 CURDIR	quecontrol.h	7;"	d
-DELTAUSEC	quemngr.c	26;"	d	file:
+DELTAUSEC	quemngr.c	28;"	d	file:
 DESCMAX	quecontrol.h	4;"	d
 ERR_QUIT	logging.h	9;"	d
 ERR_SYS	logging.h	15;"	d
 FILEMODE	quecontrol.h	9;"	d
-GETFILENAME	quemngr.c	35;"	d	file:
+GETFILENAME	quemngr.c	37;"	d	file:
 HEAPFUNC_H	heapfunc.h	2;"	d
 IN	quemngr.c	/^enum quenum {ACT, IN};$/;"	e	enum:quenum	file:
 LOGGING_H	logging.h	2;"	d
 LOG_DAEMON	logging.c	14;"	d	file:
 LOG_ERR	logging.h	6;"	d
 LOG_INFO	logging.h	7;"	d
-LOG_MSG	quemngr.c	29;"	d	file:
-LOG_MSG	quemngr.c	32;"	d	file:
+LOG_MSG	quemngr.c	31;"	d	file:
+LOG_MSG	quemngr.c	34;"	d	file:
 MAXBUF	syslogclient/syslogclient.c	17;"	d	file:
-MOVEFILE	quemngr.c	37;"	d	file:
+MOVEFILE	quemngr.c	39;"	d	file:
 MSGMAX	logging.c	13;"	d	file:
 PARENTDIR	quecontrol.h	8;"	d
 SIZERINGBUF	syslogclient/syslogclient.c	19;"	d	file:
 TIMEOUT	syslogclient/syslogclient.c	18;"	d	file:
-TIMERHEAPSIZE	quemngr.c	25;"	d	file:
+TIMERHEAPSIZE	quemngr.c	27;"	d	file:
 UTILS_H	utils.h	2;"	d
-WINDEFSIZE	quemngr.c	24;"	d	file:
-WINSIZE	quemngr.c	23;"	d	file:
+WINDEFSIZE	quemngr.c	26;"	d	file:
+WINSIZE	quemngr.c	25;"	d	file:
 _XALLOC_H	xalloc.h	2;"	d
 act	quemngr.c	/^char *act	= ".\/act\/";$/;"	v
 bindir	Makefile	/^bindir = ..\/bin$/;"	m
-brokersend	quemngr.c	/^char *msgdir, *fifotrig, *brokersend;$/;"	v
 calctimeout	utils.c	/^calctimeout(const char *dir)$/;"	f
 check_response	quemngr.c	/^check_response(ino_t inode, int retval, char *description)$/;"	f
+childpid	quemngr.c	/^pid_t childpid;$/;"	v
 conf	quecontrol.h	/^	int conf;$/;"	m	struct:msglist
 connectnb	syslogclient/syslogclient.c	/^connectnb(int sockfd, const struct sockaddr *addr, socklen_t addrlen, int timeout)$/;"	f
 countq	quemngr.c	/^int countq;$/;"	v
@@ -55,8 +55,9 @@ elem_del	quecontrol.c	/^elem_del(struct msglist *list, ino_t inode)$/;"	f
 elem_find	quecontrol.c	/^elem_find(struct msglist *list, ino_t inode)$/;"	f
 elem_new	quecontrol.c	/^elem_new(ino_t inode, struct timeval modtime, int state)$/;"	f
 fail	quemngr.c	/^char *fail	= ".\/fail\/";$/;"	v
-fifolog	quemngr.c	/^char *logfile, *fifolog;$/;"	v
-fifotrig	quemngr.c	/^char *msgdir, *fifotrig, *brokersend;$/;"	v
+flag_signal	quemngr.c	/^flag_signal(const char c)$/;"	f
+flags	quemngr.c	/^int pipefd1[2], pipefd2[2], flags;$/;"	v
+flush_queue	quemngr.c	/^flush_queue(void)$/;"	f
 fsyncdir	utils.c	/^fsyncdir(const char *dir)$/;"	f
 getmonotime	utils.c	/^getmonotime(struct timeval *tv) $/;"	f
 head	syslogclient/syslogclient.c	/^	short head;$/;"	m	struct:ringbuf	file:
@@ -65,16 +66,17 @@ heap	heapfunc.h	/^struct heap {$/;"	s
 heap_create	heapfunc.c	/^heap_create(int maxsize)$/;"	f
 heap_extract_min	heapfunc.c	/^heap_extract_min(struct heap *h)$/;"	f
 heap_heapify	heapfunc.c	/^heap_heapify(struct heap *h, int index)$/;"	f	file:
-heap_insert	heapfunc.c	/^heap_insert(struct heap *h, struct timeval key, int indq)$/;"	f
+heap_insert	heapfunc.c	/^heap_insert(struct heap *h, struct timeval key, int indq, int inode)$/;"	f
 heap_min	heapfunc.c	/^heap_min(struct heap *h)$/;"	f
 heapnode	heapfunc.h	/^struct heapnode {$/;"	s
 heapnode_swap	heapfunc.c	/^heapnode_swap(struct heapnode *a, struct heapnode *b)$/;"	f	file:
 in	quemngr.c	/^char *in	= ".\/in\/";$/;"	v
 indq	heapfunc.h	/^	int indq;$/;"	m	struct:heapnode
 init	quemngr.c	/^init(void)$/;"	f
+inode	heapfunc.h	/^	int inode;$/;"	m	struct:heapnode
 inode	quecontrol.h	/^	ino_t inode;$/;"	m	struct:msg
 key	heapfunc.h	/^	struct timeval key;$/;"	m	struct:heapnode	typeref:struct:heapnode::timeval
-logfile	quemngr.c	/^char *logfile, *fifolog;$/;"	v
+lock_send	quemngr.c	/^lock_send(void)$/;"	f
 logmsg	logging.c	/^logmsg(const char *file, const char *func, int line, int errnoflag, int level, const char *fmt, ...)$/;"	f
 logstream	logging.c	/^FILE *logstream; $/;"	v
 main	quemngr.c	/^main(int argc, char *argv[])$/;"	f
@@ -84,13 +86,16 @@ modtime	quecontrol.h	/^	struct timeval modtime;$/;"	m	struct:msg	typeref:struct:
 msg	quecontrol.h	/^	struct msg **msg;$/;"	m	struct:msglist	typeref:struct:msglist::msg
 msg	quecontrol.h	/^struct msg {$/;"	s
 msg	syslogclient/syslogclient.c	/^	char *msg[SIZERINGBUF];$/;"	m	struct:ringbuf	file:
-msgdir	quemngr.c	/^char *msgdir, *fifotrig, *brokersend;$/;"	v
 msglist	quecontrol.h	/^struct msglist {$/;"	s
 mtimecomp	quecontrol.c	/^mtimecomp(const void *msg1, const void *msg2)$/;"	f	file:
 mvfile	utils.c	/^mvfile(const char *src, const char *dst)$/;"	f
 nmax	quecontrol.h	/^	int nmax;$/;"	m	struct:msglist
 nodecount	heapfunc.h	/^	int nodecount;$/;"	m	struct:heap
 nodes	heapfunc.h	/^	struct heapnode *nodes;$/;"	m	struct:heap	typeref:struct:heap::heapnode
+nsig	quemngr.c	/^int nsig;$/;"	v
+pipefd1	quemngr.c	/^int pipefd1[2], pipefd2[2], flags;$/;"	v
+pipefd2	quemngr.c	/^int pipefd1[2], pipefd2[2], flags;$/;"	v
+pipestream	quemngr.c	/^FILE *pipestream = NULL;$/;"	v
 port	syslogclient/syslogclient.c	/^char *usock, *servaddr, *port;$/;"	v
 progname	logging.c	/^char *progname;$/;"	v
 pushmsg	syslogclient/syslogclient.c	/^pushmsg(struct ringbuf *st, const char *msg)$/;"	f
@@ -107,6 +112,11 @@ scan_drop	quemngr.c	/^scan_drop(void)$/;"	f
 send	quecontrol.h	/^	int send;$/;"	m	struct:msglist
 servaddr	syslogclient/syslogclient.c	/^char *usock, *servaddr, *port;$/;"	v
 sfd	syslogclient/syslogclient.c	/^int ufd, sfd;$/;"	v
+sig_chld	quemngr.c	/^void sig_chld(int signum)$/;"	f
+sig_hup	quemngr.c	/^void sig_hup(int signum) $/;"	f
+sig_term	quemngr.c	/^void sig_term(int signum)$/;"	f
+sig_usr1	quemngr.c	/^void sig_usr1(int signum) $/;"	f
+signalpipe	quemngr.c	/^int signalpipe[2];$/;"	v
 size	syslogclient/syslogclient.c	/^	short size;$/;"	m	struct:ringbuf	file:
 src	Makefile	/^src = heapfunc.c logging.c quecontrol.c quemngr.c utils.c xalloc.c$/;"	m
 state	quecontrol.h	/^	int	state;$/;"	m	struct:msg
