@@ -75,11 +75,11 @@ char *in	= "./in/";
 int signalpipe[2];
 int nsig;
 
-FILE *pipestream = NULL;
 int pipefd1[2], pipefd2[2], flags;
+FILE *pipestream = NULL;
 
 int
-init(void)
+initqueue(void)
 {
 	DIR *workdir = NULL;
 	struct dirent *direntry = NULL;
@@ -118,7 +118,7 @@ init(void)
 	
 	qsort(quelist, countq+1, sizeof(struct msglist), queue_comp);
 	timerheap = heap_create(TIMERHEAPSIZE);
-	for (i = 0; i < countq+1; ++i) { 
+	for (i = 0; i < countq+1; ++i) { // i начинается с 1. act востанавливать не надо, так как при выходе мы его чистим. 
 		queue_restore(quelist+i, i);
 		queue_sort(quelist+i);
 		if (i != IN) {
@@ -200,8 +200,8 @@ check_response(ino_t inode, int retval, char *description)
 			elem_del(quelist+state, inode);
 			quelist[state].conf--;
 			quelist[state].send--;
-			
 			LOG_MSG(2, "queue=%d, total=%d, send=%d, conf=%d", state, quelist[state].total, quelist[state].send, quelist[state].conf);
+			return 1;
 			break;
 		case 1:
 			quelist[state].conf++;
@@ -259,15 +259,27 @@ flag_signal(const char c)
 	}
 }
 
-void sig_term(int signum)
+void 
+sig_term(int signum)
 {
+	char src[PATH_MAX] = {0};
+	int n = quelist[ACT].total;
+
+//	while (n >= 0) { // Удаляем файлы из каталога act, так как это временный буфер для отправки файлов
+//		snprintf(src, PATH_MAX, "%s/%ld", act, quelist[ACT].msg[n]->inode);
+//		unlink(src);
+//		--n;
+//	}
+	
 	if (childpid > 0) 
 		kill(childpid, SIGTERM);
-	if (childpid == 0)
-		exit(0);
+	else 
+		exit(EXIT_SUCCESS);
+		// Очистить очередь ACT, чтобы в каталоге act не было сообщений
 }
 
-void sig_chld(int signum)
+void 
+sig_chld(int signum)
 {
 	pid_t pid;
 	int stat;
@@ -280,12 +292,14 @@ void sig_chld(int signum)
 	}
 }
 
-void sig_hup(int signum) 
+void 
+sig_hup(int signum) 
 {
 	flag_signal('H'); 
 }
 
-void sig_usr1(int signum) 
+void 
+sig_usr1(int signum) 
 {
 	flag_signal('U'); 
 }
@@ -297,9 +311,10 @@ flush_queue(void)
 	char src[PATH_MAX] = {0};
 	char dst[PATH_MAX] = {0};
 	ino_t dfinode, rinode;
-	int queuesend, code;
+	int queuesend, code, n;
 	char description[DESCMAX] = {0};	
 	
+	n = 0;
 	queuesend = countq;
 
 	while (queuesend > 1) {
@@ -320,37 +335,29 @@ flush_queue(void)
 			}
 
 			while (fscanf(pipestream, "%ld %d %[^\n]", &rinode, &code, description) != EOF)    
-				check_response(rinode, code, description);
+				if (check_response(rinode, code, description) > 0)
+					++n;
 		}
 		queuesend--;
 	}
 
-	return 0;
-}
-
-int
-lock_send(void)
-{
-
-	return 0;
+	return n;
 }
 
 int
 main(int argc, char *argv[])
 {
-//	int pipefd1[2], pipefd2[2], flags;
-//	FILE *pipestream = NULL;
-	
 	struct pollfd fds[3];
-	int trigfd, ret;
-	char *workdir, *trigger, *brokersend, *crts_name, *worker;
-		
-	int gopt;
+	int trigfd;
 	
-	int code, indq;
+	char *workdir, *trigger, *crts_name, *worker;
+		
+	int gopt, code, indq, ret;
+	
 	char description[DESCMAX] = {0};	
 	char src[PATH_MAX] = {0};
 	char dst[PATH_MAX] = {0};
+	
 	ino_t inode, dfinode, rinode; 
 	
 	int nearest, wait = -1;
@@ -358,6 +365,9 @@ main(int argc, char *argv[])
 	struct heapnode timer = {0};
 	struct heapnode *minnode = NULL;
 	
+	struct sigaction sa, saterm, sachld, sahup, sausr1;
+	sigset_t oldset;
+
 	progname = argv[0];
 
 	while ( (gopt = getopt(argc, argv, ":n:d:t:s:l:")) != -1) {
@@ -389,12 +399,25 @@ main(int argc, char *argv[])
 	if (chdir(workdir) < 0)
 		ERR_SYS("failed to change working directory to %s", workdir);
 	
-	signal(SIGTERM, sig_term);
-	signal(SIGCHLD, sig_chld);
-	signal(SIGHUP, sig_hup);
-	signal(SIGUSR1, sig_usr1);
+	sa.sa_flags = 0;
+	sigemptyset(&sa.sa_mask);	
+	sigaddset(&sa.sa_mask, SIGTERM);
+	sigaddset(&sa.sa_mask, SIGCHLD);
+	sigaddset(&sa.sa_mask, SIGHUP);
+	sigaddset(&sa.sa_mask, SIGUSR1);
 
-	init(); // Переименовать в initque()
+//	sigprocmask(SIG_BLOCK, &sa.sa_mask, &oldset);
+
+	sa.sa_handler = sig_term;
+	sigaction(SIGTERM, &sa, &saterm);
+	sa.sa_handler = sig_chld;
+	sigaction(SIGCHLD, &sa, &sachld);
+	sa.sa_handler = sig_hup;
+	sigaction(SIGHUP, &sa, &sahup);
+	sa.sa_handler = sig_usr1;
+	sigaction(SIGUSR1, &sa, &sausr1);
+
+	initqueue(); 
 	
 	if (pipe(signalpipe) < 0)
 		ERR_SYS("can`t create signalpipe", progname);
@@ -416,7 +439,13 @@ main(int argc, char *argv[])
 		close(STDOUT_FILENO);
 		dup(pipefd2[1]);
 		close(pipefd2[1]);
-		if (execlp(worker, worker, crts_name, NULL) < 0) // brokersend должен запускаться с использованием PATH
+		
+		sigaction(SIGTERM, &saterm, NULL);
+		sigaction(SIGCHLD, &sachld, NULL);
+		sigaction(SIGHUP,  &sahup,  NULL);
+		sigaction(SIGUSR1, &sausr1, NULL);
+		
+		if (execlp(worker, worker, crts_name, NULL) < 0)
 			ERR_SYS("error exec %s", worker); 
 		exit(EXIT_FAILURE);
 	}
@@ -436,19 +465,17 @@ main(int argc, char *argv[])
 	if ( (pipestream = fdopen(pipefd2[0], "r")) == NULL)
 		ERR_SYS("error fdopen pipefd2", progname);
 	
-	
-	//signalpipe
+	fds[0].events = POLLIN;
+	fds[1].fd = pipefd2[0];
+	fds[1].events = POLLIN;
 	fds[2].fd = signalpipe[0];
 	fds[2].events = POLLIN;
 
 	for (;;) {
-		fds[0].fd = -1;
-		fds[0].events = POLLIN;
-		fds[1].fd = pipefd2[0];
-		fds[1].events = POLLIN;
 		
 		LOG_MSG(2, "queue=%d, total=%d, send=%d, conf=%d", IN, quelist[IN].total, quelist[IN].send, quelist[IN].conf);
 		if ( (quelist[IN].send < WINSIZE) && (quelist[IN].send < quelist[IN].total) && (quelist[IN].send == quelist[IN].conf)) {
+			fds[0].fd = -1;
 			inode = GETFILENAME(IN);
 			MOVEFILE(IN, ACT, inode);
 			elem_add(quelist+ACT, elem_new(inode, (struct timeval){0, 0}, IN));
@@ -550,6 +577,8 @@ main(int argc, char *argv[])
 				}
 				while (--nsig >= 0) {
 					char c;
+					int n;
+
 					if (read(signalpipe[0], &c, 1) < 0 ) {
 						exit(EXIT_FAILURE);
 						; // Обработка ошибок
@@ -564,11 +593,12 @@ main(int argc, char *argv[])
 							goto signal_received; // Выключаем все файловые дескрипторы кроме, fd[2].fd
 							break;
 						case 'U': /* sigusr1 */
+							
 							LOG_MSG(2, "signal SIGUSR1 received");
 							fds[0].fd = trigfd;
 							fds[1].fd = pipefd2[0];
-							flush_queue();
-							LOG_MSG(2, "Сбросили все сообщения в отложенных очередях");
+							if ( (n = flush_queue()) > 0) 
+								LOG_MSG(2, "Successfully sent %d messages from pending queues", n);
 							break;
 					}
 				}
