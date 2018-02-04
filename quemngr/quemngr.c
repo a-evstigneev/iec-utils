@@ -36,11 +36,21 @@
 
 #define GETFILENAME(numque) quelist[numque].msg[quelist[numque].send]->inode;
 
+// Написать еще один макрос UNLINK #define UNLINK
+
 #define MOVEFILE(queind_src, queind_dst, file) \
 do { \
 	snprintf(src, PATH_MAX, "%s/%ld", quelist[queind_src].dir, file); \
 	snprintf(dst, PATH_MAX, "%s/%ld", quelist[queind_dst].dir, file); \
 	if (mvfile(src, dst) < 0) \
+		ERR_SYS("error move file %s to %s", src, dst); \
+} while (0)
+
+#define COPYFILE(queind_src, queind_dst, file) \
+do { \
+	snprintf(src, PATH_MAX, "%s/%ld", quelist[queind_src].dir, file); \
+	snprintf(dst, PATH_MAX, "%s/%ld", quelist[queind_dst].dir, file); \
+	if (cpfile(src, dst) < 0) \
 		ERR_SYS("error move file %s to %s", src, dst); \
 } while (0)
 
@@ -118,15 +128,20 @@ initqueue(void)
 	
 	qsort(quelist, countq+1, sizeof(struct msglist), queue_comp);
 	timerheap = heap_create(TIMERHEAPSIZE);
-	for (i = 0; i < countq+1; ++i) { // i начинается с 1. act востанавливать не надо, так как при выходе мы его чистим. 
+
+
+	//for (i = 0; i < countq+1; ++i) { // i начинается с 1. act востанавливать не надо, так как при выходе мы его чистим. 
+	for (i = 1; i < countq+1; ++i) { // i начинается с 1. act востанавливать не надо, так как при выходе мы его чистим. 
 		queue_restore(quelist+i, i);
 		queue_sort(quelist+i);
-		if (i != IN) {
-			for (j = 0; j < quelist[i].total; ++j) {
-				getmonotime(&now);
-				heap_insert(timerheap, now, i, 0); // Надо сюда будет забивать корректные inode при востановлении
-			}
-		}
+//		if (i != IN) {
+		
+		for (j = 0; j < quelist[i].total; ++j) {
+			getmonotime(&now);
+			heap_insert(timerheap, now, i, quelist[i].msg[j]->inode); // Надо сюда будет забивать корректные inode при востановлении
+		} 
+
+//		}
 	}
 	LOG_MSG(1, "initialization is successfully completed");
 	
@@ -180,6 +195,7 @@ check_response(ino_t inode, int retval, char *description)
 	int state;  
 	char src[PATH_MAX] = {0};
 	char dst[PATH_MAX] = {0};
+	char *dirstate = NULL;
 	struct timeval now;
 	
 	LOG_MSG(2, "search message with inode %ld, code %d", inode, retval); 
@@ -188,6 +204,7 @@ check_response(ino_t inode, int retval, char *description)
 		return -1;
 	}
 	state = quelist[ACT].msg[indelem]->state;
+	dirstate= quelist[state].dir;	
 
 	switch (retval) {
 		case 0:
@@ -196,6 +213,13 @@ check_response(ino_t inode, int retval, char *description)
 				ERR_SYS("error delete file %s", src);
 			if (fsyncdir(act) < 0)
 				ERR_SYS("error synchronize directory %s", act);
+			
+			snprintf(src, PATH_MAX, "%s/%ld", dirstate, inode); // При успешной отправке удаляем ссылку и в каталоге act и в каталоге state 
+			if (unlink(src) < 0) //
+				ERR_SYS("error delete file %s", src); //
+			if (fsyncdir(dirstate) < 0) //
+				ERR_SYS("error synchronize directory %s", dirstate); //
+			
 			elem_del(quelist+ACT, inode);
 			elem_del(quelist+state, inode);
 			quelist[state].conf--;
@@ -210,9 +234,16 @@ check_response(ino_t inode, int retval, char *description)
 		default:
 			if (state == countq) {
 				snprintf(src, PATH_MAX, "%s/%ld", act, inode);
+				if (unlink(src) < 0)//
+					ERR_SYS("error delete file %s", src);//
+				if (fsyncdir(act) < 0)//
+					ERR_SYS("error synchronize directory %s", act);//
+				
+				snprintf(src, PATH_MAX, "%s/%ld", dirstate, inode);//
 				snprintf(dst, PATH_MAX, "%s/%ld", fail, inode);
 				if (mvfile(src, dst) < 0)
 					ERR_SYS("error move file %s to %s", src, dst);
+				
 				elem_del(quelist+ACT, inode);
 				elem_del(quelist+state, inode);
 				quelist[state].conf--;
@@ -232,7 +263,16 @@ check_response(ino_t inode, int retval, char *description)
 				LOG_MSG(2, "timer for queue %d added", state+2);
 			}
 			else {	
-				MOVEFILE(ACT, state+1, inode);
+			//	MOVEFILE(ACT, state+1, inode);
+				
+				snprintf(src, PATH_MAX, "%s%ld", act, inode);// 
+				if (unlink(src) < 0)//
+					ERR_SYS("error delete file %s", src);//
+				if (fsyncdir(act) < 0)//
+					ERR_SYS("error synchronize directory %s", act);//
+				
+				MOVEFILE(state, state+1, inode);//
+				
 				elem_add(quelist+state+1, elem_new(inode, (struct timeval){0, 0}, state+1));
 				elem_del(quelist+ACT, inode);
 				elem_del(quelist+state, inode);
@@ -265,11 +305,11 @@ sig_term(int signum)
 	char src[PATH_MAX] = {0};
 	int n = quelist[ACT].total;
 
-//	while (n >= 0) { // Удаляем файлы из каталога act, так как это временный буфер для отправки файлов
-//		snprintf(src, PATH_MAX, "%s/%ld", act, quelist[ACT].msg[n]->inode);
-//		unlink(src);
-//		--n;
-//	}
+	while (n >= 0) { // Удаляем файлы из каталога act, так как это временный буфер для отправки файлов
+		snprintf(src, PATH_MAX, "%s/%ld", act, quelist[ACT].msg[n]->inode);//
+		unlink(src);//
+		--n;//
+	}//
 	
 	if (childpid > 0) 
 		kill(childpid, SIGTERM);
@@ -321,7 +361,10 @@ flush_queue(void)
 		while (quelist[queuesend].total > 0) {
 			if ( (quelist[queuesend].send < WINSIZE) && (quelist[queuesend].send < quelist[queuesend].total) && (quelist[queuesend].send == quelist[queuesend].conf)) { 
 				dfinode = GETFILENAME(queuesend);
-				MOVEFILE(queuesend, ACT, dfinode);
+				
+				COPYFILE(queuesend, ACT, dfinode);//
+				
+			//	MOVEFILE(queuesend, ACT, dfinode);
 				LOG_MSG(2, "Нашли файл %d в очереди %d", dfinode, queuesend);
 				elem_add(quelist+ACT, elem_new(dfinode, (struct timeval){0, 0}, queuesend));
 				
@@ -360,7 +403,7 @@ main(int argc, char *argv[])
 	
 	ino_t inode, dfinode, rinode; 
 	
-	int nearest, wait = -1;
+	int nearest, wait;
 	struct timeval now;
 	struct heapnode timer = {0};
 	struct heapnode *minnode = NULL;
@@ -465,53 +508,59 @@ main(int argc, char *argv[])
 	if ( (pipestream = fdopen(pipefd2[0], "r")) == NULL)
 		ERR_SYS("error fdopen pipefd2", progname);
 	
+	wait = -1;
+	fds[0].fd = -1;
 	fds[0].events = POLLIN;
-	fds[1].fd = pipefd2[0];
+	fds[1].fd = -1;
 	fds[1].events = POLLIN;
 	fds[2].fd = signalpipe[0];
 	fds[2].events = POLLIN;
 
 	for (;;) {
 		
-		LOG_MSG(2, "queue=%d, total=%d, send=%d, conf=%d", IN, quelist[IN].total, quelist[IN].send, quelist[IN].conf);
-		if ( (quelist[IN].send < WINSIZE) && (quelist[IN].send < quelist[IN].total) && (quelist[IN].send == quelist[IN].conf)) {
-			fds[0].fd = -1;
-			inode = GETFILENAME(IN);
-			MOVEFILE(IN, ACT, inode);
-			elem_add(quelist+ACT, elem_new(inode, (struct timeval){0, 0}, IN));
-			if (dprintf(pipefd1[1], "%ld\n", inode) < 0)
-				ERR_SYS("error write %ld to pipefd1", inode);
-			quelist[IN].send++;
-			LOG_MSG(2, "message with inode %ld was written to pipe", inode);
+		if (fds[1].fd > 0) {
 			LOG_MSG(2, "queue=%d, total=%d, send=%d, conf=%d", IN, quelist[IN].total, quelist[IN].send, quelist[IN].conf);
-		}
-		else if (quelist[IN].total == quelist[IN].send) {
-			fds[0].fd = trigfd;
-			LOG_MSG(2, "trigger switched on");
-		}
-
-		if (wait > 0) {
-			LOG_MSG(2, "current timeout is %d", wait);
-			minnode = heap_min(timerheap);
-			getmonotime(&now);
-			nearest = (((minnode->key.tv_sec - now.tv_sec)*1000000L + minnode->key.tv_usec) - now.tv_usec)/1000;
-			if (nearest < 0) nearest = DELTAUSEC;
-			if (wait > nearest) { 
-				wait = nearest;
-				LOG_MSG(2, "min timeout of %d is set from the heap", wait);
+			if ( (quelist[IN].send < WINSIZE) && (quelist[IN].send < quelist[IN].total) && (quelist[IN].send == quelist[IN].conf)) {
+				fds[0].fd = -1;
+				inode = GETFILENAME(IN);
+				COPYFILE(IN, ACT, inode);
+			//	MOVEFILE(IN, ACT, inode);
+				elem_add(quelist+ACT, elem_new(inode, (struct timeval){0, 0}, IN));
+				if (dprintf(pipefd1[1], "%ld\n", inode) < 0)
+					ERR_SYS("error write %ld to pipefd1", inode);
+				quelist[IN].send++;
+				LOG_MSG(2, "message with inode %ld was written to pipe", inode);
+				LOG_MSG(2, "queue=%d, total=%d, send=%d, conf=%d", IN, quelist[IN].total, quelist[IN].send, quelist[IN].conf);
 			}
+			else if (quelist[IN].total == quelist[IN].send) {
+				fds[0].fd = trigfd;
+				LOG_MSG(2, "trigger switched on");
+			}
+		
+
+			if (wait > 0) {
+				LOG_MSG(2, "current timeout is %d", wait);
+				minnode = heap_min(timerheap);
+				getmonotime(&now);
+				nearest = (((minnode->key.tv_sec - now.tv_sec)*1000000L + minnode->key.tv_usec) - now.tv_usec)/1000;
+				if (nearest < 0) nearest = DELTAUSEC;
+				if (wait > nearest) { 
+					wait = nearest;
+					LOG_MSG(2, "min timeout of %d is set from the heap", wait);
+				}
+			}
+			else if (timerheap->nodecount) {
+				LOG_MSG(2, "number of timers in the heap %d", timerheap->nodecount);
+				minnode = heap_min(timerheap);
+				getmonotime(&now); 
+				wait = (((minnode->key.tv_sec - now.tv_sec)*1000000L + minnode->key.tv_usec) - now.tv_usec)/1000;
+				if (wait <= 0) wait = DELTAUSEC;
+				LOG_MSG(2, "timeout of %d msec is set to poll", wait);
+			} 
+			else
+				wait = -1;
 		}
-		else if (timerheap->nodecount) {
-			LOG_MSG(2, "number of timers in the heap %d", timerheap->nodecount);
-			minnode = heap_min(timerheap);
-			getmonotime(&now); 
-			wait = (((minnode->key.tv_sec - now.tv_sec)*1000000L + minnode->key.tv_usec) - now.tv_usec)/1000;
-			if (wait <= 0) wait = DELTAUSEC;
-			LOG_MSG(2, "timeout of %d msec is set to poll", wait);
-		} 
-		else
-			wait = -1;
-	
+		
 	signal_received:
 		ret = poll(fds, 3, wait);
 		if (ret < 0 && errno != EINTR) { 
@@ -521,33 +570,38 @@ main(int argc, char *argv[])
 			goto signal_received;
 		}
 		else if (ret == 0) {
-			int tempinode = minnode->inode;
-			indq = minnode->indq;
-			
-			LOG_MSG(2, "timeout expired\n");
-			wait = -1;
-			
-			if (elem_find(quelist+indq, tempinode) < 0) { // Элемент не найден, извлекаем таймер из кучи (возможно можно упростить)
-				heap_extract_min(timerheap);
-				LOG_MSG(2, "Inode в отложенных очередях не найден, удаляем таймер из кучи");
-				continue;
-			}
-							
-			if ( (quelist[indq].send < WINDEFSIZE) && (quelist[indq].send < quelist[indq].total) && (quelist[indq].send == quelist[indq].conf)) { 
-				LOG_MSG(2, "queue=%d, total=%d, send=%d, conf=%d", indq, quelist[indq].total, quelist[indq].send, quelist[indq].conf);
-				dfinode = GETFILENAME(indq);
-				if (indq) {
-					MOVEFILE(indq, ACT, dfinode);
-					elem_add(quelist+ACT, elem_new(dfinode, (struct timeval){0, 0}, indq));
+			if (fds[1].fd > 0) {
+				int tempinode = minnode->inode;
+				indq = minnode->indq;
+				
+				LOG_MSG(2, "timeout expired\n");
+				wait = -1;
+				
+				if (elem_find(quelist+indq, tempinode) < 0) { // Элемент не найден, извлекаем таймер из кучи (возможно можно упростить)
+					heap_extract_min(timerheap);
+					LOG_MSG(2, "Inode в отложенных очередях не найден, удаляем таймер из кучи");
+					continue;
 				}
-				if (dprintf(pipefd1[1], "%ld\n", dfinode) < 0) 
-					ERR_SYS("error write %ld to pipefd1", dfinode);
-				quelist[indq].send++;
-				LOG_MSG(2, "message with inode %ld was written to pipe", dfinode);
-				LOG_MSG(2, "queue=%d, total=%d, send=%d, conf=%d", indq, quelist[indq].total, quelist[indq].send, quelist[indq].conf);
-				heap_extract_min(timerheap);
-				LOG_MSG(2, "min timer has been deleted from heap");
-			} 
+								
+				if ( (quelist[indq].send < WINDEFSIZE) && (quelist[indq].send < quelist[indq].total) && (quelist[indq].send == quelist[indq].conf)) { 
+					LOG_MSG(2, "queue=%d, total=%d, send=%d, conf=%d", indq, quelist[indq].total, quelist[indq].send, quelist[indq].conf);
+					dfinode = GETFILENAME(indq); // tempinode ?
+					if (indq) {
+						COPYFILE(indq, ACT, dfinode); //
+					//	MOVEFILE(indq, ACT, dfinode);
+						elem_add(quelist+ACT, elem_new(dfinode, (struct timeval){0, 0}, indq));
+					}
+					if (dprintf(pipefd1[1], "%ld\n", dfinode) < 0) 
+						ERR_SYS("error write %ld to pipefd1", dfinode);
+					
+					quelist[indq].send++;
+					
+					LOG_MSG(2, "message with inode %ld was written to pipe", dfinode);
+					LOG_MSG(2, "queue=%d, total=%d, send=%d, conf=%d", indq, quelist[indq].total, quelist[indq].send, quelist[indq].conf);
+					heap_extract_min(timerheap);
+					LOG_MSG(2, "min timer has been deleted from heap");
+				} 
+			}
 		}
 		else if (ret > 0) {
 			LOG_MSG(2, "Один из дескрипторов готов на чтение");

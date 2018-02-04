@@ -48,6 +48,42 @@ mvfile(const char *src, const char *dst)
 }
 
 int
+cpfile(const char *src, const char *dst)
+{
+	int ret, srcdirfd, dstdirfd;
+	char *srcdir, *dstdir;
+	char *srcpath = strdup(src);
+	char *dstpath = strdup(dst);
+
+//	srcdir = dirname(srcpath);
+//	dstdir = dirname(dstpath);
+
+	ret = link(srcpath, dstpath);
+	
+	
+//	if ( (srcdirfd = open(srcdir, O_RDONLY|O_NONBLOCK|O_DIRECTORY|O_CLOEXEC)) < 0)
+//		ret = -1;
+//	else if ( (dstdirfd = open(dstdir, O_RDONLY|O_NONBLOCK|O_DIRECTORY|O_CLOEXEC)) < 0)
+//		ret = -1;
+//	else if (rename(src, dst) == 0) {
+//		if (fsync(srcdirfd) < 0)
+//			ret = -1; 
+//		if (fsync(dstdirfd) < 0)
+//			ret = -1;
+//		close(srcdirfd);
+//		close(dstdirfd);
+//		ret = 0;
+//	} 
+//	else
+//		ret = -1;
+
+	xfree(srcpath);
+	xfree(dstpath);
+
+	return ret;
+}
+
+int
 fsyncdir(const char *dir)
 {
 	int dirfd, ret = 0;
