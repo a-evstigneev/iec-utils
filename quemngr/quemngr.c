@@ -101,6 +101,7 @@ initqueue(void)
 	countq = queue_add();
 	quelist[countq].dir = act;
 	quelist[countq].timeout = 0;
+	quelist[countq].total = -1;
 	
 	countq = queue_add();
 	quelist[countq].dir = in;
@@ -136,10 +137,10 @@ initqueue(void)
 		queue_sort(quelist+i);
 //		if (i != IN) {
 		
-		for (j = 0; j < quelist[i].total; ++j) {
-			getmonotime(&now);
-			heap_insert(timerheap, now, i, quelist[i].msg[j]->inode); // Надо сюда будет забивать корректные inode при востановлении
-		} 
+//		for (j = 0; j < quelist[i].total; ++j) {
+//			getmonotime(&now);
+//			heap_insert(timerheap, now, i, quelist[i].msg[j]->inode); // Надо сюда будет забивать корректные inode при востановлении
+//		} 
 
 //		}
 	}
@@ -224,7 +225,7 @@ check_response(ino_t inode, int retval, char *description)
 			elem_del(quelist+state, inode);
 			quelist[state].conf--;
 			quelist[state].send--;
-			LOG_MSG(2, "queue=%d, total=%d, send=%d, conf=%d", state, quelist[state].total, quelist[state].send, quelist[state].conf);
+		//	LOG_MSG(2, "queue=%d, total=%d, send=%d, conf=%d", state, quelist[state].total, quelist[state].send, quelist[state].conf);
 			return 1;
 			break;
 		case 1:
@@ -302,17 +303,21 @@ flag_signal(const char c)
 void 
 sig_term(int signum)
 {
-	char src[PATH_MAX] = {0};
+	char src[PATH_MAX] = {0}, *cp;
 	int n = quelist[ACT].total;
-
+	
+//	LOG_MSG(2, "ACT total %d", n);
+//	strcpy(buf, act);
+//	cp = buf + strlen(buf);
 	while (n >= 0) { // Удаляем файлы из каталога act, так как это временный буфер для отправки файлов
-		snprintf(src, PATH_MAX, "%s/%ld", act, quelist[ACT].msg[n]->inode);//
+		snprintf(src, PATH_MAX, "%s%ld", act, quelist[ACT].msg[n]->inode);//
 		unlink(src);//
 		--n;//
 	}//
 	
-	if (childpid > 0) 
+	if (childpid > 0) { 
 		kill(childpid, SIGTERM);
+	}
 	else 
 		exit(EXIT_SUCCESS);
 		// Очистить очередь ACT, чтобы в каталоге act не было сообщений
@@ -448,8 +453,6 @@ main(int argc, char *argv[])
 	sigaddset(&sa.sa_mask, SIGCHLD);
 	sigaddset(&sa.sa_mask, SIGHUP);
 	sigaddset(&sa.sa_mask, SIGUSR1);
-
-//	sigprocmask(SIG_BLOCK, &sa.sa_mask, &oldset);
 
 	sa.sa_handler = sig_term;
 	sigaction(SIGTERM, &sa, &saterm);

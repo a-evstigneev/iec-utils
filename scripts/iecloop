@@ -32,7 +32,7 @@ sigterm()
 	
 	jobs -p >$tmpfile
 	while read pid; do
-		kill $pid >/dev/null 2>&1
+		kill -s TERM $pid >/dev/null 2>&1
 	done <<-EOF
 		$(cat $tmpfile)
 	EOF
