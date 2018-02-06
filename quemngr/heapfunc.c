@@ -49,7 +49,7 @@ heap_min(struct heap *h)
 }
 
 int
-heap_insert(struct heap *h, struct timeval key, int indq, int inode)
+heap_insert(struct heap *h, struct timeval key, int indque, int inode)
 {
 	int i;
 
@@ -60,7 +60,7 @@ heap_insert(struct heap *h, struct timeval key, int indq, int inode)
 	
 	h->nodecount++;
 	h->nodes[h->nodecount].key = key;
-	h->nodes[h->nodecount].indq = indq;
+	h->nodes[h->nodecount].indque = indque;
 	h->nodes[h->nodecount].inode = inode;
 	
 	for (i = h->nodecount; i > 1 && timercmp(&h->nodes[i].key, &h->nodes[i/2].key, <) ; i = i/2) {

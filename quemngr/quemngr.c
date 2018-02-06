@@ -89,6 +89,43 @@ int pipefd1[2], pipefd2[2], flags;
 FILE *pipestream = NULL;
 
 int
+scan_drop(void)
+{
+	DIR *workdir = NULL;
+	struct dirent *direntry = NULL;
+	struct stat buf;
+	struct timeval tv;
+	char src[PATH_MAX] = {0};
+	char dst[PATH_MAX] = {0};
+	int count = 0;
+
+	if ( (workdir = opendir(drop)) == NULL)
+		ERR_SYS("error open directory %s", drop);
+	while ( (direntry = readdir(workdir)) != NULL) {
+		if ((strcmp(direntry->d_name, CURDIR) == 0) || (strcmp(direntry->d_name, PARENTDIR) == 0))
+			continue;
+		if (strtoul(direntry->d_name, NULL, 10) == direntry->d_ino) {
+			snprintf(src, PATH_MAX, "%s%s", drop, direntry->d_name);
+			snprintf(dst, PATH_MAX, "%s%s", quelist[IN].dir, direntry->d_name);
+			if (mvfile(src, dst) < 0)
+				ERR_SYS("error move file %s to %s", src, dst);
+			if (stat(dst, &buf) < 0)
+				ERR_SYS("error get file status %s", dst);
+			tv.tv_sec = buf.st_mtim.tv_sec;
+			tv.tv_usec = buf.st_mtim.tv_nsec/1000;
+			elem_add(&quelist[IN], elem_new(buf.st_ino, tv, IN));
+			++count;
+		}
+	}
+	closedir(workdir);
+	
+	if (count) 
+		queue_sort(quelist+IN);
+
+	return count;
+}
+
+int
 initqueue(void)
 {
 	DIR *workdir = NULL;
@@ -130,61 +167,14 @@ initqueue(void)
 	qsort(quelist, countq+1, sizeof(struct msglist), queue_comp);
 	timerheap = heap_create(TIMERHEAPSIZE);
 
-
-	//for (i = 0; i < countq+1; ++i) { // i начинается с 1. act востанавливать не надо, так как при выходе мы его чистим. 
-	for (i = 1; i < countq+1; ++i) { // i начинается с 1. act востанавливать не надо, так как при выходе мы его чистим. 
+	for (i = 1; i < countq+1; ++i) {
 		queue_restore(quelist+i, i);
 		queue_sort(quelist+i);
-//		if (i != IN) {
-		
-//		for (j = 0; j < quelist[i].total; ++j) {
-//			getmonotime(&now);
-//			heap_insert(timerheap, now, i, quelist[i].msg[j]->inode); // Надо сюда будет забивать корректные inode при востановлении
-//		} 
-
-//		}
 	}
+	scan_drop();
+	// Надо ли выводить статистику по востанновленым очередям?
 	LOG_MSG(1, "initialization is successfully completed");
 	
-	return 0;
-}
-
-int
-scan_drop(void)
-{
-	DIR *workdir = NULL;
-	struct dirent *direntry = NULL;
-	struct stat buf;
-	struct timeval tv;
-	char src[PATH_MAX] = {0};
-	char dst[PATH_MAX] = {0};
-	int count = 0;
-
-	if ( (workdir = opendir(drop)) == NULL)
-		ERR_SYS("error open directory %s", drop);
-	while ( (direntry = readdir(workdir)) != NULL) {
-		if ((strcmp(direntry->d_name, CURDIR) == 0) || (strcmp(direntry->d_name, PARENTDIR) == 0))
-			continue;
-		if (strtoul(direntry->d_name, NULL, 10) == direntry->d_ino) {
-			snprintf(src, PATH_MAX, "%s%s", drop, direntry->d_name);
-			snprintf(dst, PATH_MAX, "%s%s", quelist[IN].dir, direntry->d_name);
-			if (mvfile(src, dst) < 0)
-				ERR_SYS("error move file %s to %s", src, dst);
-			if (stat(dst, &buf) < 0)
-				ERR_SYS("error get file status %s", dst);
-			tv.tv_sec = buf.st_mtim.tv_sec;
-			tv.tv_usec = buf.st_mtim.tv_nsec/1000;
-			elem_add(&quelist[IN], elem_new(buf.st_ino, tv, IN));
-			++count;
-		}
-	}
-	closedir(workdir);
-	
-	if (count) {
-		LOG_MSG(2, "%d files were read from %s", count, drop); 
-		queue_sort(quelist+IN);
-	}
-
 	return 0;
 }
 
@@ -214,18 +204,18 @@ check_response(ino_t inode, int retval, char *description)
 				ERR_SYS("error delete file %s", src);
 			if (fsyncdir(act) < 0)
 				ERR_SYS("error synchronize directory %s", act);
-			
-			snprintf(src, PATH_MAX, "%s/%ld", dirstate, inode); // При успешной отправке удаляем ссылку и в каталоге act и в каталоге state 
-			if (unlink(src) < 0) //
-				ERR_SYS("error delete file %s", src); //
-			if (fsyncdir(dirstate) < 0) //
-				ERR_SYS("error synchronize directory %s", dirstate); //
+
+			snprintf(src, PATH_MAX, "%s/%ld", dirstate, inode);
+			if (unlink(src) < 0)
+				ERR_SYS("error delete file %s", src);
+			if (fsyncdir(dirstate) < 0)
+				ERR_SYS("error synchronize directory %s", dirstate);
 			
 			elem_del(quelist+ACT, inode);
 			elem_del(quelist+state, inode);
 			quelist[state].conf--;
 			quelist[state].send--;
-		//	LOG_MSG(2, "queue=%d, total=%d, send=%d, conf=%d", state, quelist[state].total, quelist[state].send, quelist[state].conf);
+			LOG_MSG(2, "queue=%d, total=%d, send=%d, conf=%d", state, quelist[state].total, quelist[state].send, quelist[state].conf);
 			return 1;
 			break;
 		case 1:
@@ -235,12 +225,12 @@ check_response(ino_t inode, int retval, char *description)
 		default:
 			if (state == countq) {
 				snprintf(src, PATH_MAX, "%s/%ld", act, inode);
-				if (unlink(src) < 0)//
-					ERR_SYS("error delete file %s", src);//
-				if (fsyncdir(act) < 0)//
-					ERR_SYS("error synchronize directory %s", act);//
+				if (unlink(src) < 0)
+					ERR_SYS("error delete file %s", src);
+				if (fsyncdir(act) < 0)
+					ERR_SYS("error synchronize directory %s", act);
 				
-				snprintf(src, PATH_MAX, "%s/%ld", dirstate, inode);//
+				snprintf(src, PATH_MAX, "%s/%ld", dirstate, inode);
 				snprintf(dst, PATH_MAX, "%s/%ld", fail, inode);
 				if (mvfile(src, dst) < 0)
 					ERR_SYS("error move file %s to %s", src, dst);
@@ -252,27 +242,14 @@ check_response(ino_t inode, int retval, char *description)
 				LOG_MSG(2, "message with inode %ld moved to directory %s", inode, fail);
 				LOG_MSG(2, "queue=%d, total=%d, send=%d, conf=%d", state, quelist[state].total, quelist[state].send, quelist[state].conf);
 			}
-			else if (state == ACT) {
-				MOVEFILE(ACT, state+2, inode);
-				elem_add(quelist+state+2, elem_new(inode, (struct timeval){0, 0}, state+2));
-				elem_del(quelist+ACT, inode);
-				quelist[state].conf--; 
-				quelist[state].send--; 
-				LOG_MSG(2, "queue=%d, total=%d, send=%d, conf=%d", state, quelist[state].total, quelist[state].send, quelist[state].conf);
-				LOG_MSG(2, "queue=%d, total=%d, send=%d, conf=%d", state+2, quelist[state+2].total, quelist[state+2].send, quelist[state+2].conf);
-				ADDTIMER(state+2, inode); 
-				LOG_MSG(2, "timer for queue %d added", state+2);
-			}
 			else {	
-			//	MOVEFILE(ACT, state+1, inode);
+				snprintf(src, PATH_MAX, "%s%ld", act, inode);
+				if (unlink(src) < 0)
+					ERR_SYS("error delete file %s", src);
+				if (fsyncdir(act) < 0)
+					ERR_SYS("error synchronize directory %s", act);
 				
-				snprintf(src, PATH_MAX, "%s%ld", act, inode);// 
-				if (unlink(src) < 0)//
-					ERR_SYS("error delete file %s", src);//
-				if (fsyncdir(act) < 0)//
-					ERR_SYS("error synchronize directory %s", act);//
-				
-				MOVEFILE(state, state+1, inode);//
+				MOVEFILE(state, state+1, inode);
 				
 				elem_add(quelist+state+1, elem_new(inode, (struct timeval){0, 0}, state+1));
 				elem_del(quelist+ACT, inode);
@@ -296,7 +273,6 @@ flag_signal(const char c)
 
 	if (write(signalpipe[1], &ch, 1) < 0) {
 		exit(EXIT_FAILURE);
-		; // обработка ошибок с выводом в stderr
 	}
 }
 
@@ -306,21 +282,17 @@ sig_term(int signum)
 	char src[PATH_MAX] = {0}, *cp;
 	int n = quelist[ACT].total;
 	
-//	LOG_MSG(2, "ACT total %d", n);
-//	strcpy(buf, act);
-//	cp = buf + strlen(buf);
-	while (n >= 0) { // Удаляем файлы из каталога act, так как это временный буфер для отправки файлов
-		snprintf(src, PATH_MAX, "%s%ld", act, quelist[ACT].msg[n]->inode);//
-		unlink(src);//
-		--n;//
-	}//
+	while (n >= 0) {
+		snprintf(src, PATH_MAX, "%s%ld", act, quelist[ACT].msg[n]->inode);
+		unlink(src);
+		--n;
+	}
 	
 	if (childpid > 0) { 
 		kill(childpid, SIGTERM);
 	}
 	else 
 		exit(EXIT_SUCCESS);
-		// Очистить очередь ACT, чтобы в каталоге act не было сообщений
 }
 
 void 
@@ -355,38 +327,34 @@ flush_queue(void)
 
 	char src[PATH_MAX] = {0};
 	char dst[PATH_MAX] = {0};
-	ino_t dfinode, rinode;
-	int queuesend, code, n;
+	ino_t definode, retinode;
+	int indque, code, n;
 	char description[DESCMAX] = {0};	
 	
 	n = 0;
-	queuesend = countq;
+	indque = countq;
 
-	while (queuesend > 1) {
-		while (quelist[queuesend].total > 0) {
-			if ( (quelist[queuesend].send < WINSIZE) && (quelist[queuesend].send < quelist[queuesend].total) && (quelist[queuesend].send == quelist[queuesend].conf)) { 
-				dfinode = GETFILENAME(queuesend);
+	while (indque > 1) {
+		while (quelist[indque].total > 0) {
+			if ( (quelist[indque].send < WINSIZE) && (quelist[indque].send < quelist[indque].total) && (quelist[indque].send == quelist[indque].conf)) { 
+				definode = GETFILENAME(indque);
+				LOG_MSG(2, "message with inode %d found in the queue %d", definode, indque);
+				COPYFILE(indque, ACT, definode);
+				elem_add(quelist+ACT, elem_new(definode, (struct timeval){0, 0}, indque));
 				
-				COPYFILE(queuesend, ACT, dfinode);//
-				
-			//	MOVEFILE(queuesend, ACT, dfinode);
-				LOG_MSG(2, "Нашли файл %d в очереди %d", dfinode, queuesend);
-				elem_add(quelist+ACT, elem_new(dfinode, (struct timeval){0, 0}, queuesend));
-				
-				if (dprintf(pipefd1[1], "%ld\n", dfinode) < 0) 
-					ERR_SYS("error write %ld to pipefd1", dfinode);
+				if (dprintf(pipefd1[1], "%ld\n", definode) < 0) 
+					ERR_SYS("error write %ld to pipefd1", definode);
 		
-				LOG_MSG(2, "Отправили файл %d в pipefd1", dfinode);
-				quelist[queuesend].send++;
-				
-				LOG_MSG(2, "queue=%d, total=%d, send=%d, conf=%d", queuesend, quelist[queuesend].total, quelist[queuesend].send, quelist[queuesend].conf);
+				LOG_MSG(2, "message with inode %ld was written to pipefd1", definode);
+				quelist[indque].send++;
+				LOG_MSG(2, "queue=%d, total=%d, send=%d, conf=%d", indque, quelist[indque].total, quelist[indque].send, quelist[indque].conf);
 			}
 
-			while (fscanf(pipestream, "%ld %d %[^\n]", &rinode, &code, description) != EOF)    
-				if (check_response(rinode, code, description) > 0)
+			while (fscanf(pipestream, "%ld %d %[^\n]", &retinode, &code, description) != EOF)    
+				if (check_response(retinode, code, description) > 0)
 					++n;
 		}
-		queuesend--;
+		indque--;
 	}
 
 	return n;
@@ -400,13 +368,13 @@ main(int argc, char *argv[])
 	
 	char *workdir, *trigger, *crts_name, *worker;
 		
-	int gopt, code, indq, ret;
+	int gopt, n, code, indque, ret, isconnect;
 	
 	char description[DESCMAX] = {0};	
 	char src[PATH_MAX] = {0};
 	char dst[PATH_MAX] = {0};
 	
-	ino_t inode, dfinode, rinode; 
+	ino_t inode, definode, retinode; 
 	
 	int nearest, wait;
 	struct timeval now;
@@ -414,7 +382,6 @@ main(int argc, char *argv[])
 	struct heapnode *minnode = NULL;
 	
 	struct sigaction sa, saterm, sachld, sahup, sausr1;
-	sigset_t oldset;
 
 	progname = argv[0];
 
@@ -511,6 +478,7 @@ main(int argc, char *argv[])
 	if ( (pipestream = fdopen(pipefd2[0], "r")) == NULL)
 		ERR_SYS("error fdopen pipefd2", progname);
 	
+	isconnect = 0;
 	wait = -1;
 	fds[0].fd = -1;
 	fds[0].events = POLLIN;
@@ -521,13 +489,11 @@ main(int argc, char *argv[])
 
 	for (;;) {
 		
-		if (fds[1].fd > 0) {
-			LOG_MSG(2, "queue=%d, total=%d, send=%d, conf=%d", IN, quelist[IN].total, quelist[IN].send, quelist[IN].conf);
+		if (isconnect > 0) {
 			if ( (quelist[IN].send < WINSIZE) && (quelist[IN].send < quelist[IN].total) && (quelist[IN].send == quelist[IN].conf)) {
 				fds[0].fd = -1;
 				inode = GETFILENAME(IN);
 				COPYFILE(IN, ACT, inode);
-			//	MOVEFILE(IN, ACT, inode);
 				elem_add(quelist+ACT, elem_new(inode, (struct timeval){0, 0}, IN));
 				if (dprintf(pipefd1[1], "%ld\n", inode) < 0)
 					ERR_SYS("error write %ld to pipefd1", inode);
@@ -573,42 +539,35 @@ main(int argc, char *argv[])
 			goto signal_received;
 		}
 		else if (ret == 0) {
-			if (fds[1].fd > 0) {
-				int tempinode = minnode->inode;
-				indq = minnode->indq;
-				
-				LOG_MSG(2, "timeout expired\n");
-				wait = -1;
-				
-				if (elem_find(quelist+indq, tempinode) < 0) { // Элемент не найден, извлекаем таймер из кучи (возможно можно упростить)
-					heap_extract_min(timerheap);
-					LOG_MSG(2, "Inode в отложенных очередях не найден, удаляем таймер из кучи");
-					continue;
-				}
-								
-				if ( (quelist[indq].send < WINDEFSIZE) && (quelist[indq].send < quelist[indq].total) && (quelist[indq].send == quelist[indq].conf)) { 
-					LOG_MSG(2, "queue=%d, total=%d, send=%d, conf=%d", indq, quelist[indq].total, quelist[indq].send, quelist[indq].conf);
-					dfinode = GETFILENAME(indq); // tempinode ?
-					if (indq) {
-						COPYFILE(indq, ACT, dfinode); //
-					//	MOVEFILE(indq, ACT, dfinode);
-						elem_add(quelist+ACT, elem_new(dfinode, (struct timeval){0, 0}, indq));
-					}
-					if (dprintf(pipefd1[1], "%ld\n", dfinode) < 0) 
-						ERR_SYS("error write %ld to pipefd1", dfinode);
-					
-					quelist[indq].send++;
-					
-					LOG_MSG(2, "message with inode %ld was written to pipe", dfinode);
-					LOG_MSG(2, "queue=%d, total=%d, send=%d, conf=%d", indq, quelist[indq].total, quelist[indq].send, quelist[indq].conf);
-					heap_extract_min(timerheap);
-					LOG_MSG(2, "min timer has been deleted from heap");
-				} 
+			LOG_MSG(2, "timeout expired\n");
+			
+			definode = minnode->inode;
+			indque = minnode->indque;
+			wait = -1;
+			
+			if (elem_find(quelist+indque, definode) < 0) {
+				heap_extract_min(timerheap);
+				LOG_MSG(2, "inode is not found in deffered queue, remove timer from the heap");
+				continue;
 			}
+							
+			if ( (quelist[indque].send < WINDEFSIZE) && (quelist[indque].send < quelist[indque].total) && (quelist[indque].send == quelist[indque].conf)) { 
+				LOG_MSG(2, "queue=%d, total=%d, send=%d, conf=%d", indque, quelist[indque].total, quelist[indque].send, quelist[indque].conf);
+				COPYFILE(indque, ACT, definode); //
+				elem_add(quelist+ACT, elem_new(definode, (struct timeval){0, 0}, indque));
+				
+				if (dprintf(pipefd1[1], "%ld\n", definode) < 0) 
+					ERR_SYS("error write %ld to pipefd1", definode);
+				
+				quelist[indque].send++;
+				
+				LOG_MSG(2, "message with inode %ld was written to pipe", definode);
+				LOG_MSG(2, "queue=%d, total=%d, send=%d, conf=%d", indque, quelist[indque].total, quelist[indque].send, quelist[indque].conf);
+				heap_extract_min(timerheap);
+				LOG_MSG(2, "min timer has been removed from the heap");
+			} 
 		}
 		else if (ret > 0) {
-			LOG_MSG(2, "Один из дескрипторов готов на чтение");
-			
 			if (fds[0].revents & POLLIN) {
 				LOG_MSG(2, "trigger changed state");
 				close(trigfd);
@@ -618,40 +577,41 @@ main(int argc, char *argv[])
 					ERR_SYS("can`t create fifo %s", trigger);
 				if ( (trigfd = open(trigger, O_RDONLY | O_NONBLOCK)) < 0)
 					ERR_SYS("error open %s", trigger);
-				scan_drop();
+				if ( (n = scan_drop()) > 0)
+					LOG_MSG(2, "%d files were read from %s", n, drop); 
 			}
 
 			if (fds[1].revents & POLLIN) {
 				LOG_MSG(2, "data in the pipe are available");
-				while (fscanf(pipestream, "%ld %d %[^\n]", &rinode, &code, description) != EOF)    
-					check_response(rinode, code, description);
+				while (fscanf(pipestream, "%ld %d %[^\n]", &retinode, &code, description) != EOF)    
+					check_response(retinode, code, description);
 			}
 
 			if (fds[2].revents & POLLIN) {
 				if (ioctl(signalpipe[0], FIONREAD, &nsig) != 0) {
-					exit(EXIT_FAILURE);
-					; // Обработка ошибок
+					ERR_SYS("error ioctl()");
 				}
 				while (--nsig >= 0) {
 					char c;
 					int n;
 
 					if (read(signalpipe[0], &c, 1) < 0 ) {
-						exit(EXIT_FAILURE);
-						; // Обработка ошибок
+						ERR_SYS("error read from signalpipe");
 					}
 					
 					switch(c) {
 						case 'H': /* sighup */
 							LOG_MSG(2, "signal SIGHUP received");
-							wait = -1;	
+							LOG_MSG(2, "network connection is not available");
+							wait = -1; 
+							isconnect = 0;
 							fds[0].fd = -1;
 							fds[1].fd = -1;
-							goto signal_received; // Выключаем все файловые дескрипторы кроме, fd[2].fd
 							break;
 						case 'U': /* sigusr1 */
-							
 							LOG_MSG(2, "signal SIGUSR1 received");
+							LOG_MSG(2, "network connection is available");
+							isconnect = 1;
 							fds[0].fd = trigfd;
 							fds[1].fd = pipefd2[0];
 							if ( (n = flush_queue()) > 0) 
