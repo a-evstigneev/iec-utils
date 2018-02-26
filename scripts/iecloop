@@ -54,9 +54,20 @@ while read crts_name crts_address crts_port; do
 	mkdir -p $VARDIR/$crts_name/work/df/0h0m45s
 	mkdir -p $VARDIR/$crts_name/work/df/0h0m60s
 	
-	quemngr	-n $crts_name -d $VARDIR/$crts_name/work -t $VARDIR/$crts_name/work/trigger -s worker -l 3 2>$LOGDIR/$crts_name/quemngr.log &
+	quemngr \
+		-n $crts_name \
+		-d $VARDIR/$crts_name/work \
+		-t $VARDIR/$crts_name/work/trigger \
+		-s worker \
+		-l 3 2>$LOGDIR/$crts_name/quemngr.log &
 	
-	QUEMNGR_PID=$! iecproxy -u $VARDIR/$crts_name/socket -s $crts_address -p $crts_port -l ieclink -g ginterrog 2>$LOGDIR/$crts_name/iecproxy.log &
+	QUEMNGR_PID=$! iecproxy \
+		-u $VARDIR/$crts_name/socket \
+		-s $crts_address \
+		-p $crts_port \
+		-l ieclink \
+		-g ginterrog 2>$LOGDIR/$crts_name/iecproxy.log &
+
 done <<-EOF
 	$(cat $CRTS_LIST | grep -v '^#' | sed '/^$/d')
 EOF

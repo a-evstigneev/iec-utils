@@ -30,4 +30,4 @@ install:
 	mkdir -p $(installdir)/var/smsdrop $(installdir)/var/run
 
 clean:
-	cd $(bindir); rm -rf *
+	cd $(bindir) && rm -rf *
