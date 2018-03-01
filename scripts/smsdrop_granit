@@ -46,10 +46,10 @@ if echo "$sms" | grep -q -v -e '[,:]'; then
 	exit 2
 fi
 
-#if echo $sms | grep -q -e 'Vzayty na ohrany' -e 'Snayty s ohrany'; then
+if echo $sms | grep -q -e 'Vzayty na ohrany' -e 'Snayty s ohrany'; then
 #	echo "Subject: iec104\r\n\r\nControlled station  = ${comaddr}, ${sms}" | msmtp --debug -a komisyk@gmail.com -t -i komisyk@mail.ru >/dev/null 2>&1
-#	exit 2
-#fi
+	exit 2
+fi
 
 sms=$(echo $sms | sed 's/ gradus C//')
 filename=$(mktemp -u -p "$SMSDROP" "${comaddr}_XXXXXX")
