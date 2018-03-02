@@ -37,8 +37,9 @@ smssep()
 			_listid="error"
 			break
 		elif echo "$_line" | grep -v -q "CMGL"; then
-			_listid="undef"
-			break
+			continue
+		#	_listid="undef"
+		#	break
 		fi
 		
 		IFS="," read _id _stat _num _sp _date <<-EOF
