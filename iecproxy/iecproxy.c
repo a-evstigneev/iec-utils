@@ -294,7 +294,7 @@ main(int argc, char *argv[])
 		}
 		
 		if (fdread[2].revents & POLLIN) {
-			if (fdread[2].fd < 0)
+			if (fdread[2].fd < 0) // Какая-то хрень
 				continue;
 			
 			while ( (n = read(fdread[2].fd, buf, BUF_SIZE)) > 0) { 

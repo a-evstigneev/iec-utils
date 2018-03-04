@@ -1,0 +1,34 @@
+#!/bin/sh
+
+IECDIR="/opt/iecd"
+IECDB="$IECDIR/iecdb"
+
+#if ! [ -z "$(ls $IECDB)" ]; then 
+#	find $IECDB -type f -printf "%P\n" | \
+#	while IFS="/" read comaddr type objaddr; do 
+#		echo $comaddr $objaddr 30 $(cat $IECDB/$comaddr/$type/$objaddr 2>/dev/null) 
+#	done | $IECDIR/asduconv -c 3
+
+	echo "180 1 30 0 not_used 34887:31:23:2:5:3:18" | $IECDIR/asduconv -c 3
+	echo "180 1 30 1 not_used 34887:32:23:2:5:3:18" | $IECDIR/asduconv -c 3
+	echo "180 1 30 0 not_used 34887:33:23:2:5:3:18" | $IECDIR/asduconv -c 3
+	
+	echo "180 2 30 1 not_used 34887:34:23:2:5:3:18" | $IECDIR/asduconv -c 3
+	echo "180 2 30 0 not_used 34887:35:23:2:5:3:18" | $IECDIR/asduconv -c 3
+	echo "180 2 30 1 not_used 34887:36:23:2:5:3:18" | $IECDIR/asduconv -c 3
+	
+	echo "180 3 30 0 not_used 34887:37:23:2:5:3:18" | $IECDIR/asduconv -c 3
+	echo "180 3 30 1 not_used 34887:38:23:2:5:3:18" | $IECDIR/asduconv -c 3
+	echo "180 3 30 0 not_used 34887:39:23:2:5:3:18" | $IECDIR/asduconv -c 3
+	
+	echo "180 4 30 1 not_used 34887:40:23:2:5:3:18" | $IECDIR/asduconv -c 3
+	echo "180 4 30 0 not_used 34887:41:23:2:5:3:18" | $IECDIR/asduconv -c 3
+	echo "180 4 30 1 not_used 34887:42:23:2:5:3:18" | $IECDIR/asduconv -c 3
+	
+	echo "180 1 1 0 not_used" | $IECDIR/asduconv -c 20
+	echo "180 2 1 1 not_used" | $IECDIR/asduconv -c 20
+	echo "180 3 1 0 not_used" | $IECDIR/asduconv -c 20
+	echo "180 4 1 1 not_used" | $IECDIR/asduconv -c 20
+#else
+#	exit 1
+#fi
