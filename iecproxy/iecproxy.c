@@ -88,7 +88,6 @@ ginterrog(int fdw, const char *script_path)
 	FILE *fp;
 	char asdu[BUF_SIZE] = {0};
 
-	dprintf(fdw, "%s\n", CON_INTERROG);
 	fp = popen(script_path, "r");
 	while (fgets(asdu, BUF_SIZE, fp) != NULL) {
 		dprintf(fdw, "%s", asdu);
@@ -157,7 +156,7 @@ main(int argc, char *argv[])
     
 	char *quemngr_pid = NULL;
 
-	int i, n, nready, gopt, ret;
+	int i, n, nready, gopt, ret, just_connect = 0, new_sockfd = -1;
 		
 	int pipefd1[2], pipefd2[2];
 	
@@ -247,14 +246,32 @@ main(int argc, char *argv[])
 					fprintf(stderr, "iecproxy: received M_EI_NA_1 (cot=4) %s", buf);
 				else if (strncmp(ACT_INTERROG, buf, n-1) == 0) {
 					fprintf(stderr, "iecproxy: received C_IC_NA_1 (cot=6) %s", buf);
-					ginterrog(pipefd1[1], gi_script);
+					
+					if (just_connect) {
+						dprintf(pipefd1[1], "%s\n", CON_INTERROG);
+						fdread[1].fd = new_sockfd;
+						fdread[1].events = POLLIN; // Ждем сообщения от менеджера очередей, 
+						// или служебного сообщения, что служебных сообщений нет
+						just_connect = 0;		
+						fprintf(stderr, "general interrogation activation, just_connect = %d\n", just_connect);
+					}
+					else {
+						dprintf(pipefd1[1], "%s\n", CON_INTERROG);
+						ginterrog(pipefd1[1], gi_script);
+						dprintf(pipefd1[1], ">\n");
+						fprintf(stderr, "general interrogation is over\n");
+					}
 				}
 				else { 
 					switch (buf[0]) {
 						case '+':
-							fdread[1].fd = new_usocket(unixsock);
-							fdread[1].events = POLLIN;
+							//fdread[1].fd = new_usocket(unixsock); // Может временной переменной
+							new_sockfd = new_usocket(unixsock); // Может временной переменной
+							// присвоить значение дескриптора?
+						//	fdread[1].events = POLLIN; // Ждем пока придет активация общего опроса
 							connect_hook(quemngr_pid);
+							just_connect = 1; // Соединение было установлено только что
+							fprintf(stderr, "just connect = %d\n", just_connect);
 							break;
 						case '-':
 							if (connfd > 0) {
@@ -298,7 +315,16 @@ main(int argc, char *argv[])
 				continue;
 			
 			while ( (n = read(fdread[2].fd, buf, BUF_SIZE)) > 0) { 
-				write(pipefd1[1], buf, n);
+				if (buf[0] == '^') {
+					fprintf(stderr, "receive ^\n");
+					ginterrog(pipefd1[1], gi_script);
+					fprintf(stderr, "general interrogation is over (^)\n");
+					dprintf(fdread[2].fd, "^\n");
+					close(fdread[2].fd);
+					connfd = -1;
+				}
+				else
+					write(pipefd1[1], buf, n);
 			}
 			
 			if (n < 0) {
@@ -309,6 +335,7 @@ main(int argc, char *argv[])
 				else
 					perror("read() error");
 			}				
+			
 			dprintf(pipefd1[1], ">\n");
 			fdread[2].fd = -1;	
 		}

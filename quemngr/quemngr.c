@@ -334,7 +334,7 @@ flush_queue(void)
 	n = 0;
 	indque = countq;
 
-	while (indque > 1) {
+	while (indque > 0) {
 		while (quelist[indque].total > 0) {
 			if ( (quelist[indque].send < WINSIZE) && (quelist[indque].send < quelist[indque].total) && (quelist[indque].send == quelist[indque].conf)) { 
 				definode = GETFILENAME(indque);
@@ -614,8 +614,17 @@ main(int argc, char *argv[])
 							isconnect = 1;
 							fds[0].fd = trigfd;
 							fds[1].fd = pipefd2[0];
+							
+							if ( (n = scan_drop()) > 0) // Смотрим появились ли сообщения за время отсутствия канала
+								LOG_MSG(2, "%d files were read from %s", n, drop); 
+							
 							if ( (n = flush_queue()) > 0) 
 								LOG_MSG(2, "Successfully sent %d messages from pending queues", n);
+							
+							kill(childpid, SIGUSR2);
+							
+							LOG_MSG(2, "Send SIGUSR2 to process pid = %d\n", childpid);
+							
 							break;
 					}
 				}

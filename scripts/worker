@@ -14,6 +14,12 @@ sendfile()
 	asduconv -c 3 $1 | asdusend -s $VARDIR/$crts_name/socket 
 }
 
+end_defque()
+{
+	printf 'receive signal SIGUSR2, send to iecproxy ^\n' >&2 
+	printf '^\n' | asdusend -s $VARDIR/$crts_name/socket 
+}
+
 sigchld()
 {
 	local pid state code name
@@ -34,8 +40,14 @@ sigchld()
 				0) 
 					printf '%s\n' "$name $code $success" 
 					;;
-				*) 
+				2) 
 					printf '%s\n' "$name $code $fail" 
+					;;
+				3) 
+					printf '%s\n' "All deffered message for general interrogarion was send to iecproxy" >&2 
+					;;
+				*) 
+					true 
 					;;
 				esac
 				;;
@@ -51,6 +63,7 @@ sigchld()
 }
 
 trap 'sigchld' CHLD
+trap 'end_defque' USR2
 trap 'rm -rf ${tmpdir}; exit 0' TERM 
 
 while true; do 

@@ -59,7 +59,10 @@ main(int argc, char **argv)
 				status = 0;
 				break;
 			case '-':
-				status = 4;
+				status = 2;
+				break;
+			case '^':
+				status = 3;
 				break;
 			default:
 				break;
