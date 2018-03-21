@@ -45,7 +45,7 @@ read sms
 if echo $sms | grep -q -e 'Vzayty na ohrany' -e 'Snayty s ohrany'; then
 #	echo "Subject: iec104\r\n\r\nControlled station  = ${comaddr}, ${sms}" | msmtp --debug -a komisyk@gmail.com -t -i komisyk@mail.ru >/dev/null 2>&1
 	exit 2
-elif ! echo "$sms" | grep -q -E 'Zona.*Zona.*Zona.*Zona.*Akk.*Set.*t=.*gradus C'; then 
+elif ! echo "$sms" | grep -q -E 'Zona1:.*Zona2:.*Zona3:.*Zona4:.*Akk.*Set.*t=.*gradus C'; then 
 	exit 2 
 fi
 

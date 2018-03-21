@@ -1,0 +1,32 @@
+#!/bin/sh
+
+#schedule_call="10:30"
+
+GSMDEV="/dev/ttyUSB0"
+RTU_LIST="/opt/iecd/rtu_list.conf"
+TIMECALL=13
+ENDCALL=5
+DEVLOCK="/opt/iecd/device.lock"
+TIMEOUT_POLL="24h"
+
+rtupoll()
+{
+while read rtu number model; do 
+	number=8$(echo $number | cut -c 2-11)
+	if [ $model = "granit" ]; then
+		echo -ne "ATD${number};\r\n" > $GSMDEV 
+		# Проверять ответ от GSMDEV на наличие ошибок (например no carrier)
+		sleep $TIMECALL
+		echo -ne "ATH0\r\n" > $GSMDEV
+		sleep $ENDCALL
+	fi
+done <$RTU_LIST
+}
+
+while true; do
+	(
+		flock 9
+		rtupoll
+	) 9>$DEVLOCK
+	sleep $TIMEOUT_POLL
+done
