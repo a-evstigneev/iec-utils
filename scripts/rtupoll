@@ -5,7 +5,7 @@
 GSMDEV="/dev/ttyUSB0"
 RTU_LIST="/opt/iecd/rtu_list.conf"
 TIMECALL=13
-ENDCALL=5
+ENDCALL=7
 DEVLOCK="/opt/iecd/device.lock"
 TIMEOUT_POLL="24h"
 
