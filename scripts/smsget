@@ -2,7 +2,8 @@
 
 #set -x
 
-. $IECDIR/service-func
+source $IECDIR/utils #logmsg, logmsgtime, atsend, readreply, rwdev
+
 sleeptime=10
 smslistdel=""
 errmsg=""
@@ -106,78 +107,6 @@ smssep()
 	done
 	
 	echo "$_listid"
-}
-
-atsend()
-{
-	local _fd _cmd
-	_fd=$1
-	_cmd=$2
-	
-	/usr/bin/printf '%s\r\n' $_cmd 2>/dev/null >&"$_fd"	
-}
-
-readreply()
-{
-	local _fd _reply _childpid
-	_fd=$1
-
-	trap ' ' ALRM
-	
-	( sh -c 'sleep 2; kill -s ALRM $PPID >/dev/null 2>&1' ) &
-	_childpid=$!
-	
-	while read <&"$_fd" _reply; do
-		kill $_childpid >/dev/null 2>&1
-		
-		if /usr/bin/printf '%s\n' "$_reply" | grep '^[[:space:]]\{1,\}' >/dev/null 2>&1; then
-			( sh -c 'sleep 2; kill -s ALRM $PPID >/dev/null 2>&1' ) &
-			_childpid=$!
-			continue
-		fi
-		
-		/usr/bin/printf '%s\n' "$_reply" | sed 's/\r$//' | sed '/^$/d'
-		
-		if /usr/bin/printf '%s\n' "$_reply" | grep -e "OK" -e "ERROR" >/dev/null 2>&1; then
-			break
-		fi
-		
-		( sh -c 'sleep 2; kill -s ALRM $PPID >/dev/null 2>&1' ) &
-		_childpid=$!
-	done
-}
-
-rwdev()
-{
-	local _dev _cmd _var _resp
-	_dev=$1
-	_cmd=$2
-	_var=$3
-
-	if [ -c $_dev ]; then 
-		exec 3<$_dev 4>$_dev
-		atsend 4 "$_cmd"
-		sleep 1
-	else
-		return 1
-	fi
-
-	if [ -c $_dev ]; then
-		_resp=$(readreply 3)
-		if [ -z "$_resp" ]; then
-			exec 3<&- 4>&-
-			return 1
-		else
-			_resp=$(echo -n "$_resp" | tr -d "'") # Костыль принудительно убираем в строке СИМВОЛ '
-			eval $_var="'$_resp'"
-			exec 3<&- 4>&-
-		fi	
-	else
-		exec 3<&- 4>&-
-		return 1
-	fi
-	
-	return 0	
 }
 
 devinit()
