@@ -3,9 +3,9 @@
 . /opt/iecd/iecvar
 . /opt/iecd/utils
 
-TIMECALL=12
-ENDCALL=7
-TIMEWAIT=7
+TIMECALL=13
+ENDCALL=8
+TIMEWAIT=8
 TIMEOUT_POLL="24h"
 LOGFILE="$LOGDIR/rtupoll.log"
 
