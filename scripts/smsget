@@ -2,9 +2,10 @@
 
 #set -x
 
-source $IECDIR/utils #logmsg, logmsgtime, atsend, readreply, rwdev
+. /opt/iecd/utils #logmsg, logmsgtime, atsend, readreply, rwdev
+. /opt/iecd/iecvar
 
-sleeptime=10
+WAIT_NEXTPOLL=10
 smslistdel=""
 errmsg=""
 
@@ -12,11 +13,11 @@ usage()
 {
 	echo "Usage: $0 [-idcgt] -F DEVICE"
 	echo " "
-	echo "  -i  Device information."
-	echo "  -d  Device initialization."
-	echo "  -c  Device check."
-	echo "  -t	Time to sleep." 
-	echo "  -g  Receiving messages from the device."
+	echo "  -i  Device information"
+	echo "  -d  Device initialization"
+	echo "  -c  Device check"
+	echo "  -t	Time to sleep" 
+	echo "  -g  Receiving messages from the device"
 	echo "  -F  Name of gsm-device (example: /dev/ttyUSB0)"
 	echo " "
 }
@@ -165,70 +166,85 @@ shift $(($OPTIND - 1))
 # Info about gsm-equipment
 if [ $info ]; then
 	logmsgtime "Information about $gsmdev"
-	if ! devinfo $gsmdev; then
-		logmsgtime "Device $gsmdev is not available now"
-		exit 1
-	fi
+	(
+		flock 9
+		if ! devinfo $gsmdev; then
+			logmsgtime "Device $gsmdev is not available now"
+			exit 1
+		fi
+	) 9>$DEVLOCK
+	
 	exit 0
 fi
 
 # Gsm device init
 if [ $devinit ]; then
 	logmsgtime "Gsm device $gsmdev initialization"
-	if ! devinit $gsmdev; then
-		logmsgtime "Device $gsmdev is not available now"
-		exit 1
-	fi
+	(
+		flock 9
+		if ! devinit $gsmdev; then
+			logmsgtime "Device $gsmdev is not available now"
+			exit 1
+		fi
+	) 9>$DEVLOCK
+	
 	exit 0
 fi
 
 # Get sms from gsm-device
 if [ $get ]; then
 	while true; do
-		
-		if [ -n "$errmsg" ]; then
-			sendnotice "$errmsg" 
-			errmsg=""
-		fi
-		
-		logmsgtime "Get sms list from $gsmdev"
-		
-		if rwdev "$gsmdev" "AT+CMGL=\"ALL\"" response; then
-			smsiddel=$(printf '%s\n' "$response" | smssep)
+		(
+			flock 9
+			
+			if [ -n "$errmsg" ]; then
+				sendnotice "$errmsg" # Send a notification if the device is unavailable
 
-			case $smsiddel in
-				"empty")
-					logmsgtime "Sms list is empty"			
-					;;
-				"error")
-					logmsgtime "Error was detected on the device $gsmdev"
-					errmsg="Error was detected on the device $gsmdev"
-					devinit $gsmdev	
-					;;
-				"undef")
-					logmsgtime "Undefined string \"$response\" from device $gsmdev"	
-					;;
-				*)
-					for i in $smsiddel; do
-						if  rwdev "$gsmdev" "AT+CMGD=$i" reply; then
-							logmsg "Delete sms id $i"
-							logmsg "$reply"
-						else
-							logmsgtime "Device $gsmdev is not available"
-							errmsg="Device $gsmdev is not available now"
-							break
-						fi
-					done
-					;;	
-			esac
+				errmsg=""
+			fi
+			
+			logmsgtime "Get sms list from $gsmdev"
+			
+			if rwdev "$gsmdev" "AT+CMGL=\"ALL\"" response; then
+				smsiddel=$(printf '%s\n' "$response" | smssep)
 
-			smsiddel=""
-			sleep $sleeptime 
-		else
-			logmsgtime "Device $gsmdev is not available now"
-			sleep $sleeptime 
-			errmsg="Device $gsmdev is not available now"
-		fi
+				case $smsiddel in
+					"empty")
+						logmsgtime "Sms list is empty"			
+						;;
+					"error")
+						logmsgtime "Error was detected on the device $gsmdev"
+						errmsg="Error was detected on the device $gsmdev"
+						devinit $gsmdev	
+						;;
+					"undef")
+						logmsgtime "Undefined string \"$response\" from device $gsmdev"	
+						;;
+					*)
+						for i in $smsiddel; do
+							if  rwdev "$gsmdev" "AT+CMGD=$i" reply; then
+								logmsg "Delete sms id $i"
+								logmsg "$reply"
+							else
+								logmsgtime "Device $gsmdev is not available"
+								errmsg="Device $gsmdev is not available now"
+								break
+							fi
+						done
+						;;	
+				esac
+
+				smsiddel=""
+			#	sleep $sleeptime 
+			else
+				logmsgtime "Device $gsmdev is not available now"
+			#	sleep $sleeptime 
+				errmsg="Device $gsmdev is not available now"
+			fi
+		) 9>$DEVLOCK
+
+		sleep $WAIT_NEXTPOLL
+		
 		echo $errmsg
 	done
 fi

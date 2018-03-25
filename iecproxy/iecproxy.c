@@ -253,13 +253,13 @@ main(int argc, char *argv[])
 						fdread[1].events = POLLIN; // Ждем сообщения от менеджера очередей, 
 						// или служебного сообщения, что служебных сообщений нет
 						just_connect = 0;		
-						fprintf(stderr, "general interrogation activation, just_connect = %d\n", just_connect);
+						fprintf(stderr, "iecproxy: general interrogation activation, just_connect = %d\n", just_connect);
 					}
 					else {
 						dprintf(pipefd1[1], "%s\n", CON_INTERROG);
 						ginterrog(pipefd1[1], gi_script);
 						dprintf(pipefd1[1], ">\n");
-						fprintf(stderr, "general interrogation is over\n");
+						fprintf(stderr, "iecproxy: general interrogation is over\n");
 					}
 				}
 				else { 
@@ -271,7 +271,7 @@ main(int argc, char *argv[])
 						//	fdread[1].events = POLLIN; // Ждем пока придет активация общего опроса
 							connect_hook(quemngr_pid);
 							just_connect = 1; // Соединение было установлено только что
-							fprintf(stderr, "just connect = %d\n", just_connect);
+							fprintf(stderr, "iecproxy: just connect = %d\n", just_connect);
 							break;
 						case '-':
 							if (connfd > 0) {
@@ -316,9 +316,9 @@ main(int argc, char *argv[])
 			
 			while ( (n = read(fdread[2].fd, buf, BUF_SIZE)) > 0) { 
 				if (buf[0] == '^') {
-					fprintf(stderr, "receive ^\n");
+					fprintf(stderr, "iecproxy: receive ^\n");
 					ginterrog(pipefd1[1], gi_script);
-					fprintf(stderr, "general interrogation is over (^)\n");
+					fprintf(stderr, "iecproxy: general interrogation is over (^)\n");
 					dprintf(fdread[2].fd, "^\n");
 					close(fdread[2].fd);
 					connfd = -1;
@@ -327,13 +327,15 @@ main(int argc, char *argv[])
 					write(pipefd1[1], buf, n);
 			}
 			
+			fprintf(stderr, "iecproxy: read n = %d\n", n);
+			
 			if (n < 0) {
 				if (errno == ECONNRESET) {
 					close(fdread[2].fd);
 					fdread[2].fd = -1;
 				} 
 				else
-					perror("read() error");
+					perror("iecproxy: read() error");
 			}				
 			
 			dprintf(pipefd1[1], ">\n");

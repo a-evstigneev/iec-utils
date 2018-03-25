@@ -3,45 +3,76 @@
 . /opt/iecd/iecvar
 . /opt/iecd/utils
 
-TIMECALL=13
-ENDCALL=8
-TIMEWAIT=8
-TIMEOUT_POLL="24h"
-LOGFILE="$LOGDIR/rtupoll.log"
+DURATION_CALL=11
+WAITING_ENDCALL=8
+TIMEWAIT=6
+
+usage()
+{
+	echo "Usage: $0 [-t Type -n Phone number] [RTU_LIST]"
+}
 
 rtupoll()
 {
-	local _response _rtu _number _model 
+	local _type _number _response _ret 
+	_type=$1
+	_number=$2
 
-	while read _rtu _number _model; do 
-		_number=8$(echo $_number | cut -c 2-11)
-		if [ $_model = "granit" ]; then
-			if rwdev "$GSMDEV" "ATD${_number};" _response; then
-				logmsgtime "Result of calling to the number $_number is $_response"
-				sleep $TIMECALL
-			else
-				logmsgtime "Device $GSMDEV is not available now"	
-				sleep $TIMEWAIT 
-			fi	
+	_number=8$(echo $_number | cut -c 2-11)
+	
+	if [ $_type = "granit" ]; then 
+		if ! rwdev "$GSMDEV" "ATD${_number};" _response; then
+			logmsgtime "Device $GSMDEV is not available now"	
+			sleep $TIMEWAIT 
+			_ret=2
+		else			
+			logmsgtime "Result of calling to the number $_number is $_response"
+			sleep $DURATION_CALL
 			
 			if rwdev "$GSMDEV" "ATH0" _response; then
 				logmsgtime "Result of ending call on the number $_number is $_response"
-				sleep $ENDCALL
+				sleep $WAITING_ENDCALL
+				_ret=0
 			else
 				logmsgtime "Device $GSMDEV is not available now"	
 				sleep $TIMEWAIT
+				_ret=2
 			fi	
-			
-		fi
-	done <$RTU_LIST
+		fi	
+	fi
+	# It is possible to ask a poll of other device models
+	return $_ret
 }
 
-exec 2>$LOGFILE	
+while getopts "t:n:" opt; do
+    case $opt in
+    t) type=$OPTARG ;;
+    n) number=$OPTARG ;;
+    *) usage; exit ;;
+    esac
+done
 
-#while true; do
+shift $(($OPTIND - 1))
+
+if [ $number ]; then
+	[ $type ] || type="granit"
+	case $type in
+	granit)
+		(
+			flock 9
+			rtupoll $type $number
+		) 9>$DEVLOCK
+	;;
+	esac
+	# It is possible to ask a poll of other device models
+	exit $?
+fi
+
+if [ $# -eq 1 ] && [ -f $1 ]; then rtu_list=$1; else usage; exit 0; fi 
+
+while read rtu number type; do
 	(
 		flock 9
-		rtupoll
+		rtupoll $type $number
 	) 9>$DEVLOCK
-#	sleep $TIMEOUT_POLL
-#done
+done <$rtu_list

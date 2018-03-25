@@ -5,11 +5,13 @@
 !_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
 !_TAG_PROGRAM_VERSION	5.9~svn20110310	//
 ACT	quemngr.c	/^enum quenum {ACT, IN};$/;"	e	enum:quenum	file:
-ADDTIMER	quemngr.c	47;"	d	file:
+ADDTIMER	quemngr.c	57;"	d	file:
 ARGROW	quecontrol.c	/^enum {ARINIT = 4, ARGROW = 2};$/;"	e	enum:__anon1	file:
 ARINIT	quecontrol.c	/^enum {ARINIT = 4, ARGROW = 2};$/;"	e	enum:__anon1	file:
 ARRAY_H	quecontrol.h	2;"	d
 BUFMAX	quecontrol.h	5;"	d
+CFLAGS	Makefile	/^CFLAGS="-Wall"$/;"	m
+COPYFILE	quemngr.c	49;"	d	file:
 CURDIR	quecontrol.h	7;"	d
 DELTAUSEC	quemngr.c	28;"	d	file:
 DESCMAX	quecontrol.h	4;"	d
@@ -26,7 +28,7 @@ LOG_INFO	logging.h	7;"	d
 LOG_MSG	quemngr.c	31;"	d	file:
 LOG_MSG	quemngr.c	34;"	d	file:
 MAXBUF	syslogclient/syslogclient.c	17;"	d	file:
-MOVEFILE	quemngr.c	39;"	d	file:
+MOVEFILE	quemngr.c	41;"	d	file:
 MSGMAX	logging.c	13;"	d	file:
 PARENTDIR	quecontrol.h	8;"	d
 SIZERINGBUF	syslogclient/syslogclient.c	19;"	d	file:
@@ -44,6 +46,7 @@ childpid	quemngr.c	/^pid_t childpid;$/;"	v
 conf	quecontrol.h	/^	int conf;$/;"	m	struct:msglist
 connectnb	syslogclient/syslogclient.c	/^connectnb(int sockfd, const struct sockaddr *addr, socklen_t addrlen, int timeout)$/;"	f
 countq	quemngr.c	/^int countq;$/;"	v
+cpfile	utils.c	/^cpfile(const char *src, const char *dst)$/;"	f
 daemon_proc	logging.c	/^int daemon_proc;$/;"	v
 debuglevel	quemngr.c	/^int debuglevel;$/;"	v
 deltail	syslogclient/syslogclient.c	/^deltail(struct ringbuf *st)$/;"	f
@@ -66,17 +69,16 @@ heap	heapfunc.h	/^struct heap {$/;"	s
 heap_create	heapfunc.c	/^heap_create(int maxsize)$/;"	f
 heap_extract_min	heapfunc.c	/^heap_extract_min(struct heap *h)$/;"	f
 heap_heapify	heapfunc.c	/^heap_heapify(struct heap *h, int index)$/;"	f	file:
-heap_insert	heapfunc.c	/^heap_insert(struct heap *h, struct timeval key, int indq, int inode)$/;"	f
+heap_insert	heapfunc.c	/^heap_insert(struct heap *h, struct timeval key, int indque, int inode)$/;"	f
 heap_min	heapfunc.c	/^heap_min(struct heap *h)$/;"	f
 heapnode	heapfunc.h	/^struct heapnode {$/;"	s
 heapnode_swap	heapfunc.c	/^heapnode_swap(struct heapnode *a, struct heapnode *b)$/;"	f	file:
 in	quemngr.c	/^char *in	= ".\/in\/";$/;"	v
-indq	heapfunc.h	/^	int indq;$/;"	m	struct:heapnode
-init	quemngr.c	/^init(void)$/;"	f
+indque	heapfunc.h	/^	int indque;$/;"	m	struct:heapnode
+initqueue	quemngr.c	/^initqueue(void)$/;"	f
 inode	heapfunc.h	/^	int inode;$/;"	m	struct:heapnode
 inode	quecontrol.h	/^	ino_t inode;$/;"	m	struct:msg
 key	heapfunc.h	/^	struct timeval key;$/;"	m	struct:heapnode	typeref:struct:heapnode::timeval
-lock_send	quemngr.c	/^lock_send(void)$/;"	f
 logmsg	logging.c	/^logmsg(const char *file, const char *func, int line, int errnoflag, int level, const char *fmt, ...)$/;"	f
 logstream	logging.c	/^FILE *logstream; $/;"	v
 main	quemngr.c	/^main(int argc, char *argv[])$/;"	f
@@ -112,10 +114,10 @@ scan_drop	quemngr.c	/^scan_drop(void)$/;"	f
 send	quecontrol.h	/^	int send;$/;"	m	struct:msglist
 servaddr	syslogclient/syslogclient.c	/^char *usock, *servaddr, *port;$/;"	v
 sfd	syslogclient/syslogclient.c	/^int ufd, sfd;$/;"	v
-sig_chld	quemngr.c	/^void sig_chld(int signum)$/;"	f
-sig_hup	quemngr.c	/^void sig_hup(int signum) $/;"	f
-sig_term	quemngr.c	/^void sig_term(int signum)$/;"	f
-sig_usr1	quemngr.c	/^void sig_usr1(int signum) $/;"	f
+sig_chld	quemngr.c	/^sig_chld(int signum)$/;"	f
+sig_hup	quemngr.c	/^sig_hup(int signum) $/;"	f
+sig_term	quemngr.c	/^sig_term(int signum)$/;"	f
+sig_usr1	quemngr.c	/^sig_usr1(int signum) $/;"	f
 signalpipe	quemngr.c	/^int signalpipe[2];$/;"	v
 size	syslogclient/syslogclient.c	/^	short size;$/;"	m	struct:ringbuf	file:
 src	Makefile	/^src = heapfunc.c logging.c quecontrol.c quemngr.c utils.c xalloc.c$/;"	m

@@ -1,14 +1,21 @@
 #!/bin/sh
 
-export IECDIR="/opt/iecd"
-export IECDB="$IECDIR/iecdb"
-export LOGDIR="$IECDIR/log"
-export VARDIR="$IECDIR/var"
-export SMSDROP="$VARDIR/smsdrop"
-export RUNDIR="$VARDIR/run"
-export RTU_LIST="$IECDIR/rtu_list.conf"
-export CRTS_LIST="$IECDIR/crts_list.conf"
-export GSMDEV="/dev/ttyUSB0"
+if [ -f /opt/iecd/iecvar ]; then
+	. /opt/iecd/iecvar
+else
+	exit 0
+fi
+
+RTUPOLL_START="0 1 * * * " # minute, hour, day of month, month, day of week
+
+#export IECDB="$IECDIR/iecdb"
+#export LOGDIR="$IECDIR/log"
+#export VARDIR="$IECDIR/var"
+#export SMSDROP="$VARDIR/smsdrop"
+#export RUNDIR="$VARDIR/run"
+#export RTU_LIST="$IECDIR/rtu_list.conf"
+#export CRTS_LIST="$IECDIR/crts_list.conf"
+#export GSMDEV="/dev/ttyUSB0"
 
 test -x $IECDIR/smsget || exit 0
 test -x $IECDIR/smsdrop_verset || exit 0
@@ -20,6 +27,7 @@ test -x $IECDIR/asdusend || exit 0
 test -x $IECDIR/ginterrog || exit 0
 test -x $IECDIR/iecproxy || exit 0
 test -x $IECDIR/ieclink || exit 0
+test -x $IECDIR/rtupoll || exit 0
 #test -x /usr/sbin/watchdog || exit 0
 
 
@@ -29,6 +37,10 @@ sigterm()
 {
 	local pid 
 	trap '' TERM CHLD
+	
+	tasks=$(crontab -l 2>/dev/null | grep -v rtupoll)
+	crontab -r
+	[ -z $tasks ] || echo "$tasks" | crontab -
 	
 	jobs -p >$tmpfile
 	while read pid; do
@@ -79,5 +91,7 @@ if [ -c $GSMDEV ]; then
 	smsget -d -F $GSMDEV
 	smsget -t 10 -g -F $GSMDEV & 
 fi
+
+crontab -l 2>/dev/null | { cat; echo "$RTUPOLL_START /opt/iecd/rtupoll $RTU_LIST 2>$LOGDIR/rtupoll.log"; } | crontab -
 
 wait

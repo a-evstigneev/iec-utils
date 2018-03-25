@@ -27,6 +27,7 @@ atsend()
 readreply()
 {
 	local _fd _reply _childpid
+	wait_reply=6
 	_fd=$1
 
 	trap ' ' ALRM
