@@ -94,7 +94,6 @@ ginterrog(int fdw, const char *script_path)
 	}
 	pclose(fp);
 	dprintf(fdw, "%s\n", END_INTERROG);
-	dprintf(fdw, ">\n");
 	
 	return 0;
 }

@@ -1,6 +1,7 @@
 #!/bin/sh
 
 . /opt/iecd/iecvar
+. /opt/iecd/utils
 
 tmpdir=$(mktemp -d /tmp/XXXXX.broker)
 crts_name=$1
@@ -14,13 +15,12 @@ confirm="Ok"
 sendfile()
 {
 	asduconv -c 3 $1 | asdusend -s $VARDIR/$crts_name/socket 
-	printf "function sendfile(): send file $1 to iecproxy\n" >&2 
 }
 
 end_defque()
 {
-	printf 'function end_defque(): receive signal SIGUSR2, send to iecproxy ^\n' >&2 
 	printf '^\n' | asdusend -s $VARDIR/$crts_name/socket 
+	logmsgtime "Receive signal SIGUSR2 from quemngr and send \"^\" to iecproxy" 
 }
 
 sigchld()
@@ -42,12 +42,14 @@ sigchld()
 				case "$code" in
 				0) 
 					printf '%s\n' "$name $code $success" 
+					logmsgtime "file $name was transferred successfully, return code 0" 
 					;;
 				2) 
 					printf '%s\n' "$name $code $fail" 
+					logmsgtime "file $name was not transfered, return code 2" 
 					;;
 				3) 
-					printf 'iecbroker: %s\n' "all deffered message for general interrogarion was send to iecproxy" >&2 
+					logmsgtime "All deferred messages were received by iecproxy, return code 3"
 					;;
 				*) 
 					true 
@@ -73,8 +75,11 @@ exec 2>$LOGDIR/${crts_name}/iecbroker.log
 while true; do 
 	if read filename; then 
 		printf '%s\n' "$filename 1 $confirm"
-		sendfile ./act/$filename & #2>>$LOGDIR/${crts_name}/iecbroker.log 1>&2 & 
-		printf "iecbroker: send ./act/$filename from asdusend to iecproxy\n" >&2 
+		logmsgtime "File $filename from the quemngr is received"
+		
+		sendfile ./act/$filename & 
+		logmsgtime "Send file ./act/$filename to iecproxy" 
+		
 		printf '%s %s\n' $! $filename >> $sendfiles
 	fi
 done
