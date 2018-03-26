@@ -93,7 +93,6 @@ ginterrog(int fdw, const char *script_path)
 		dprintf(fdw, "%s", asdu);
 	}
 	pclose(fp);
-	dprintf(fdw, "%s\n", END_INTERROG);
 	
 	return 0;
 }
@@ -250,14 +249,16 @@ main(int argc, char *argv[])
 						dprintf(pipefd1[1], "%s\n", CON_INTERROG);
 						fdread[1].fd = new_sockfd;
 						fdread[1].events = POLLIN; // Ждем сообщения от менеджера очередей, 
-						// или служебного сообщения, что служебных сообщений нет
+						// или служебного сообщения, что отложенных сообщений нет
 						just_connect = 0;		
 						fprintf(stderr, "iecproxy: general interrogation activation, just_connect = %d\n", just_connect);
 					}
 					else {
 						dprintf(pipefd1[1], "%s\n", CON_INTERROG);
 						ginterrog(pipefd1[1], gi_script);
+						dprintf(pipefd1[1], "%s\n", END_INTERROG);
 						dprintf(pipefd1[1], ">\n");
+						
 						fprintf(stderr, "iecproxy: general interrogation is over\n");
 					}
 				}
@@ -316,11 +317,15 @@ main(int argc, char *argv[])
 			while ( (n = read(fdread[2].fd, buf, BUF_SIZE)) > 0) { 
 				if (buf[0] == '^') {
 					fprintf(stderr, "iecproxy: receive ^\n");
+					
 					ginterrog(pipefd1[1], gi_script);
+					dprintf(pipefd1[1], "%s\n", END_INTERROG);
+					
 					fprintf(stderr, "iecproxy: general interrogation is over (^)\n");
 					dprintf(fdread[2].fd, "^\n");
 					close(fdread[2].fd);
 					connfd = -1;
+					// Надо сделать brake, иначе ошибка read bad file descriptor
 				}
 				else
 					write(pipefd1[1], buf, n);
