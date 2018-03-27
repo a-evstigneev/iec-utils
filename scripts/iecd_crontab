@@ -1,3 +1,4 @@
+MAILTO=""
 RTU_LIST=/opt/iecd/rtu_list.conf
 LOGDIR=/opt/iecd/log
 0 1 * * * /opt/iecd/rtupoll $RTU_LIST 2>$LOGDIR/rtupoll.log
