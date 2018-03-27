@@ -38,6 +38,8 @@ sigterm()
 	local pid 
 	trap '' TERM CHLD
 	
+	# Если iecd будет запускаться от конкретного пользователя,
+	# то по завершению демона можно просто удалять все задания с помощью crontab -r
 	tasks=$(crontab -l 2>/dev/null | grep -v rtupoll)
 	crontab -r
 	[ -z $tasks ] || echo "$tasks" | crontab -
@@ -93,5 +95,6 @@ if [ -c $GSMDEV ]; then
 fi
 
 crontab -l 2>/dev/null | { cat; echo "$RTUPOLL_START /opt/iecd/rtupoll $RTU_LIST 2>$LOGDIR/rtupoll.log"; } | crontab -
+# crontab /opt/iecd/iecd_crontab
 
 wait
