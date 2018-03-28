@@ -94,7 +94,7 @@ if [ -c $GSMDEV ]; then
 	smsget -t 10 -g -F $GSMDEV & 
 fi
 
-crontab -l 2>/dev/null | { cat; echo "$RTUPOLL_START /opt/iecd/rtupoll $RTU_LIST 2>$LOGDIR/rtupoll.log"; } | crontab -
+crontab -l 2>/dev/null | { cat; echo "$RTUPOLL_START /opt/iecd/rtupoll $RTU_LIST 2>>$LOGDIR/rtupoll.log"; } | crontab -
 # crontab /opt/iecd/iecd_crontab
 
 wait
