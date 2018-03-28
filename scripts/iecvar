@@ -1,5 +1,7 @@
 export IECDIR="/opt/iecd"
 export IECDB="$IECDIR/iecdb"
+#export DBACT="$IECDIR/db_active"
+#export DBARH="$IECDIR/db_archive"
 export LOGDIR="$IECDIR/log"
 export VARDIR="$IECDIR/var"
 export RUNDIR="$VARDIR/run"
