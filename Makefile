@@ -26,7 +26,7 @@ scripts:
 install:
 	rm -rf $(installdir)/*
 	cp -r $(bindir)/* $(installdir) 
-	mkdir -p $(installdir)/iecdb $(installdir)/log
+	mkdir -p $(installdir)/db_active $(installdir)/db_archive $(installdir)/log
 	mkdir -p $(installdir)/var/smsdrop $(installdir)/var/run
 
 clean:

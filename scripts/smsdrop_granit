@@ -1,7 +1,5 @@
 #!/bin/sh
 
-. ${IECDIR}/service-func
-
 smsparse()
 {
 	local _file _comaddr
@@ -45,7 +43,7 @@ read sms
 if echo $sms | grep -q -e 'Vzayty na ohrany' -e 'Snayty s ohrany'; then
 #	echo "Subject: iec104\r\n\r\nControlled station  = ${comaddr}, ${sms}" | msmtp --debug -a komisyk@gmail.com -t -i komisyk@mail.ru >/dev/null 2>&1
 	exit 2
-elif ! echo "$sms" | grep -q -E 'Zona1:.*Zona2:.*Zona3:.*Zona4:.*Akk.*Set.*t=.*gradus C'; then 
+elif ! echo "$sms" | grep -q -E '.*Zona.:.*Akk.*Set.*t=.*gradus C'; then 
 	exit 2 
 fi
 
@@ -55,23 +53,31 @@ filename=$(mktemp -u -p "$SMSDROP" "${comaddr}_XXXXXX")
 if printf '%s\n' "$sms" | smsparse "$filename" "$comaddr"; then
 	if sync $filename; then
 		# Create files that will store the signal values for a general interrogation
-		while read comaddr objaddr type value qds timestamp; do
-			case $type in
+		while read _comaddr _objaddr _type _value _qds _timestamp; do
+			case $_type in
 				30)
-					type=1
+					_type=1
 					;;
 				36)
-					type=13
+					_type=13
 					;;
 			esac
 			
-			if ! [ -d $IECDB/$comaddr/$type ]; then
-				mkdir -p $IECDB/$comaddr/$type
+			if ! [ -d $DB_ACT/$_comaddr/$_type ]; then
+				mkdir -p $DB_ACT/$_comaddr/$_type
 			fi
-			echo $value $qds > $IECDB/$comaddr/$type/$objaddr
+			echo $_value $_qds > $DB_ACT/$_comaddr/$_type/$_objaddr
 		done < $filename
 		
-		mv $filename $SMSDROP/msg	
+		dir_path="$DB_ARCH"/"$comaddr"/$(/bin/date '+%Y-%m-%e')
+		if ! [ -d "$dir_path" ]; then
+			mkdir -p "$dir_path"
+		fi
+		#sync?
+		archive_name=$(/bin/date '+%k:%M:%S')_$(mktemp -u "XXXXXX")
+		cp "$filename" "$dir_path/$archive_name"; sync "$dir_path/$archive_name"
+		
+		mv $filename $SMSDROP/msg; sync $SMSDROP/msg	
 	else
 		exit 1
 	fi

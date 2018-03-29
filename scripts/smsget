@@ -24,7 +24,7 @@ usage()
 
 smssep()
 {
-	local _line _listid _smsnum _comaddr _crts_name _inode
+	local _line _listid _smsnum _comaddr _cts_name _inode
 	local _id _stat _num _sp _date _sms _senddev _filename
 
 	_listid=""; _smsnum=0; _comaddr=""
@@ -76,18 +76,18 @@ smssep()
 				_listid="${_listid}${_id} "
 				
 				# Trigger activation for each instance quemngr
-				while read _crts_name rest; do
-					_filename="$VARDIR/$_crts_name/work/drop/msg"
+				while read _cts_name rest; do
+					_filename="$VARDIR/$_cts_name/work/drop/msg"
 					cp $SMSDROP/msg $_filename
-					_inode="$VARDIR/$_crts_name/work/drop/`stat -c %i $_filename`"
+					_inode="$VARDIR/$_cts_name/work/drop/`stat -c %i $_filename`"
 					
 					if sync $_filename; then
 						mv "$_filename" "$_inode"
 					fi
 					
-					/usr/bin/printf "1" > $VARDIR/$_crts_name/work/trigger
+					/usr/bin/printf "1" > $VARDIR/$_cts_name/work/trigger
 				done <<-EOF
-					$(cat $CRTS_LIST | grep -v '^#' | sed '/^$/d')
+					$(cat $CTS_LIST | grep -v '^#' | sed '/^$/d')
 				EOF
 				rm $SMSDROP/msg
 			;;

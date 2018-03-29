@@ -67,14 +67,23 @@ filename=$(mktemp -u -p "$SMSDROP" "${comaddr}_XXXXXX")
 if printf '%s\n' "$smsconv" | smsparse "$filename" "$comaddr"; then
 	if sync $filename; then
 		# Create files that will store the signal values for a general interrogation
-		while read comaddr objaddr type value qds timestamp; do
-			type=1
-			if ! [ -d $IECDB/$comaddr/$type ]; then
-				mkdir -p $IECDB/$comaddr/$type
+		while read _comaddr _objaddr _type _value _qds _timestamp; do
+			_type=1
+			if ! [ -d $DB_ACT/$_comaddr/$_type ]; then
+				mkdir -p $DB_ACT/$_comaddr/$_type
 			fi
-			echo $value $qds > $IECDB/$comaddr/$type/$objaddr
+			echo $_value $_qds > $DB_ACT/$_comaddr/$_type/$_objaddr
 		done < $filename
-		mv $filename $SMSDROP/msg
+
+		dir_path="$DB_ARCH"/"$comaddr"/$(/bin/date '+%Y-%m-%e')
+		if ! [ -d "$dir_path" ]; then
+			mkdir -p "$dir_path"
+		fi
+		#sync?
+		archive_name=$(/bin/date '+%k:%M:%S')_$(mktemp -u "XXXXXX")
+		cp "$filename" "$dir_path/$archive_name"; sync "$dir_path/$archive_name" 
+				
+		mv $filename $SMSDROP/msg; sync $SMSDROP/msg
 	else
 		exit 1
 	fi

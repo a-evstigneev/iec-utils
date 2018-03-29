@@ -8,15 +8,6 @@ fi
 
 RTUPOLL_START="0 1 * * * " # minute, hour, day of month, month, day of week
 
-#export IECDB="$IECDIR/iecdb"
-#export LOGDIR="$IECDIR/log"
-#export VARDIR="$IECDIR/var"
-#export SMSDROP="$VARDIR/smsdrop"
-#export RUNDIR="$VARDIR/run"
-#export RTU_LIST="$IECDIR/rtu_list.conf"
-#export CRTS_LIST="$IECDIR/crts_list.conf"
-#export GSMDEV="/dev/ttyUSB0"
-
 test -x $IECDIR/smsget || exit 0
 test -x $IECDIR/smsdrop_verset || exit 0
 test -x $IECDIR/smsdrop_granit || exit 0
@@ -42,7 +33,7 @@ sigterm()
 	# то по завершению демона можно просто удалять все задания с помощью crontab -r
 	tasks=$(crontab -l 2>/dev/null | grep -v rtupoll)
 	crontab -r
-	[ -z $tasks ] || echo "$tasks" | crontab -
+	[ -z "$tasks" ] || echo "$tasks" | crontab -
 	
 	jobs -p >$tmpfile
 	while read pid; do
@@ -58,32 +49,32 @@ trap 'rm -rf $RUNDIR/*; exit 0' EXIT
 trap 'sigterm' TERM
 
 cd $IECDIR
-while read crts_name crts_address crts_port; do
-	mkdir -p $LOGDIR/$crts_name
-	mkdir -p $VARDIR/$crts_name/work/drop
-	mkdir -p $VARDIR/$crts_name/work/fail
-	mkdir -p $VARDIR/$crts_name/work/in
-	mkdir -p $VARDIR/$crts_name/work/act
-	mkdir -p $VARDIR/$crts_name/work/df/0h0m30s
-	mkdir -p $VARDIR/$crts_name/work/df/0h0m45s
-	mkdir -p $VARDIR/$crts_name/work/df/0h0m60s
+while read cts_name cts_address cts_port; do
+	mkdir -p $LOGDIR/$cts_name
+	mkdir -p $VARDIR/$cts_name/work/drop
+	mkdir -p $VARDIR/$cts_name/work/fail
+	mkdir -p $VARDIR/$cts_name/work/in
+	mkdir -p $VARDIR/$cts_name/work/act
+	mkdir -p $VARDIR/$cts_name/work/df/0h0m30s
+	mkdir -p $VARDIR/$cts_name/work/df/0h0m45s
+	mkdir -p $VARDIR/$cts_name/work/df/0h0m60s
 	
 	quemngr \
-		-n $crts_name \
-		-d $VARDIR/$crts_name/work \
-		-t $VARDIR/$crts_name/work/trigger \
+		-n $cts_name \
+		-d $VARDIR/$cts_name/work \
+		-t $VARDIR/$cts_name/work/trigger \
 		-s worker \
-		-l 3 2>$LOGDIR/$crts_name/quemngr.log &
+		-l 3 2>$LOGDIR/$cts_name/quemngr.log &
 	
 	QUEMNGR_PID=$! iecproxy \
-		-u $VARDIR/$crts_name/socket \
-		-s $crts_address \
-		-p $crts_port \
+		-u $VARDIR/$cts_name/socket \
+		-s $cts_address \
+		-p $cts_port \
 		-l ieclink \
-		-g ginterrog 2>$LOGDIR/$crts_name/iecproxy.log &
+		-g ginterrog 2>$LOGDIR/$cts_name/iecproxy.log &
 
 done <<-EOF
-	$(cat $CRTS_LIST | grep -v '^#' | sed '/^$/d')
+	$(cat $CTS_LIST | grep -v '^#' | sed '/^$/d')
 EOF
 
 exec 2>$LOGDIR/smsget.log

@@ -4,7 +4,7 @@
 . /opt/iecd/utils
 
 tmpdir=$(mktemp -d /tmp/XXXXX.broker)
-crts_name=$1
+cts_name=$1
 jobslist=${tmpdir}/jobslist
 sendfiles=${tmpdir}/sendfiles
 
@@ -14,12 +14,12 @@ confirm="Ok"
 
 sendfile()
 {
-	asduconv -c 3 $1 | asdusend -s $VARDIR/$crts_name/socket 
+	asduconv -c 3 $1 | asdusend -s $VARDIR/$cts_name/socket 
 }
 
 end_defque()
 {
-	printf '^\n' | asdusend -s $VARDIR/$crts_name/socket 
+	printf '^\n' | asdusend -s $VARDIR/$cts_name/socket 
 	logmsgtime "Receive signal SIGUSR2 from quemngr and send \"^\" to iecproxy" 
 }
 
@@ -71,7 +71,7 @@ trap 'sigchld' CHLD
 trap 'end_defque' USR2
 trap 'rm -rf ${tmpdir}; exit 0' TERM 
 
-exec 2>$LOGDIR/${crts_name}/iecbroker.log
+exec 2>$LOGDIR/${cts_name}/iecbroker.log
 while true; do 
 	if read filename; then 
 		printf '%s\n' "$filename 1 $confirm"

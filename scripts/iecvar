@@ -1,14 +1,13 @@
 export IECDIR="/opt/iecd"
-export IECDB="$IECDIR/iecdb"
-#export DBACT="$IECDIR/db_active"
-#export DBARH="$IECDIR/db_archive"
+export DB_ACT="$IECDIR/db_active"
+export DB_ARCH="$IECDIR/db_archive"
 export LOGDIR="$IECDIR/log"
 export VARDIR="$IECDIR/var"
 export RUNDIR="$VARDIR/run"
 export SMSDROP="$VARDIR/smsdrop"
 
 export RTU_LIST="$IECDIR/rtu_list.conf"
-export CRTS_LIST="$IECDIR/crts_list.conf"
+export CTS_LIST="$IECDIR/cts_list.conf"
 
 export GSMDEV="/dev/ttyUSB0"
 export DEVLOCK="$IECDIR/device.lock"
