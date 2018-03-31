@@ -60,7 +60,7 @@ while read cts_name cts_address cts_port; do
 		-l 3 2>$LOGDIR/$cts_name/quemngr.log &
 	
 	PID_NOTIFY=$! iecproxy \
-		-u $VARDIR/$cts_name/socket \
+		-u $VARDIR/$cts_name/usocket \
 		-s $cts_address \
 		-p $cts_port \
 		-l ieclink \
@@ -69,8 +69,6 @@ while read cts_name cts_address cts_port; do
 done <<-EOF
 	$(cat $CTS_LIST | grep -v '^#' | sed '/^$/d')
 EOF
-
-#exec 2>$LOGDIR/smsget.log
 
 if [ -c $GSMDEV ]; then
 	stty raw -echo -F $GSMDEV
