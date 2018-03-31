@@ -1,9 +1,7 @@
 #!/bin/sh
 
-#set -x
-
-. /opt/iecd/utils #logmsg, logmsgtime, atsend, readreply, rwdev
-. /opt/iecd/iecvar
+. /opt/iecd/utils
+set_env DEVLOCK RTU_LIST
 
 WAIT_NEXTPOLL=10
 smslistdel=""
@@ -11,7 +9,7 @@ errmsg=""
 
 usage() 
 {
-	echo "Usage: $0 [-idcgt] -F DEVICE"
+	echo "Usage: $0 [-idcgt] [-F DEVICE]"
 	echo " "
 	echo "  -i  Device information"
 	echo "  -d  Device initialization"
@@ -78,7 +76,7 @@ smssep()
 				# Trigger activation for each instance quemngr
 				while read _cts_name rest; do
 					_filename="$VARDIR/$_cts_name/work/drop/msg"
-					cp $SMSDROP/msg $_filename
+					cp $SMSDROPDIR/msg $_filename
 					_inode="$VARDIR/$_cts_name/work/drop/`stat -c %i $_filename`"
 					
 					if sync $_filename; then
@@ -89,7 +87,7 @@ smssep()
 				done <<-EOF
 					$(cat $CTS_LIST | grep -v '^#' | sed '/^$/d')
 				EOF
-				rm $SMSDROP/msg
+				rm $SMSDROPDIR/msg
 			;;
 			1)
 				logmsg "Synchronous recording to disk failed"

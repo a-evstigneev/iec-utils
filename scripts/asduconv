@@ -1,6 +1,6 @@
 #!/bin/sh
 
-USAGE="Usage: $0 [-c cause_of_transmission] -h [FILE]..."
+USAGE="Usage: $0 [-c cause_of_transmission] [-h] [FILE]..."
 
 transform_asdu()
 {

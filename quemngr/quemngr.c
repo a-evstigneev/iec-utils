@@ -366,7 +366,7 @@ main(int argc, char *argv[])
 	struct pollfd fds[3];
 	int trigfd;
 	
-	char *workdir, *trigger, *crts_name, *worker;
+	char *workdir, *trigger, *cts_name, *sender;
 		
 	int gopt, n, code, indque, ret, isconnect;
 	
@@ -388,7 +388,7 @@ main(int argc, char *argv[])
 	while ( (gopt = getopt(argc, argv, ":n:d:t:s:l:")) != -1) {
 		switch(gopt) {
 			case 'n':
-				crts_name = optarg;
+				cts_name = optarg;
 				break;
 			case 'd':
 				workdir = optarg;
@@ -397,7 +397,7 @@ main(int argc, char *argv[])
 				trigger = optarg;
 				break;
 			case 's':
-				worker = optarg;
+				sender = optarg;
 				break;
 			case 'l':
 				debuglevel = atoi(optarg); 
@@ -458,8 +458,8 @@ main(int argc, char *argv[])
 		sigaction(SIGHUP,  &sahup,  NULL);
 		sigaction(SIGUSR1, &sausr1, NULL);
 		
-		if (execlp(worker, worker, crts_name, NULL) < 0)
-			ERR_SYS("error exec %s", worker); 
+		if (execlp(sender, sender, cts_name, NULL) < 0)
+			ERR_SYS("error exec %s", sender); 
 		exit(EXIT_FAILURE);
 	}
 	

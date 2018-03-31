@@ -1,9 +1,9 @@
 bindir = ./bin
 installdir = /opt/iecd
 
-.PHONY: all quemngr asdusend iecproxy ieclink scripts clean install
+.PHONY: all quemngr sockwrite iecproxy ieclink scripts clean install
 
-all: mkdirbin quemngr asdusend iecproxy ieclink scripts
+all: mkdirbin quemngr sockwrite iecproxy ieclink scripts
 
 mkdirbin:
 	mkdir -p ./bin
@@ -11,7 +11,7 @@ mkdirbin:
 quemngr:
 	$(MAKE) -C $@
 
-asdusend:
+sockwrite:
 	$(MAKE) -C $@
 
 iecproxy: 

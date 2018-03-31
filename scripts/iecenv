@@ -1,0 +1,13 @@
+IECDIR="/opt/iecd"
+VARDIR="$IECDIR/var"
+RUNDIR="$IECDIR/var/run"
+SMSDROPDIR="$IECDIR/var/smsdrop"
+LOGDIR="$IECDIR/log"
+DB_ACT="$IECDIR/db_active"
+DB_ARCH="$IECDIR/db_archive"
+RTU_LIST="$IECDIR/rtu_list.conf"
+CTS_LIST="$IECDIR/cts_list.conf"
+GSMDEV="/dev/ttyUSB0"
+DEVLOCK="$IECDIR/device.lock"
+IECD_CRONTAB="$IECDIR/iecd_crontab"
+RTUPOLL_START="0 1 * * * " # minute, hour, day of month, month, day of week

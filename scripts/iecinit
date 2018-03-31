@@ -1,26 +1,19 @@
 #!/bin/sh
 
-if [ -f /opt/iecd/iecvar ]; then
-	. /opt/iecd/iecvar
-else
-	exit 0
-fi
+. /opt/iecd/utils
+set_env IECDIR VARDIR RUNDIR LOGDIR SMSDROPDIR CTS_LIST GSMDEV IECD_CRONTAB
 
-RTUPOLL_START="0 1 * * * " # minute, hour, day of month, month, day of week
-
-test -x $IECDIR/smsget || exit 0
-test -x $IECDIR/smsdrop_verset || exit 0
-test -x $IECDIR/smsdrop_granit || exit 0
-test -x $IECDIR/quemngr || exit 0
-test -x $IECDIR/worker || exit 0
-test -x $IECDIR/asduconv || exit 0
-test -x $IECDIR/asdusend || exit 0
-test -x $IECDIR/ginterrog || exit 0
-test -x $IECDIR/iecproxy || exit 0
-test -x $IECDIR/ieclink || exit 0
-test -x $IECDIR/rtupoll || exit 0
-#test -x /usr/sbin/watchdog || exit 0
-
+test -x $IECDIR/smsget || exit 1
+test -x $IECDIR/smsdrop_verset || exit 1
+test -x $IECDIR/smsdrop_granit || exit 1
+test -x $IECDIR/quemngr || exit 1
+test -x $IECDIR/asdusend || exit 1
+test -x $IECDIR/asduconv || exit 1
+test -x $IECDIR/sockwrite || exit 1
+test -x $IECDIR/iecproxy || exit 1
+test -x $IECDIR/ieclink || exit 1
+test -x $IECDIR/ginterrog || exit 1
+test -x $IECDIR/rtupoll || exit 1
 
 tmpfile=$(mktemp -p $RUNDIR childpids.XXXXXX)
 
@@ -63,10 +56,10 @@ while read cts_name cts_address cts_port; do
 		-n $cts_name \
 		-d $VARDIR/$cts_name/work \
 		-t $VARDIR/$cts_name/work/trigger \
-		-s worker \
+		-s asdusend \
 		-l 3 2>$LOGDIR/$cts_name/quemngr.log &
 	
-	QUEMNGR_PID=$! iecproxy \
+	PID_NOTIFY=$! iecproxy \
 		-u $VARDIR/$cts_name/socket \
 		-s $cts_address \
 		-p $cts_port \
@@ -77,15 +70,14 @@ done <<-EOF
 	$(cat $CTS_LIST | grep -v '^#' | sed '/^$/d')
 EOF
 
-exec 2>$LOGDIR/smsget.log
+#exec 2>$LOGDIR/smsget.log
 
 if [ -c $GSMDEV ]; then
 	stty raw -echo -F $GSMDEV
-	smsget -d -F $GSMDEV
-	smsget -t 10 -g -F $GSMDEV & 
+	smsget -d -F $GSMDEV 2>>$LOGDIR/smsget.log
+	smsget -t 10 -g -F $GSMDEV 2>>$LOGDIR/smsget.log & 
 fi
 
-crontab -l 2>/dev/null | { cat; echo "$RTUPOLL_START /opt/iecd/rtupoll $RTU_LIST 2>>$LOGDIR/rtupoll.log"; } | crontab -
-# crontab /opt/iecd/iecd_crontab
+crontab $IECD_CRONTAB
 
 wait

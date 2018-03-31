@@ -35,7 +35,7 @@ main(int argc, char **argv)
 	sockfd = socket(AF_UNIX, SOCK_STREAM, 0);
 	if (sockfd == -1) {
 		perror("Socket() error");
-		exit(4);
+		exit(4); // Возможно задать status и выход сделать через goto?
 	}
 	
 	memset(&sockun, 0, sizeof(struct sockaddr_un));
@@ -62,7 +62,7 @@ main(int argc, char **argv)
 				status = 2;
 				break;
 			case '^':
-				status = 3;
+				status = 3; // Надо подумать стоит ли ожидать ответа об отправке отложенных сообщений.
 				break;
 			default:
 				break;

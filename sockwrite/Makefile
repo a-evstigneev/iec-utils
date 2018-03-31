@@ -1,5 +1,5 @@
 bindir = ../bin
-target = asdusend
+target = sockwrite
 
 .PHONY: all $(target)
 

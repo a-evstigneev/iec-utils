@@ -152,7 +152,7 @@ main(int argc, char *argv[])
 	char *unixsock, *ieclink, *iecserver, *iecport, *gi_script;
 	int sockfd = -1, connfd = -1;
     
-	char *quemngr_pid = NULL;
+	char *pid_notify = NULL;
 
 	int i, n, nready, gopt, ret, just_connect = 0, new_sockfd = -1;
 		
@@ -188,8 +188,8 @@ main(int argc, char *argv[])
 	signal(SIGTERM, sig_term);
 	signal(SIGCHLD, sig_chld);
 	
-	if ( (quemngr_pid = getenv("QUEMNGR_PID")) == NULL)
-		fprintf(stderr, "Variable QUEMNGR_PID not defined\n");
+	if ( (pid_notify = getenv("PID_NOTIFY")) == NULL)
+		fprintf(stderr, "Variable PID_NOTIFY not defined\n");
 	
 	/* delete old unix socket */
     unlink(unixsock);
@@ -269,7 +269,7 @@ main(int argc, char *argv[])
 							new_sockfd = new_usocket(unixsock); // Может временной переменной
 							// присвоить значение дескриптора?
 						//	fdread[1].events = POLLIN; // Ждем пока придет активация общего опроса
-							connect_hook(quemngr_pid);
+							connect_hook(pid_notify);
 							just_connect = 1; // Соединение было установлено только что
 							fprintf(stderr, "iecproxy: just connect = %d\n", just_connect);
 							break;
@@ -282,7 +282,7 @@ main(int argc, char *argv[])
 							close(fdread[1].fd);
 							unlink(unixsock);
 							fdread[1].fd = -1;
-							disconnect_hook(quemngr_pid);
+							disconnect_hook(pid_notify);
 							break;
 						case '<':
 							if (connfd < 0)

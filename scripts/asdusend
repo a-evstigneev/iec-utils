@@ -1,6 +1,5 @@
 #!/bin/sh
 
-. /opt/iecd/iecvar
 . /opt/iecd/utils
 
 tmpdir=$(mktemp -d /tmp/XXXXX.broker)
@@ -14,12 +13,12 @@ confirm="Ok"
 
 sendfile()
 {
-	asduconv -c 3 $1 | asdusend -s $VARDIR/$cts_name/socket 
+	asduconv -c 3 $1 | sockwrite -s $VARDIR/$cts_name/socket 
 }
 
 end_defque()
 {
-	printf '^\n' | asdusend -s $VARDIR/$cts_name/socket 
+	printf '^\n' | sockwrite -s $VARDIR/$cts_name/socket 
 	logmsgtime "Receive signal SIGUSR2 from quemngr and send \"^\" to iecproxy" 
 }
 
@@ -49,7 +48,7 @@ sigchld()
 					logmsgtime "file $name was not transfered, return code 2" 
 					;;
 				3) 
-					logmsgtime "All deferred messages were received by iecproxy, return code 3"
+					logmsgtime "all deferred messages were received by iecproxy, return code 3"
 					;;
 				*) 
 					true 

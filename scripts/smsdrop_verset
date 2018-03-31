@@ -1,5 +1,8 @@
 #!/bin/sh
 
+./opt/iecd/utils
+set_env DB_ACT DB_ARCH
+
 smsparse()
 {
 	local _file _comaddr
@@ -62,7 +65,7 @@ fi
 
 read sms
 smsconv=$(/bin/echo -n -e `/bin/echo $sms | sed -r 's/.{2}/\\\\x&/g'` | /usr/bin/iconv -f UCS-2BE 2>/dev/null)
-filename=$(mktemp -u -p "$SMSDROP" "${comaddr}_XXXXXX")
+filename=$(mktemp -u -p "$SMSDROPDIR" "${comaddr}_XXXXXX")
 
 if printf '%s\n' "$smsconv" | smsparse "$filename" "$comaddr"; then
 	if sync $filename; then
@@ -83,7 +86,7 @@ if printf '%s\n' "$smsconv" | smsparse "$filename" "$comaddr"; then
 		archive_name=$(/bin/date '+%k:%M:%S')_$(mktemp -u "XXXXXX")
 		cp "$filename" "$dir_path/$archive_name"; sync "$dir_path/$archive_name" 
 				
-		mv $filename $SMSDROP/msg; sync $SMSDROP/msg
+		mv $filename $SMSDROPDIR/msg; sync $SMSDROPDIR/msg
 	else
 		exit 1
 	fi

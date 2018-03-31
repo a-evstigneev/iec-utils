@@ -1,8 +1,7 @@
 #!/bin/sh
 
 IECDIR="/opt/iecd"
-IECDB="$IECDIR/iecdb"
-#IECDB="$IECDIR/db_active"
+IECDB="$IECDIR/db_active"
 
 if ! [ -z "$(ls $IECDB)" ]; then 
 	find $IECDB -type f -printf "%P\n" | \
