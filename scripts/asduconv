@@ -172,6 +172,7 @@ transform_asdu()
 	function qds(strbits,		sum, flag, i)
 	{
 		split(strbits, flag, ",")
+		
 		for (i in flag)
 			if (flag[i] == "IV")
 				sum = sum + 128
@@ -183,6 +184,7 @@ transform_asdu()
 				sum = sum + 16
 			else if (flag[i] == "OV")
 				sum = sum + 1
+		
 		return sum 
 	}	
 	'

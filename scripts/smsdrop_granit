@@ -12,27 +12,42 @@ smsparse()
 			TYPE["M_SP_TB_1"] = 30
 			TYPE["M_ME_TF_1"] = 36
 			cmd="/bin/date \047+%S%3N:%_M:%_k:%e:%u:%_m:%y\047 | /bin/sed \047s/^0*//g; s/ //g\047"
-
+			
+			OBJADDR["Zona1"] = 1; VALUE["Zona1"] = -1 
+			OBJADDR["Zona2"] = 2; VALUE["Zona2"] = -1 
+			OBJADDR["Zona3"] = 3; VALUE["Zona3"] = -1 
+			OBJADDR["Zona4"] = 4; VALUE["Zona4"] = -1 
+			OBJADDR["Akk"] 	 = 5; VALUE["Akk"]   = -1 
+			OBJADDR["Set"]   = 6; VALUE["Set"]   = -1 
+			OBJADDR["t="]    = 1; VALUE["t="]
 		}
 		
 		{ 
 			for (i = 1; i <= NF; ++i) {
-				if ($i ~ /norma/)
-					$i = 0
-				else if ($i ~ /Neispravnost/ || /Pogar/ || /Trevoga/)
-					$i = 1
-				else if ($i ~ /Net/)
-					$i = 1
-				else if ($i ~ /t=/)
-					$i = substr($i, index($i, "=") + 1)
+				for (field in OBJADDR) { 
+					if ($i ~ field) {
+						if ($i ~ /norma/)
+							VALUE[field] = 0
+						else if ( ($i ~ /Neispravnost/) || ($i ~ /Pogar/) || ($i ~ /Trevoga/))
+							VALUE[field] = 1
+						else if ($i ~ /Net/)
+							VALUE[field] = 1
+						else if ($i ~ /t=/) 
+							VALUE[field] = substr($i, index($i, "=") + 1)
+						
+					}
+				}
 			}
 			
 			cmd | getline timestamp; close(cmd)	
 
-			for (i = 1; i < NF; ++i )
-				printf("%s %s %s %s %s %s\n", COMADDR, i, TYPE["M_SP_TB_1"], $i, "not_used", timestamp) >> FILE
-			printf("%s %s %s %s %s %s\n", COMADDR, 1, TYPE["M_ME_TF_1"], $NF, "not_used", timestamp) >> FILE
-			close(file)
+			for (field in OBJADDR) 
+				if ( (field == "t=") && (VALUE[field] != ""))
+					printf("%s %s %s %s %s %s\n", COMADDR, OBJADDR[field], TYPE["M_ME_TF_1"], VALUE[field], "not_used", timestamp) >> FILE
+				else if (VALUE[field] != -1) 
+					printf("%s %s %s %s %s %s\n", COMADDR, OBJADDR[field], TYPE["M_SP_TB_1"], VALUE[field], "not_used", timestamp) >> FILE
+				
+			close(FILE)
 		}
 	' 
 }
@@ -55,7 +70,7 @@ filename=$(mktemp -u -p "$SMSDROPDIR" "${comaddr}_XXXXXX")
 
 if printf '%s\n' "$sms" | smsparse "$filename" "$comaddr"; then
 	if sync $filename; then
-		# Create files that will store the signal values for a general interrogation
+   	# Create files that will store the signal values for a general interrogation
 		while read _comaddr _objaddr _type _value _qds _timestamp; do
 			case $_type in
 				30)
@@ -72,7 +87,7 @@ if printf '%s\n' "$sms" | smsparse "$filename" "$comaddr"; then
 			echo $_value $_qds > $DB_ACT/$_comaddr/$_type/$_objaddr
 		done < $filename
 		
-		dir_path="$DB_ARCH"/"$comaddr"/$(/bin/date '+%Y-%m-%e')
+		dir_path="$DB_ARCH"/"$comaddr"/$(/bin/date '+%Y-%m-%d')
 		if ! [ -d "$dir_path" ]; then
 			mkdir -p "$dir_path"
 		fi
@@ -80,7 +95,7 @@ if printf '%s\n' "$sms" | smsparse "$filename" "$comaddr"; then
 		archive_name=$(/bin/date '+%k:%M:%S')_$(mktemp -u "XXXXXX")
 		cp "$filename" "$dir_path/$archive_name"; sync "$dir_path/$archive_name"
 		
-		mv $filename $SMSDROPDIR/msg; sync $SMSDROPDIR/msg	
+		mv $filename $SMSDROPDIR/msgsync; sync $SMSDROPDIR/msgsync	
 	else
 		exit 1
 	fi

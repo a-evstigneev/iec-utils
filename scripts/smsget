@@ -76,10 +76,10 @@ smssep()
 				# Trigger activation for each instance quemngr
 				while read _cts_name rest; do
 					_filename="$VARDIR/$_cts_name/work/drop/msg"
-					cp $SMSDROPDIR/msg $_filename
+					cp $SMSDROPDIR/msgsync $_filename
 					_inode="$VARDIR/$_cts_name/work/drop/`stat -c %i $_filename`"
 					
-					if sync $_filename; then
+					if sync "$_filename"; then
 						mv "$_filename" "$_inode"
 					fi
 					
@@ -87,7 +87,7 @@ smssep()
 				done <<-EOF
 					$(cat $CTS_LIST | grep -v '^#' | sed '/^$/d')
 				EOF
-				rm $SMSDROPDIR/msg
+				rm $SMSDROPDIR/msgsync
 			;;
 			1)
 				logmsg "Synchronous recording to disk failed"
