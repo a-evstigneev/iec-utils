@@ -43,9 +43,9 @@ smsparse()
 
 			for (field in OBJADDR) 
 				if ( (field == "t=") && (VALUE[field] != ""))
-					printf("%s %s %s %s %s %s\n", COMADDR, OBJADDR[field], TYPE["M_ME_TF_1"], VALUE[field], "not_used", timestamp) >> FILE
+					printf("%s %s %s %s %s %s\n", COMADDR, OBJADDR[field], TYPE["M_ME_TF_1"], VALUE[field], "-", timestamp) >> FILE
 				else if (VALUE[field] != -1) 
-					printf("%s %s %s %s %s %s\n", COMADDR, OBJADDR[field], TYPE["M_SP_TB_1"], VALUE[field], "not_used", timestamp) >> FILE
+					printf("%s %s %s %s %s %s\n", COMADDR, OBJADDR[field], TYPE["M_SP_TB_1"], VALUE[field], "-", timestamp) >> FILE
 				
 			close(FILE)
 		}

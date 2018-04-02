@@ -52,7 +52,7 @@ smsparse()
 			
 			cmd | getline timestamp; close(cmd)
 			
-			printf("%s %s %s %s %s %s\n", COMADDR, objaddr, TYPE["M_SP_TB_1"], value, "not_used", timestamp) >> FILE
+			printf("%s %s %s %s %s %s\n", COMADDR, objaddr, TYPE["M_SP_TB_1"], value, "-", timestamp) >> FILE
 			close(file)
 		}
 	' 
