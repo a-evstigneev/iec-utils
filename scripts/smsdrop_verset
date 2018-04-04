@@ -1,6 +1,6 @@
 #!/bin/sh
 
-./opt/iecd/utils
+. /opt/iecd/utils
 set_env DB_ACT DB_ARCH
 
 smsparse()
@@ -65,28 +65,23 @@ fi
 
 read sms
 smsconv=$(/bin/echo -n -e `/bin/echo $sms | sed -r 's/.{2}/\\\\x&/g'` | /usr/bin/iconv -f UCS-2BE 2>/dev/null)
-filename=$(mktemp -u -p "$SMSDROPDIR" "${comaddr}_XXXXXX")
 
-if printf '%s\n' "$smsconv" | smsparse "$filename" "$comaddr"; then
-	if sync $filename; then
+savedir="$DB_ARCH/$comaddr/$(/bin/date '+%Y-%m-%d')"
+[ -d "$savedir" ] || mkdir -p "$savedir"
+
+tempfile="$savedir/tempfile"
+[ -f $tempfile ] && rm $tempfile 2>/dev/null 
+touch $tempfile
+
+if printf '%s\n' "$smsconv" | smsparse "$tempfile" "$comaddr"; then
+	if sync $tempfile; then
 		# Create files that will store the signal values for a general interrogation
 		while read _comaddr _objaddr _type _value _qds _timestamp; do
 			_type=1
-			if ! [ -d $DB_ACT/$_comaddr/$_type ]; then
-				mkdir -p $DB_ACT/$_comaddr/$_type
-			fi
+			[ -d $DB_ACT/$_comaddr/$_type ] || mkdir -p $DB_ACT/$_comaddr/$_type
 			echo $_value $_qds > $DB_ACT/$_comaddr/$_type/$_objaddr
-		done < $filename
-
-		dir_path="$DB_ARCH"/"$comaddr"/$(/bin/date '+%Y-%m-%d')
-		if ! [ -d "$dir_path" ]; then
-			mkdir -p "$dir_path"
-		fi
-		#sync?
-		archive_name=$(/bin/date '+%k:%M:%S')_$(mktemp -u "XXXXXX")
-		cp "$filename" "$dir_path/$archive_name"; sync "$dir_path/$archive_name" 
-				
-		mv $filename $SMSDROPDIR/msgsync; sync $SMSDROPDIR/msgsync
+			sync $DB_ACT/$_comaddr/$_type/$_objaddr
+		done < $tempfile
 	else
 		exit 1
 	fi
