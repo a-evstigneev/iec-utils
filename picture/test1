@@ -1,0 +1,27 @@
+.PS
+#scale=2.54
+
+#"x" at 0,0
+#"x" at 1,1
+#box wid 1 ht 1 at 0,0
+#box wid 1 ht 1 at 1,1
+
+#"x" at 0,0
+#arc -> cw from 0,0 to 2,0 rad 2 2 
+
+#Box1: box at 0,0
+#Box2: box at 0,2
+#line from Box1 to Box2 chop
+#move to Box1 up 2 right 2
+#line to Box1
+
+#Box1: box at 0,0
+#Box2: box at 2,2
+#Box3: box at 0,2
+#line from 1st box to 2nd box + 0.5,0.5
+
+#box ht 0.75 wid 0.75
+
+#box ht 0.5 wid 0.5 with .sw at last box.ne
+
+.PE

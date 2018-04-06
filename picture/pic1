@@ -1,0 +1,48 @@
+.PS
+scale=2.54
+
+Gsmdev: box wid 3 rad 0.2 "GSM equipment" 
+move 2
+Smsget: box "smsget"
+line -> left 2 at 3/4 <Smsget.nw, Smsget.w> "AT" above
+line <- left 2 at 1/4 <Smsget.w, Smsget.sw> "SMS list" below
+line -> right 2 from Smsget.e "SMS" above
+Smsdrop: box "smsdrop" 
+
+down; arrow 2.5 at Smsdrop.s
+
+h = 0.6; 
+Db_arch: [
+	boxht = h; boxwid = boxwid+0.3
+	box "tmp_file"
+	box "stored_msg_n"
+	box ht 2*h "..."
+	box "stored_msg_2";
+	box "stored_msg_1";
+	box invis "./db_archive"
+]
+box dashed wid boxwid+0.7 ht last [].ht+0.4 at last [] + (0, 0.2)
+
+move down 2.5 at Gsmdev.b; 
+Quemngr_1: [
+	T: box ht h "trigger_1"; 
+	arrow down 0.7 from last box.b; box "quemngr_1"; 
+	line <- down 0.7; 
+	Msgdrop: [
+		box ht h "inode_name";
+		box ht h+0.2 "./work/drop" invis
+	]
+	box wid boxwid+0.6 ht last [].ht+0.1 at Msgdrop + (0, 0.15) dashed; 
+]
+Quemngr_2: [
+	T: box ht h "trigger_2"; 
+	arrow down 0.7 from last box.b; box "quemngr_2"; 
+	line <- down 0.7; 
+	Msgdrop: [
+		box ht h "inode_name";
+		box ht h+0.2 "./work/drop" invis
+	]
+	box wid boxwid+0.6 ht last [].ht+0.1 at Msgdrop + (0, 0.15) dashed; 
+]
+
+.PE
