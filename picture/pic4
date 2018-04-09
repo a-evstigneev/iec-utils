@@ -1,0 +1,40 @@
+.PS
+scale=2.54
+
+h=0.5; w=1.5
+
+boxht=h; boxwid=w
+down
+Qs: [
+	Qa: [
+		box "msg 1"
+		box "msg 2"
+		box "..."
+		box "msg n"
+	]
+
+	Qd1: [
+		box "msg 1"
+		box "msg 2"
+		box "..."
+		box "msg n"
+	] with .w at Qa.e + (0.3,0)
+
+	Qd2: [
+		box "msg 1"
+		box "msg 2"
+		box "..."
+		box "msg n"
+	] with .w at Qd1.e + (0.3,0)
+
+	Qd3: [
+		box "msg 1"
+		box "msg 2"
+		box "..."
+		box "msg n"
+	] with .w at Qd2.e + (0.3,0)
+]
+
+
+
+.PE
