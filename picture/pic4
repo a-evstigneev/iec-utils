@@ -7,34 +7,52 @@ boxht=h; boxwid=w
 down
 Qs: [
 	Qa: [
-		box "msg 1"
-		box "msg 2"
-		box "..."
 		box "msg n"
-	]
-
+		box ". . ."
+		box "msg 2"
+		box "msg 1"
+	] 
+#	"./act" with .b at Qa.t + (0,0.25) 
+	
+	Qin: [
+		box "msg 1" 
+		box "msg 2"
+		box ". . ."
+		box "msg n"
+	] with .w at Qa.e +(0.3,0)
+	
 	Qd1: [
 		box "msg 1"
 		box "msg 2"
-		box "..."
+		box ". . ."
 		box "msg n"
-	] with .w at Qa.e + (0.3,0)
-
-	Qd2: [
-		box "msg 1"
-		box "msg 2"
-		box "..."
-		box "msg n"
-	] with .w at Qd1.e + (0.3,0)
-
+	] with .w at Qin.e + (0.3,0)
+	
 	Qd3: [
+		box invis
+		box invis
+		". . ."
+		box invis
+	] with .w at Qd1.e + (0.3,0)
+	
+	Qdn: [
+		box "msg 1"
+		box "msg 2"
+		box ". . ."
+		box "msg n"
+	] with .w at Qd3.e + (0.3,0)
+	
+	Fail: [
 		box "msg 1"
 		box "msg 2"
 		box "..."
 		box "msg n"
-	] with .w at Qd2.e + (0.3,0)
+	] with .w at Qdn.e + (0.3,0)
 ]
 
+reset boxht
+reset boxwid
 
+box ht 2*h wid 2*w "quemngr" with .nw at Qs.Qa.sw 
 
 .PE
