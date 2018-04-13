@@ -91,7 +91,7 @@ smssep()
 				EOF
 				
 				_archive_msg=$_savedir/$(/bin/date '+%k:%M:%S')_$(mktemp -u "XXXXXX")
-				mv $_savedir/tempfile $_archive_msg; sync $_archive_msg
+				mv "$_savedir/tempfile" "$_archive_msg"; sync "$_archive_msg"
 			;;
 			1)
 				logmsg "Synchronous recording to disk failed"
