@@ -64,6 +64,9 @@ smssep()
 			verset)
 				/usr/bin/printf '%s\n' "$_sms" | smsdrop_verset $_comaddr &
 				;;
+			ccu825)
+				/usr/bin/printf '%s\n' "$_sms" | smsdrop_ccu825 $_comaddr &
+				;;
 			esac
 			
 			wait %1

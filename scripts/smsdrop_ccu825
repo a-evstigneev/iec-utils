@@ -1,0 +1,91 @@
+#!/bin/sh
+
+. /opt/iecd/utils
+set_env DB_ACT DB_ARCH
+
+smsparse()
+{
+	local _file _comaddr
+	awk -v _file=$1 -v _comaddr=$2 '
+		BEGIN {
+			FS=" "; FILE = _file; COMADDR = _comaddr; 
+			TYPE["M_SP_TB_1"] = 30
+			cmd="/bin/date \047+%S%3N:%_M:%_k:%e:%u:%_m:%y\047 | /bin/sed \047s/^0*//g; s/ //g\047"
+		}
+		
+		{ 
+			value = 0
+			objaddr = 0
+			
+			if ( $0 ~ "Взята на охрану зона" )
+				objaddr = $8
+			else if ( $0 ~ "Восстановление технолог. зоны" )
+				objaddr = $7  
+			else if ( $0 ~ "Нарушение технологической зоны" || $0 ~ "Неисправность в зоне" ) {
+				objaddr = $7; value = 1
+			}
+			
+			# TC 10
+			if ( $0 ~ "Прибор закрыт" ) 
+				objaddr = 10
+			else if ( $0 ~ "Прибор открыт" ) {
+				objaddr = 10; value = 1
+			}
+			
+			# TC 11
+			if ( $0 ~ "Сеть двести двадцать вольт включена" )
+				objaddr = 11
+			else if ( $0 ~ "Сеть двести двадцать вольт выключена" ) {
+				objaddr = 11; value = 1  
+			}
+
+			# TC 12
+			if ( $0 ~ "Аккумулятор в норме" )
+				objaddr = 12
+			else if ( $0 ~ "Аккумулятор отсутствует" || $0 ~ "Аккумулятор разряжен" ) {
+				objaddr = 12; value = 1  
+			}
+			
+			# Invalid data
+			if ( value == 0 && objaddr == 0)
+				exit 2
+			
+			cmd | getline timestamp; close(cmd)
+			
+			printf("%s %s %s %s %s %s\n", COMADDR, objaddr, TYPE["M_SP_TB_1"], value, "-", timestamp) >> FILE
+			close(file)
+		}
+	' 
+}
+
+comaddr="0"
+if [ ! -z $1 ]; then
+	comaddr=$1
+fi
+
+read sms
+smsconv=$(/bin/echo -n -e `/bin/echo $sms | sed -r 's/.{2}/\\\\x&/g'` | /usr/bin/iconv -f UCS-2BE 2>/dev/null)
+
+savedir="$DB_ARCH/$comaddr/$(/bin/date '+%Y-%m-%d')"
+[ -d "$savedir" ] || mkdir -p "$savedir"
+
+tempfile="$savedir/tempfile"
+[ -f $tempfile ] && rm $tempfile 2>/dev/null 
+touch $tempfile
+
+if printf '%s\n' "$smsconv" | smsparse "$tempfile" "$comaddr"; then
+	if sync $tempfile; then
+		# Create files that will store the signal values for a general interrogation
+		while read _comaddr _objaddr _type _value _qds _timestamp; do
+			_type=1
+			
+			[ -d $DB_ACT/$_comaddr/$_type ] || mkdir -p $DB_ACT/$_comaddr/$_type
+			echo $_value $_qds > $DB_ACT/$_comaddr/$_type/$_objaddr
+			sync $DB_ACT/$_comaddr/$_type/$_objaddr
+		done < $tempfile
+	else
+		exit 1
+	fi
+else
+	exit 2
+fi
