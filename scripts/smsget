@@ -23,7 +23,7 @@ usage()
 smssep()
 {
 	local _line _listid _smsnum _comaddr _cts_name _inode
-	local _id _stat _num _sp _date _sms _senddev _dropmsg _archivemsg _savedir
+	local _id _stat _num _number _sp _date _sms _senddev _dropmsg _archivemsg _savedir
 
 	_listid=""; _smsnum=0; _comaddr=""
 	
@@ -49,8 +49,8 @@ smssep()
 		read _sms
 		
 		_id=$(echo $_id | sed 's/+CMGL: //')
-		_num=$(echo $_num | sed 's/"//g; s/+//')
-		
+		_num=$(/bin/echo -n -e `/bin/echo $_num | tr -d '"' | sed -r 's/.{2}/\\\\x&/g'` | /usr/bin/iconv -f UCS-2BE 2>/dev/null | tr -d '+')
+
 		logmsg "Read sms_id = $_id, number = $_num, sms = $_sms"
 	
 		_comaddr=$(grep -q $_num $RTU_LIST && grep $_num $RTU_LIST | awk '{ print $1 }')
@@ -120,7 +120,7 @@ devinit()
 	local _dev _cmd _result
 	_dev=$1
 
-	for _cmd in 'AT+CSCS="GSM"' "AT+CSMS=0" 'AT+CMGF=1' 'AT+CPMS="SM","SM","SM"' 'AT+CNMI=2,0,0,0,0'; do
+	for _cmd in 'AT+CSCS="UCS2"' "AT+CSMS=0" 'AT+CMGF=1' 'AT+CSDH=1' 'AT+CPMS="SM","SM","SM"' 'AT+CNMI=2,0,0,0,0'; do
 		if rwdev $_dev "$_cmd" _result; then
 			logmsg "$_cmd"
 			logmsg "$_result"

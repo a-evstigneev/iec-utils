@@ -58,6 +58,8 @@ if [ ! -z $1 ]; then
 fi
 
 read sms
+sms=$(/bin/echo -n -e `/bin/echo $sms | sed -r 's/.{2}/\\\\x&/g'` | /usr/bin/iconv -f UCS-2BE 2>/dev/null | tr -d "'")
+
 if echo $sms | grep -q -e 'Vzayty na ohrany' -e 'Snayty s ohrany'; then
 #	echo "Subject: iec104\r\n\r\nControlled station  = ${comaddr}, ${sms}" | msmtp --debug -a komisyk@gmail.com -t -i komisyk@mail.ru >/dev/null 2>&1
 	exit 2
