@@ -4,12 +4,12 @@ scale=2.54
 
 Gsmdev: box wid 3 rad 0.2 "GSM equipment" 
 move 3.5
-Smsget: box "smsget"
+Smsget: box "Smsget"
 line -> left 3.5 at 3/4 <Smsget.nw, Smsget.w> "AT" above
 line <- left 3.5 at 1/4 <Smsget.w, Smsget.sw> "SMS list" below
 line -> right 3.5 at 3/4 <Smsget.ne, Smsget.e > "SMS" above
-line <- right 3.5 at 1/4 <Smsget.e, Smsget.se> "Return code" below
-Smsdrop: box "smsdrop" 
+line <- right 3.5 at 1/4 <Smsget.e, Smsget.se> "return code" below
+Smsdrop: box "Smsdrop" 
 
 move to Gsmdev.w - (0,6)
 
@@ -17,28 +17,28 @@ Quemngr: [
 	h=0.8
 	Qn: [ 
 		Tr: [ box ht h "trigger" ]; 
-		line ->; box "quemngr n"; line <- ; 
+		line ->; box "Quemngr n"; line <- ; 
 		Dr: [ box wid boxwid+0.6 ht boxht+0.3 dashed ]; 
 		"work/drop" at Dr.b above; 
-		In: [ box ht h "inode_name" ] at Dr + (0,0.2) 
+		In: [ box ht h "file name" ] at Dr + (0,0.2) 
 	]
 	
 	Q3: [ box ht 0.9 " . . ." invis ] with .b at Qn.n + (0.7, 0.4)
 	
 	Q2: [ 
 		Tr: [ box ht h "trigger" ]; 
-		line ->; box "quemngr 2"; line <- ; 
+		line ->; box "Quemngr 2"; line <- ; 
 		Dr: [ box wid boxwid+0.6 ht boxht+0.3 dashed ]; 
 		"work/drop" at Dr.b above; 
-		In: [ box ht h "inode_name" ] at Dr + (0,0.2) 
+		In: [ box ht h "file name" ] at Dr + (0,0.2) 
 	] with .b at Q3.n + (0.55, 0.4) 
 	
 	Q1: [ 
 		Tr: [ box ht h "trigger" ]; 
-		line ->; box "quemngr 1"; line <- ; 
+		line ->; box "Quemngr 1"; line <- ; 
 		Dr: [ box wid boxwid+0.6 ht boxht+0.3 dashed ]; 
 		"work/drop" at Dr.b above; 
-		In: [ box ht h "inode_name" ] at Dr + (0,0.2) 
+		In: [ box ht h "file name" ] at Dr + (0,0.2) 
 	] with .b at Q2.n + (0.55, 0.4)
 ]
 
@@ -56,7 +56,7 @@ reset boxht; reset boxwid
 box wid boxwid+0.9 ht last [].ht+0.4 at last [] + (0, 0.2) dashed
 "db_archive" at last box.b above
 
-arrow from Smsdrop.b to Db_arch.Tmpf.t "  Write" ljust "  a message" ljust "  to disk" ljust
+arrow from Smsdrop.b to Db_arch.Tmpf.t "  write" ljust "  a message" ljust "  to disk" ljust
 
 density = 0.05
 arc down cw rad 0.5 from 1/5 <Smsget.sw, Smsget.se> dotted density; line 5.2 dotted density "trigger activation" above; arc rad 1 dotted density; line -> 6.09 dotted density
