@@ -5,11 +5,12 @@ scale=2.54
 Gsmdev: box wid 3 rad 0.2 "GSM equipment" 
 move 3.5
 Smsget: box "Smsget"
+move 3.5
+Smsdrop: box "Smsdrop" 
 line -> left 3.5 at 3/4 <Smsget.nw, Smsget.w> "AT" above
 line <- left 3.5 at 1/4 <Smsget.w, Smsget.sw> "SMS list" below
 line -> right 3.5 at 3/4 <Smsget.ne, Smsget.e > "SMS" above
 line <- right 3.5 at 1/4 <Smsget.e, Smsget.se> "return code" below
-Smsdrop: box "Smsdrop" 
 
 move to Gsmdev.w - (0,6)
 
@@ -20,7 +21,7 @@ Quemngr: [
 		line ->; box "Quemngr n"; line <- ; 
 		Dr: [ box wid boxwid+0.6 ht boxht+0.3 dashed ]; 
 		"work/drop" at Dr.b above; 
-		In: [ box ht h "file name" ] at Dr + (0,0.2) 
+		In: [ box ht h "file" ] at Dr + (0,0.2) 
 	]
 	
 	Q3: [ box ht 0.9 " . . ." invis ] with .b at Qn.n + (0.7, 0.4)
@@ -30,7 +31,7 @@ Quemngr: [
 		line ->; box "Quemngr 2"; line <- ; 
 		Dr: [ box wid boxwid+0.6 ht boxht+0.3 dashed ]; 
 		"work/drop" at Dr.b above; 
-		In: [ box ht h "file name" ] at Dr + (0,0.2) 
+		In: [ box ht h "file" ] at Dr + (0,0.2) 
 	] with .b at Q3.n + (0.55, 0.4) 
 	
 	Q1: [ 
@@ -38,7 +39,7 @@ Quemngr: [
 		line ->; box "Quemngr 1"; line <- ; 
 		Dr: [ box wid boxwid+0.6 ht boxht+0.3 dashed ]; 
 		"work/drop" at Dr.b above; 
-		In: [ box ht h "file name" ] at Dr + (0,0.2) 
+		In: [ box ht h "file" ] at Dr + (0,0.2) 
 	] with .b at Q2.n + (0.55, 0.4)
 ]
 
@@ -46,25 +47,26 @@ h = 0.6; boxht = h; boxwid = boxwid+0.3
 Db_arch: [
 	down
 	Tmpf: box "tmp_file";
-	box "stored msg"
+	box "stored msg 1"
 	box ht 2*h "..."
-	box "stored msg";
-	box "stored msg";
+	box "stored msg n-1";
+	box "stored msg n";
 	box invis; 
 ] with .Tmpf.w at Quemngr.Q2.In.e + (Smsdrop.x - Quemngr.Q2.In.e.x - boxwid/2, 0)
 reset boxht; reset boxwid
 box wid boxwid+0.9 ht last [].ht+0.4 at last [] + (0, 0.2) dashed
 "db_archive" at last box.b above
 
-arrow from Smsdrop.b to Db_arch.Tmpf.t "  write" ljust "  a message" ljust "  to disk" ljust
+arrow from Smsdrop.b to Db_arch.Tmpf.t "  writing a message" ljust "  to disk" ljust "  with the name" ljust "  tmp_file" ljust
 
 density = 0.05
 arc down cw rad 0.5 from 1/5 <Smsget.sw, Smsget.se> dotted density; line 5.2 dotted density "trigger activation" above; arc rad 1 dotted density; line -> 6.09 dotted density
 arc down cw rad 0.75 from 2/5 <Smsget.sw, Smsget.se> dotted density; line 4.1 dotted density "trigger activation" below; arc rad 1 dotted density; line -> 2.55 dotted density
 arc down cw rad 1.25 from 3/5 <Smsget.sw, Smsget.se> dotted density; line 3.6 dotted density "trigger activation" below ; arc rad 0.8 dotted density; line -> 0.29 dotted density
 
-arc down rad 1.25 from 4/5 <Smsget.sw, Smsget.se>; line 2.4 "copy tmp_file" "to inode_name"; arc cw rad 0.8; line -> 2.15
-
+arc down rad 1.6 from 4/5 <Smsget.sw, Smsget.se>; 
+Lt: line 2.1; arc cw rad 0.8; line -> 1.8
+"copy tmp_file" "to file with the name" "it's own inode" at Lt.c + (-0.2, 0.7);
 
 spline left 0.5 -> from Db_arch.Tmpf.w then up 1.8 to Quemngr.Q1.In.e
 line -> from Db_arch.Tmpf.w to Quemngr.Q2.In.e

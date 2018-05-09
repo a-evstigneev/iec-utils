@@ -4,15 +4,15 @@ h = 0.8
 
 Qs: [
 	down
-	In: box "in_queue"
+	In: box "queue_1" "(IN)"
 	move 
-	Q1: box "queue 1"
+	Q1: box "queue_2"
 	move 1/2
 	box ht 1/3 ". . ." invis
 	move 1/2
-	Qn: box "queue n"
+	Qn: box "queue_n"
 
-	Qa: box "act_queue" with .w at In.e + (1.5,0)
+	Qa: box "queue_0" "(ACT)" with .w at In.e + (1.5,0)
 
 	line -> from In.e to Qa.w dotted
 
@@ -30,24 +30,29 @@ Tr: box ht h "trigger" with .nw at QmgrBr.sw - (- 0.4, 0.7)
 line -> from last box.n up 0.7 
 
 As: box "Asdusend" with .w at Qs.Qa.e + (6,0)
-line -> from 2/5 <Qs.Qa.ne, Qs.Qa.se> to 2/5 <As.nw, As.sw> "file_name" above
-line <- from 3/5 <Qs.Qa.ne, Qs.Qa.se> to 3/5 <As.nw, As.sw> "file_name, status" below
+line -> from 2/5 <Qs.Qa.ne, Qs.Qa.se> to 2/5 <As.nw, As.sw> "file name" above
+line <- from 3/5 <Qs.Qa.ne, Qs.Qa.se> to 3/5 <As.nw, As.sw> "file name, status" below
 
 Sw: box "Sockwrite" with .w at Tr.e + (1.5 + Qs.Qa.wid + 6, 0)
 
-Ac: box "Asduconv" at 1/2 <As.c, Sw.c> - (0.5*As.wid, 0)
+Ac: box "Asduconv" at 3/5 <As.c, Sw.c> - (0.5*As.wid, 0)
 
 sockleft = 4.5
 Us: box ht h "unix socket" at Sw.c - (sockleft, 0)
 line -> left sockleft - boxwid from 2/5 <Sw.nw, Sw.sw> "ascii hex" above
 line <- left sockleft - boxwid from 3/5 <Sw.nw, Sw.sw> "status" below
 
-Fn: box ht h "file_name" at Ac.c - (sockleft - 0.5*As.wid, 0)
-AcDir: box ht Fn.ht + 0.9 wid Fn.wid + 0.4 at Fn.c - (0, 0.2) dashed
-"work/act/" at AcDir.s above
+Fn: box ht h "file" at Ac.c - (sockleft - 0.5*As.wid, 0)
+AcDir: box ht Fn.ht + 1 wid Fn.wid + 0.4 at Fn.c - (0, 0.15) dashed
+"work/act" at AcDir.s above
 line -> from Fn.e to Ac.w
 
-line -> from 1/4 <As.sw, As.se> to 3/4 <Ac.nw, Ac.ne> "file_name  " rjust
+Fni: box ht h "file" at Ac.c - (sockleft - 0.5*As.wid, -2.2)
+QiDir: box ht Fni.ht + 1 wid Fni.wid + 0.4 at Fni.c - (0, -0.15) dashed
+"work/queue_i" at QiDir.n - (0, 0.3)
+line -> from Fni.s to Fn.n
+
+line -> from 1/4 <As.sw, As.se> to 3/4 <Ac.nw, Ac.ne> "file name  " rjust
 line -> from 3/4 <Ac.sw, Ac.se> to 1/4 <Sw.nw, Sw.ne> "ascii hex  " rjust
 line -> from 3/4 <Sw.nw, Sw.ne> to 3/4 <As.sw, As.se> "  status" ljust
 
