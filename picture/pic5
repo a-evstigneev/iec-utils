@@ -54,6 +54,6 @@ line -> from Fni.s to Fn.n
 
 line -> from 1/4 <As.sw, As.se> to 3/4 <Ac.nw, Ac.ne> "file name  " rjust
 line -> from 3/4 <Ac.sw, Ac.se> to 1/4 <Sw.nw, Sw.ne> "ascii hex  " rjust
-line -> from 3/4 <Sw.nw, Sw.ne> to 3/4 <As.sw, As.se> "  status" ljust
+line -> from 3/4 <Sw.nw, Sw.ne> to 3/4 <As.sw, As.se> "  return" ljust "  code" ljust
 
 .PE
