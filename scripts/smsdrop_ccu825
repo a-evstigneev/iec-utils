@@ -26,9 +26,9 @@ smsparse()
 			}
 			else if ( $0 ~ "POWER" ) { #TC17
 				objaddr = 17
-				if ($2 == OK)
+				if ($2 == "OK")
 					value = 0
-				else ($2 == FAULT)
+				else if ($2 == "FAULT")
 					value = 1
 				type = TYPE["M_SP_TB_1"]
 			}
