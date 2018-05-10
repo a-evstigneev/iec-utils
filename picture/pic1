@@ -12,13 +12,13 @@ line <- left 3.5 at 1/4 <Smsget.w, Smsget.sw> "SMS list" below
 line -> right 3.5 at 3/4 <Smsget.ne, Smsget.e > "SMS" above
 line <- right 3.5 at 1/4 <Smsget.e, Smsget.se> "return code" below
 
-move to Gsmdev.w - (0,6)
+move to Gsmdev.w - (0,7)
 
 Quemngr: [
 	h=0.8
 	Qn: [ 
 		Tr: [ box ht h "trigger" ]; 
-		line ->; box "Quemngr n"; line <- ; 
+		line ->; box "Quemngr_n"; line <- ; 
 		Dr: [ box wid boxwid+0.6 ht boxht+0.3 dashed ]; 
 		"work/drop" at Dr.b above; 
 		In: [ box ht h "file" ] at Dr + (0,0.2) 
@@ -28,7 +28,7 @@ Quemngr: [
 	
 	Q2: [ 
 		Tr: [ box ht h "trigger" ]; 
-		line ->; box "Quemngr 2"; line <- ; 
+		line ->; box "Quemngr_2"; line <- ; 
 		Dr: [ box wid boxwid+0.6 ht boxht+0.3 dashed ]; 
 		"work/drop" at Dr.b above; 
 		In: [ box ht h "file" ] at Dr + (0,0.2) 
@@ -36,7 +36,7 @@ Quemngr: [
 	
 	Q1: [ 
 		Tr: [ box ht h "trigger" ]; 
-		line ->; box "Quemngr 1"; line <- ; 
+		line ->; box "Quemngr_1"; line <- ; 
 		Dr: [ box wid boxwid+0.6 ht boxht+0.3 dashed ]; 
 		"work/drop" at Dr.b above; 
 		In: [ box ht h "file" ] at Dr + (0,0.2) 
@@ -60,13 +60,14 @@ box wid boxwid+0.9 ht last [].ht+0.4 at last [] + (0, 0.2) dashed
 arrow from Smsdrop.b to Db_arch.Tmpf.t "  writing a message" ljust "  to disk" ljust "  with the name" ljust "  tmp_file" ljust
 
 density = 0.05
-arc down cw rad 0.5 from 1/5 <Smsget.sw, Smsget.se> dotted density; line 5.2 dotted density "trigger activation" above; arc rad 1 dotted density; line -> 6.09 dotted density
-arc down cw rad 0.75 from 2/5 <Smsget.sw, Smsget.se> dotted density; line 4.1 dotted density "trigger activation" below; arc rad 1 dotted density; line -> 2.55 dotted density
-arc down cw rad 1.25 from 3/5 <Smsget.sw, Smsget.se> dotted density; line 3.6 dotted density "trigger activation" below ; arc rad 0.8 dotted density; line -> 0.29 dotted density
+arc down cw rad 0.8 from 1/5 <Smsget.sw, Smsget.se> dotted density; line 4.3 dotted density "trigger activation" above; arc rad 1.6 dotted density; line -> 6.18 dotted density
+arc down cw rad 1.4 from 2/5 <Smsget.sw, Smsget.se> dotted density; line 3.05 dotted density "trigger activation" above; arc rad 1.4 dotted density; line -> 2.522 dotted density
+arc down cw rad 2 from 3/5 <Smsget.sw, Smsget.se> dotted density; line 2.7 dotted density "trigger activation" above ; arc rad 1 dotted density; line -> 0.35 dotted density
 
-arc down rad 1.6 from 4/5 <Smsget.sw, Smsget.se>; 
-Lt: line 2.1; arc cw rad 0.8; line -> 1.8
-"copy tmp_file" "to file with the name" "it's own inode" at Lt.c + (-0.2, 0.7);
+arc down rad 2 from 4/5 <Smsget.sw, Smsget.se> 
+Lt: line 1.4 
+arc cw rad 1.2; line -> 2
+"copy tmp_file" "to file with the name" "it's own inode" at Lt.c + (-0.3, 0.8);
 
 spline left 0.5 -> from Db_arch.Tmpf.w then up 1.8 to Quemngr.Q1.In.e
 line -> from Db_arch.Tmpf.w to Quemngr.Q2.In.e
