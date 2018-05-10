@@ -83,10 +83,10 @@ if printf '%s\n' "$sms" | smsparse "$tempfile" "$comaddr"; then
 			case $_type in
 				30)
 					_type=1
-					;;
+				;;
 				36)
 					_type=13
-					;;
+				;;
 			esac
 			
 			[ -d $DB_ACT/$_comaddr/$_type ] || mkdir -p $DB_ACT/$_comaddr/$_type

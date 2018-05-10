@@ -70,7 +70,14 @@ if printf '%s\n' "$smsconv" | smsparse "$tempfile" "$comaddr"; then
 	if sync $tempfile; then
 		# Create files that will store the signal values for a general interrogation
 		while read _comaddr _objaddr _type _value _qds _timestamp; do
-			_type=1
+			case $_type in
+				30)
+					_type=1
+				;;
+				36)
+					_type=13
+				;;
+			esac
 			
 			[ -d $DB_ACT/$_comaddr/$_type ] || mkdir -p $DB_ACT/$_comaddr/$_type
 			echo $_value $_qds > $DB_ACT/$_comaddr/$_type/$_objaddr
