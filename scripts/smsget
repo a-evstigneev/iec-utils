@@ -1,6 +1,7 @@
 #!/bin/sh
 
-. /opt/iecd/utils
+. /opt/iecd/io_utils
+. /opt/iecd/sms_utils
 set_env DEVLOCK RTU_LIST DB_ARCH
 
 WAIT_NEXTPOLL=10
