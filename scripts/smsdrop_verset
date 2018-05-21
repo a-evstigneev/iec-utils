@@ -1,7 +1,8 @@
 #!/bin/sh
 
-. /opt/iecd/utils
-set_env DB_ACT DB_ARCH
+. /opt/iecd/io_utils
+. /opt/iecd/sms_utils
+set_env IECDIR DB_ACT DB_ARCH
 
 smsparse()
 {
@@ -63,8 +64,12 @@ if [ ! -z $1 ]; then
 	comaddr=$1
 fi
 
+dcs=$2; scts=$3
+
 read sms
-smsconv=$(/bin/echo -n -e `/bin/echo $sms | sed -r 's/.{2}/\\\\x&/g'` | /usr/bin/iconv -f UCS-2BE 2>/dev/null)
+
+smsdecode=$(ucs2decode $sms)
+#smsconv=$(/bin/echo -n -e `/bin/echo $sms | sed -r 's/.{2}/\\\\x&/g'` | /usr/bin/iconv -f UCS-2BE 2>/dev/null)
 
 savedir="$DB_ARCH/$comaddr/$(/bin/date '+%Y-%m-%d')"
 [ -d "$savedir" ] || mkdir -p "$savedir"
@@ -73,7 +78,7 @@ tempfile="$savedir/tempfile"
 [ -f $tempfile ] && rm $tempfile 2>/dev/null 
 touch $tempfile
 
-if printf '%s\n' "$smsconv" | smsparse "$tempfile" "$comaddr"; then
+if printf '%s\n' "$smsdecode" | smsparse "$tempfile" "$comaddr"; then
 	if sync $tempfile; then
 		# Create files that will store the signal values for a general interrogation
 		while read _comaddr _objaddr _type _value _qds _timestamp; do

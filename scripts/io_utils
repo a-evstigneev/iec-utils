@@ -1,0 +1,104 @@
+ENV_FILE=/opt/iecd/iecenv
+
+logmsg()
+{
+	local _msg 
+	
+	_msg=$1
+	/usr/bin/printf '%s\n' "$_msg" >&2 
+}
+
+logmsgtime()
+{
+	local _msg _pid
+	
+	_msg=$1
+	_pid=$(echo $$)
+	/usr/bin/printf '%s\n' "$(LANG=en date '+%b %d %T') $(cat /etc/hostname) $(basename "$0")[${_pid}]: $_msg" >&2
+}
+
+set_env()
+{
+	if [ -r "$ENV_FILE" -a -s "$ENV_FILE" ]; then
+		for var in $*; do
+			value=`egrep "^${var}=" "$ENV_FILE" | tail -n1 | cut -d= -f2`
+			[ -n "$value" ] && eval export $var=$value
+		done
+	else
+		exit 1
+	fi
+}
+
+atsend()
+{
+	local _fd _cmd
+	_fd=$1
+	_cmd=$2
+	
+	/usr/bin/printf '%s\r\n' $_cmd 2>/dev/null >&"$_fd"	
+}
+
+readreply()
+{
+	local _fd _reply _childpid
+	export WAIT_REPLY=6
+	_fd=$1
+
+	
+	trap ' ' ALRM
+	
+	( sh -c 'sleep $WAIT_REPLY; kill -s ALRM $PPID >/dev/null 2>&1' ) &
+	_childpid=$!
+	
+	while read <&"$_fd" _reply; do
+		kill $_childpid >/dev/null 2>&1
+		
+		if /usr/bin/printf '%s\n' "$_reply" | grep '^[[:space:]]\{1,\}' >/dev/null 2>&1; then
+			( sh -c 'sleep $WAIT_REPLY; kill -s ALRM $PPID >/dev/null 2>&1' ) &
+			_childpid=$!
+			continue
+		fi
+		
+		/usr/bin/printf '%s\n' "$_reply" | sed 's/\r$//' | sed '/^$/d'
+		
+		if /usr/bin/printf '%s\n' "$_reply" | grep -e "OK" -e "ERROR" -e "NO CARRIER" -e "BUSY" >/dev/null 2>&1; then
+			break
+		fi
+		
+		( sh -c 'sleep $WAIT_REPLY; kill -s ALRM $PPID >/dev/null 2>&1' ) &
+		_childpid=$!
+	done
+}
+
+rwdev()
+{
+	local _dev _cmd _var _resp
+	_dev=$1
+	_cmd=$2
+	_var=$3
+
+	if [ -c $_dev ]; then 
+		exec 3<$_dev 4>$_dev
+		atsend 4 "$_cmd"
+		sleep 1
+	else
+		return 1
+	fi
+
+	if [ -c $_dev ]; then
+		_resp=$(readreply 3)
+		if [ -z "$_resp" ]; then
+			exec 3<&- 4>&-
+			return 1
+		else
+		#	_resp=$(echo -n "$_resp" | tr -d "'") # Так как используем кодировку UCS2 то больше не нужен, после проверки удалить.
+			eval $_var="'$_resp'"
+			exec 3<&- 4>&-
+		fi	
+	else
+		exec 3<&- 4>&-
+		return 1
+	fi
+	
+	return 0	
+}

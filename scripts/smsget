@@ -24,7 +24,7 @@ usage()
 smssep()
 {
 	local _line _listid _smsnum _comaddr _cts_name _inode
-	local _id _stat _num _number _sp _date _sms _senddev _dropmsg _archivemsg _savedir
+	local _id _stat _data _num _number _sp _date _sms _senddev _dropmsg _archivemsg _savedir
 
 	_listid=""; _smsnum=0; _comaddr=""
 	
@@ -37,22 +37,20 @@ smssep()
 		elif echo "$_line" | grep -q 'ERROR'; then
 			_listid="error"
 			break
-		elif echo "$_line" | grep -v -q "CMGL"; then
-			continue
+	#	elif echo "$_line" | grep -v -q "CMGL"; then
+	#		continue
 		#	_listid="undef"
 		#	break
 		fi
 		
-		IFS="," read _id _stat _num _sp _date <<-EOF
+		IFS=":" read _id _num _dcs _scts _data <<-EOF
 			$_line
 		EOF
-
-		read _sms
 		
-		_id=$(echo $_id | sed 's/+CMGL: //')
-		_num=$(/bin/echo -n -e `/bin/echo $_num | tr -d '"' | sed -r 's/.{2}/\\\\x&/g'` | /usr/bin/iconv -f UCS-2BE 2>/dev/null | tr -d '+')
+#		_id=$(echo $_id | sed 's/+CMGL: //')
+#		_num=$(/bin/echo -n -e `/bin/echo $_num | tr -d '"' | sed -r 's/.{2}/\\\\x&/g'` | /usr/bin/iconv -f UCS-2BE 2>/dev/null | tr -d '+')
 
-		logmsg "Read sms_id = $_id, number = $_num, sms = $_sms"
+		logmsg "Read sms_id = $_id, number = $_num, sms = $_data"
 	
 		_comaddr=$(grep -q $_num $RTU_LIST && grep $_num $RTU_LIST | awk '{ print $1 }')
 		if [ $_comaddr ]; then
@@ -60,13 +58,13 @@ smssep()
 			
 			case $_senddev in
 			granit)
-				/usr/bin/printf '%s\n' "$_sms" | smsdrop_granit $_comaddr &
+				/usr/bin/printf '%s\n' "$_data" | smsdrop_granit $_comaddr $_dcs $_scts &
 				;;
 			verset)
-				/usr/bin/printf '%s\n' "$_sms" | smsdrop_verset $_comaddr &
+				/usr/bin/printf '%s\n' "$_data" | smsdrop_verset $_comaddr $_dcs $_scts &
 				;;
 			ccu825)
-				/usr/bin/printf '%s\n' "$_sms" | smsdrop_ccu825 $_comaddr &
+				/usr/bin/printf '%s\n' "$_data" | smsdrop_ccu825 $_comaddr $_dcs $_scts &
 				;;
 			esac
 			
@@ -121,7 +119,7 @@ devinit()
 	local _dev _cmd _result
 	_dev=$1
 
-	for _cmd in 'AT+CSCS="UCS2"' "AT+CSMS=0" 'AT+CMGF=1' 'AT+CSDH=1' 'AT+CPMS="SM","SM","SM"' 'AT+CNMI=2,0,0,0,0'; do
+	for _cmd in 'AT+CSCS="UCS2"' "AT+CSMS=0" 'AT+CMGF=0' 'AT+CSDH=1' 'AT+CPMS="SM","SM","SM"' 'AT+CNMI=2,0,0,0,0'; do
 		if rwdev $_dev "$_cmd" _result; then
 			logmsg "$_cmd"
 			logmsg "$_result"
@@ -211,8 +209,9 @@ if [ $get ]; then
 			
 			logmsgtime "Get sms list from $gsmdev"
 			
-			if rwdev "$gsmdev" "AT+CMGL=\"ALL\"" response; then
-				smsiddel=$(printf '%s\n' "$response" | smssep)
+			if rwdev "$gsmdev" "AT+CMGL=4" response; then
+			#	smsiddel=$(printf '%s\n' "$response" | smssep)
+				smsiddel=$(printf '%s\n' "$response" | smsparse | sort -n -t: -k 7 -k 6 -k 5,5 | smsjoin | sort -t: | smssep)
 
 				case $smsiddel in
 					"empty")

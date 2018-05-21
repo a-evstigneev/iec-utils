@@ -72,6 +72,8 @@ smsconv()
 	local PDU
 	
 	while read smsindex; do
+		echo $_smsindex >>/opt/iecd/RESPONSE
+		
 		if echo "$smsindex" | grep -q -e 'OK' -e 'ERROR'; then
 			/usr/bin/printf '%s\n' $smsindex
 			break
@@ -80,6 +82,7 @@ smsconv()
 		SMSIND=$(echo $smsindex | sed 's/+CMGL: \([0-9]\{1,\}\),.*/\1/')	
 
 		read PDU
+		echo $PDU >>/opt/iecd/RESPONSE
 		PDUOLD=$PDU
 		
 		TP_SCA_LEN=$(hextoint $(echo $PDU | cut -b -2)) # Service Center Address length
@@ -156,6 +159,7 @@ smsjoin()
 		
 	while read string; do
 		/usr/bin/printf '%s\n' "$string"
+		echo $string >>/opt/iecd/RESPONSE
 	done | 	awk -F: ' # Сортируем, чтобы части текста одной большой СМС шли по порядку 
 	BEGIN {
 
@@ -205,9 +209,14 @@ gsmdecode()
 	
 	while [ $smslen -gt 0 ]; do
 		octet=$(hextobin $(echo $sms | cut -b -2))
+		
 		ch=$(echo $octet | cut -b $(($pos))-)${rest} # 7-bit character in binary representation
 		rest=$(echo $octet | cut -b -$(($pos - 1)))
-		smsdecode=${smsdecode}\\x$(bintohex ${ch})
+	
+		if [ ! $ch == "0000000" ]; then 
+			smsdecode=${smsdecode}\\x$(bintohex ${ch})
+		fi
+
 		pos=$(($pos + 1))
 		
 		if [ $pos -eq 9 ]; then 

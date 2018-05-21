@@ -1,7 +1,8 @@
 #!/bin/sh
 
-. /opt/iecd/utils
-set_env DB_ACT DB_ARCH
+. /opt/iecd/io_utils
+. /opt/iecd/sms_utils
+set_env IECDIR DB_ACT DB_ARCH
 
 smsparse()
 {
@@ -57,17 +58,21 @@ if [ ! -z $1 ]; then
 	comaddr=$1
 fi
 
-read sms
-sms=$(/bin/echo -n -e `/bin/echo $sms | sed -r 's/.{2}/\\\\x&/g'` | /usr/bin/iconv -f UCS-2BE 2>/dev/null | tr -d "'")
+dcs=$2
+scts=$3
 
-if echo $sms | grep -q -e 'Vzayty na ohrany' -e 'Snayty s ohrany'; then
+read sms
+#sms=$(/bin/echo -n -e `/bin/echo $sms | sed -r 's/.{2}/\\\\x&/g'` | /usr/bin/iconv -f UCS-2BE 2>/dev/null | tr -d "'")
+smsdecode=$(gsmdecode $sms)
+
+if echo $smsdecode | grep -q -e 'Vzayty na ohrany' -e 'Snayty s ohrany'; then
 #	echo "Subject: iec104\r\n\r\nControlled station  = ${comaddr}, ${sms}" | msmtp --debug -a komisyk@gmail.com -t -i komisyk@mail.ru >/dev/null 2>&1
 	exit 2
-elif ! echo "$sms" | grep -q -E '.*Zona.:.*Akk.*Set.*t=.*gradus C'; then 
+elif ! echo "$smsdecode" | grep -q -E '.*Zona.:.*Akk.*Set.*t=.*gradus C'; then 
 	exit 2 
 fi
 
-sms=$(echo $sms | sed 's/ gradus C//')
+smsdecode=$(echo $smsdecode | sed 's/ gradus C//')
 
 savedir="$DB_ARCH/$comaddr/$(/bin/date '+%Y-%m-%d')"
 [ -d "$savedir" ] || mkdir -p "$savedir"
@@ -76,7 +81,7 @@ tempfile="$savedir/tempfile"
 [ -f $tempfile ] && rm $tempfile 2>/dev/null 
 touch $tempfile
 
-if printf '%s\n' "$sms" | smsparse "$tempfile" "$comaddr"; then
+if printf '%s\n' "$smsdecode" | smsparse "$tempfile" "$comaddr"; then
 	if sync $tempfile; then
    	# Create files that will store the signal values for a general interrogation
 		while read _comaddr _objaddr _type _value _qds _timestamp; do
