@@ -72,7 +72,6 @@ smsparse()
 	local PDU
 	
 	while read smsindex; do
-		echo $_smsindex >>/opt/iecd/RESPONSE
 		
 		if echo "$smsindex" | grep -q -e 'OK' -e 'ERROR'; then
 			/usr/bin/printf '%s\n' $smsindex
@@ -82,7 +81,6 @@ smsparse()
 		SMSIND=$(echo $smsindex | sed 's/+CMGL: \([0-9]\{1,\}\),.*/\1/')	
 
 		read PDU
-		echo $PDU >>/opt/iecd/RESPONSE
 		PDUOLD=$PDU
 		
 		TP_SCA_LEN=$(hextoint $(echo $PDU | cut -b -2)) # Service Center Address length
@@ -141,19 +139,14 @@ smsparse()
 				TP_REF_NUM=$(echo $TP_UDH | cut -b 7-8) # CSMS reference number
 				TP_TOTAL_PART=$(hextoint $(echo $TP_UDH | cut -b 9-10)) # Total number of parts
 				TP_SER_PART=$(hextoint $(echo $TP_UDH | cut -b 11-12)) # This part's number in the sequence
-			#d	TP_UDH=$(echo $TP_UDH | tr '[:alnum:]' '0') # Меняем символы заголовка данной смс на 0, для более простого декодирования из GSM 7-bit
-				TP_UD=$(echo $TP_UDH | tr '[:alnum:]' '0')${PDU}
+				TP_UD=$(echo $TP_UDH | tr '[:alnum:]' '0')${PDU} # Меняем символы заголовка данной смс на 0, для более простого декодирования из GSM 7-bit
 			;;
 		esac
-
-# d		TP_UD=$PDU # User Data
 
 		echo ${SMSIND}:${TP_OA_NUM}:${TP_DCS}:${TP_SCTS}:${TP_REF_NUM}:${TP_TOTAL_PART}:${TP_SER_PART}:${TP_UD}
 		TP_OA_NUM=""; TP_DCS=""; TP_SCTS=""; TP_REF_NUM=""; TP_TOTAL_NUM=""; TP_SEQ_NUM=""; TP_UD="";
 	done
 }
-
-# sort -n -t: -k 7 -k 6 -k 5,5 
 
 smsjoin()
 {
@@ -161,7 +154,6 @@ smsjoin()
 		
 	while read string; do
 		/usr/bin/printf '%s\n' "$string"
-# d		echo $string >>/opt/iecd/RESPONSE
 	done | 	awk -F: ' # Сортируем, чтобы части текста одной большой СМС шли по порядку 
 	BEGIN {
 
@@ -240,13 +232,3 @@ ucs2decode()
 {
 	/bin/echo -n -e `/bin/echo $1 | sed -r 's/.{2}/\\\\x&/g'` | /usr/bin/iconv -f UCS-2BE 2>/dev/null
 }
-
-#sms1="DAB73B1CD3B9DFF27698A57DBBC3329DFB2D6F8759DAB73B3CD3B9DFF27698A57DBBC3349DFB2D6F8759C1F55AE72CD359D332FDA473BFE5ED308BDE9BC95C37D0591E26D7E7A021"
-#sms2="041D043004480430002004220430043D044F002004430440043E043D0438043B0430002004320020044004350447043A04430020043C044F04470438043A"
-
-#gsmdecode $sms1
-#ucs2decode $sms2
-
-while read line; do
-	/usr/bin/printf '%s\n' "$line"
-done | smsparse | sort -n -t: -k 7 -k 6 -k 5,5 | smsjoin | sort -t:

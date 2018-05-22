@@ -1,0 +1,7 @@
+#!/bin/sh
+cd $PWD
+. /$PWD/sms_utils
+
+while read line; do
+	/usr/bin/printf '%s\n' "$line"
+done | smsparse | sort -n -t: -k 7 -k 6 -k 5,5 | smsjoin | sort -t:
