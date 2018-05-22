@@ -66,7 +66,7 @@ getnumber()
 	echo ${number%F}
 }
 
-smsconv()
+smsparse()
 {
 	local smsinfo
 	local PDU
@@ -118,7 +118,6 @@ smsconv()
 			;;
 		esac
 		
-		
 		TP_PID=$(echo $PDU | cut -b -2) # Protocol identifier
 			PDU=$(echo $PDU | cut -b 3-)
 
@@ -134,6 +133,7 @@ smsconv()
 		case $TP_UDHI in
 			"0") 
 				TP_UDH=""
+				TP_UD=$PDU
 			;;
 			"1")
 				TP_UDH=$(echo $PDU | cut -b -12) # User Data Header
@@ -141,10 +141,12 @@ smsconv()
 				TP_REF_NUM=$(echo $TP_UDH | cut -b 7-8) # CSMS reference number
 				TP_TOTAL_PART=$(hextoint $(echo $TP_UDH | cut -b 9-10)) # Total number of parts
 				TP_SER_PART=$(hextoint $(echo $TP_UDH | cut -b 11-12)) # This part's number in the sequence
+			#d	TP_UDH=$(echo $TP_UDH | tr '[:alnum:]' '0') # Меняем символы заголовка данной смс на 0, для более простого декодирования из GSM 7-bit
+				TP_UD=$(echo $TP_UDH | tr '[:alnum:]' '0')${PDU}
 			;;
 		esac
 
-		TP_UD=$PDU # User Data
+# d		TP_UD=$PDU # User Data
 
 		echo ${SMSIND}:${TP_OA_NUM}:${TP_DCS}:${TP_SCTS}:${TP_REF_NUM}:${TP_TOTAL_PART}:${TP_SER_PART}:${TP_UD}
 		TP_OA_NUM=""; TP_DCS=""; TP_SCTS=""; TP_REF_NUM=""; TP_TOTAL_NUM=""; TP_SEQ_NUM=""; TP_UD="";
@@ -159,7 +161,7 @@ smsjoin()
 		
 	while read string; do
 		/usr/bin/printf '%s\n' "$string"
-		echo $string >>/opt/iecd/RESPONSE
+# d		echo $string >>/opt/iecd/RESPONSE
 	done | 	awk -F: ' # Сортируем, чтобы части текста одной большой СМС шли по порядку 
 	BEGIN {
 
@@ -245,6 +247,6 @@ ucs2decode()
 #gsmdecode $sms1
 #ucs2decode $sms2
 
-#while read line; do
-#	/usr/bin/printf '%s\n' "$line"
-#done | smsconv | sort -n -t: -k 7 -k 6 -k 5,5 | smsjoin # smsassamble
+while read line; do
+	/usr/bin/printf '%s\n' "$line"
+done | smsparse | sort -n -t: -k 7 -k 6 -k 5,5 | smsjoin | sort -t:
