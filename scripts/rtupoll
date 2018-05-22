@@ -1,6 +1,6 @@
 #!/bin/sh
 
-. /opt/iecd/utils
+. /opt/iecd/io_utils
 set_env IECDIR GSMDEV DEVLOCK
 
 DURATION_CALL=11

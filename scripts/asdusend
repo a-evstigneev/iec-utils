@@ -1,6 +1,6 @@
 #!/bin/sh
 
-. /opt/iecd/utils
+. /opt/iecd/io_utils
 
 tmpdir=$(mktemp -d /tmp/XXXXX.broker)
 cts_name=$1

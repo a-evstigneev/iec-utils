@@ -35,6 +35,11 @@ bintohex()
 	echo $(/bin/echo "obase=16; ibase=2; $1" | bc) 
 }
 
+hextodec()
+{
+	echo $(/bin/echo "obase=10; ibase=16; $1" | bc) 
+}
+
 getnumtype()
 {
 	local numtype
@@ -134,12 +139,24 @@ smsparse()
 				TP_UD=$PDU
 			;;
 			"1")
-				TP_UDH=$(echo $PDU | cut -b -12) # User Data Header
-					PDU=$(echo $PDU | cut -b 13-)
-				TP_REF_NUM=$(echo $TP_UDH | cut -b 7-8) # CSMS reference number
-				TP_TOTAL_PART=$(hextoint $(echo $TP_UDH | cut -b 9-10)) # Total number of parts
-				TP_SER_PART=$(hextoint $(echo $TP_UDH | cut -b 11-12)) # This part's number in the sequence
-				TP_UD=$(echo $TP_UDH | tr '[:alnum:]' '0')${PDU} # Меняем символы заголовка данной смс на 0, для более простого декодирования из GSM 7-bit
+				LENBYTE=$(hextodec $(echo $PDU | cut -b -2)) # Length header in bytes
+				HL=$((2 * ($LENBYTE + 1))) # Full length header equals 12 or 14 symbols
+				TP_UDH=$(echo $PDU | cut -b -$HL) # User Data Header
+					PDU=$(echo $PDU | cut -b $((1+$HL))-)
+				
+				if [ $HL -eq 12 ]; then
+					TP_REF_NUM=$(echo $TP_UDH | cut -b 7-8) # CSMS reference number
+				elif [ $HL -eq 14 ]; then
+					TP_REF_NUM=$(echo $TP_UDH | cut -b 7-10)
+				fi
+				TP_TOTAL_PART=$(hextoint $(echo $TP_UDH | cut -b $(($HL-3))-$(($HL-2)))) # Total number of parts
+				TP_SER_PART=$(hextoint $(echo $TP_UDH | cut -b $(($HL-1))-$TP_UDHL)) # This part's number in the sequence
+				
+				if [ $TP_DCS = "00" ]; then
+					TP_UD=$(echo $TP_UDH | tr '[:alnum:]' '0')${PDU} # Zero the header for sms with GSM 7-bit encoding. A zero header will be needed to decode
+				elif [ $TP_DCS = "08" ]; then 
+					TP_UD=${PDU} # Delete the header for sms with UCS2 encoding
+				fi
 			;;
 		esac
 
@@ -154,7 +171,7 @@ smsjoin()
 		
 	while read string; do
 		/usr/bin/printf '%s\n' "$string"
-	done | 	awk -F: ' # Сортируем, чтобы части текста одной большой СМС шли по порядку 
+	done | 	awk -F: '
 	BEGIN {
 
 	}
@@ -195,40 +212,42 @@ smsjoin()
 
 gsmdecode()
 {
-	local sms=$1
-	local smslen=$(expr length $sms)
+	local str=$1
+	local strlen=$(expr length $str)
 	local pos=2
 	local rest=""
-	local smsdecode=""
-	
-	while [ $smslen -gt 0 ]; do
-		octet=$(hextobin $(echo $sms | cut -b -2))
-		
+	local strdecode=""
+	local ch
+
+	while [ $strlen -gt 0 ]; do
+		octet=$(hextobin $(echo $str | cut -b -2))
 		ch=$(echo $octet | cut -b $(($pos))-)${rest} # 7-bit character in binary representation
 		rest=$(echo $octet | cut -b -$(($pos - 1)))
 	
-		if [ ! $ch == "0000000" ]; then 
-			smsdecode=${smsdecode}\\x$(bintohex ${ch})
+		if ! [ "$ch" = "0000000" ]; then 
+			strdecode=${strdecode}\\x$(bintohex ${ch})
 		fi
 
 		pos=$(($pos + 1))
 		
 		if [ $pos -eq 9 ]; then 
 			pos=2
-			smsdecode=${smsdecode}\\x$(bintohex ${rest})
+			strdecode=${strdecode}\\x$(bintohex ${rest})
 			rest=""
 		fi
 		
-		smslen=$(($smslen - 2))
-		if [ ! $smslen -eq 0 ]; then
-			sms=$(echo $sms | cut -b 3-) 
+		strlen=$(($strlen - 2))
+		if [ ! $strlen -eq 0 ]; then
+			str=$(echo $str | cut -b 3-) 
 		fi
 	done
 	
-	/usr/bin/printf '%b\n' "$smsdecode"
+	/usr/bin/printf '%b\n' "$strdecode"
 }
 
 ucs2decode()
 {
-	/bin/echo -n -e `/bin/echo $1 | sed -r 's/.{2}/\\\\x&/g'` | /usr/bin/iconv -f UCS-2BE 2>/dev/null
+	local str=$1
+
+	/bin/echo -n -e `/bin/echo $str | sed -r 's/.{2}/\\\\x&/g'` | /usr/bin/iconv -f UCS-2BE 2>/dev/null
 }

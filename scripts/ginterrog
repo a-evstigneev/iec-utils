@@ -1,6 +1,6 @@
 #!/bin/sh
 
-. /opt/iecd/utils
+. /opt/iecd/io_utils
 set_env IECDIR DB_ACT
 
 if ! [ -z "$(ls $DB_ACT)" ]; then 

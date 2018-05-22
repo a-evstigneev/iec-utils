@@ -37,34 +37,27 @@ smssep()
 		elif echo "$_line" | grep -q 'ERROR'; then
 			_listid="error"
 			break
-	#	elif echo "$_line" | grep -v -q "CMGL"; then
-	#		continue
-		#	_listid="undef"
-		#	break
 		fi
 		
 		IFS=":" read _id _num _dcs _scts _data <<-EOF
 			$_line
 		EOF
-		
-#		_id=$(echo $_id | sed 's/+CMGL: //')
-#		_num=$(/bin/echo -n -e `/bin/echo $_num | tr -d '"' | sed -r 's/.{2}/\\\\x&/g'` | /usr/bin/iconv -f UCS-2BE 2>/dev/null | tr -d '+')
 
-		logmsg "Read sms_id = $_id, number = $_num, sms = $_data"
+		logmsg "Read sms_id = $_id, phone_number = $_num, encoded_sms = $_data"
 	
-		_comaddr=$(grep -q $_num $RTU_LIST && grep $_num $RTU_LIST | awk '{ print $1 }')
+		_comaddr=$(grep -q $_num $RTU_LIST && grep $_num $RTU_LIST | cut -d " " -f 1)
 		if [ $_comaddr ]; then
-			_senddev=$(grep $_num $RTU_LIST | awk '{ print $3 }')
+			_senddev=$(grep $_num $RTU_LIST | cut -d " " -f 3)
 			
 			case $_senddev in
 			granit)
-				/usr/bin/printf '%s\n' "$_data" | smsdrop_granit $_comaddr $_dcs $_scts &
+				smsdrop_granit $_comaddr $_dcs $_scts $_data &
 				;;
 			verset)
-				/usr/bin/printf '%s\n' "$_data" | smsdrop_verset $_comaddr $_dcs $_scts &
+				smsdrop_verset $_comaddr $_dcs $_scts $_data &
 				;;
 			ccu825)
-				/usr/bin/printf '%s\n' "$_data" | smsdrop_ccu825 $_comaddr $_dcs $_scts &
+				smsdrop_ccu825 $_comaddr $_dcs $_scts $_data &
 				;;
 			esac
 			
@@ -202,7 +195,7 @@ if [ $get ]; then
 			flock 9
 			
 			if [ -n "$errmsg" ]; then
-				sendnotice "$errmsg" # Send a notification if the device is unavailable
+				sendnotice "$errmsg" # Send a notification if the device is unavailable. Optional.
 
 				errmsg=""
 			fi
@@ -210,7 +203,6 @@ if [ $get ]; then
 			logmsgtime "Get sms list from $gsmdev"
 			
 			if rwdev "$gsmdev" "AT+CMGL=4" response; then
-			#	smsiddel=$(printf '%s\n' "$response" | smssep)
 				smsiddel=$(printf '%s\n' "$response" | smsparse | sort -n -t: -k 7 -k 6 -k 5,5 | smsjoin | sort -t: | smssep)
 
 				case $smsiddel in
@@ -240,10 +232,8 @@ if [ $get ]; then
 				esac
 
 				smsiddel=""
-			#	sleep $sleeptime 
 			else
 				logmsgtime "Device $gsmdev is not available now"
-			#	sleep $sleeptime 
 				errmsg="Device $gsmdev is not available now"
 			fi
 		) 9>$DEVLOCK
