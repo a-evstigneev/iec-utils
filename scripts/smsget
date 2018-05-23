@@ -67,7 +67,7 @@ smssep()
 			0)
 				logmsg "Sms id $_id was written synchronously to disk"
 				_listid="${_listid}${_id} "
-				_savedir="$DB_ARCH/$_comaddr/$(/bin/date '+%Y-%m-%d')" # Если сохранение и чтение происходит на стыке суток? 
+				_savedir="$DB_ARCH/$_comaddr" # Если сохранение и чтение происходит на стыке суток? 
 				
 				# Trigger activation for each instance quemngr
 				while read _cts_name rest; do
@@ -85,7 +85,7 @@ smssep()
 					$(cat $CTS_LIST | grep -v '^#' | sed '/^$/d')
 				EOF
 				
-				_archive_msg=$_savedir/$(/bin/date '+%k:%M:%S')_$(mktemp -u "XXXXXX")
+				_archive_msg=$_savedir/$(/bin/date '+%G-%m-%d_%H:%M:%S')_$(mktemp -u "XXXXXX")
 				mv "$_savedir/tempfile" "$_archive_msg"; sync "$_archive_msg"
 			;;
 			1)

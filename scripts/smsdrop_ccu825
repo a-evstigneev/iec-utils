@@ -6,21 +6,22 @@ set_env IECDIR DB_ACT DB_ARCH
 
 readvalue()
 {
-	local _file _comaddr
-	awk -v _file=$1 -v _comaddr=$2 '
+	local comaddr timestamp
+	awk -v comaddr=$1 -v timestamp=$2 '
 		BEGIN {
-			FS=" "; FILE = _file; COMADDR = _comaddr; 
+			FS = " "; COMADDR = comaddr; TIMESTAMP = timestamp 
 			TYPE["M_SP_TB_1"] = 30
 			TYPE["M_ME_TF_1"] = 36
-			cmd="/bin/date \047+%S%3N:%_M:%_k:%e:%u:%_m:%y\047 | /bin/sed \047s/^0*//g; s/ //g\047"
-			cmd | getline timestamp; close(cmd)
+			count = 0
 		}
 		
 		{ 
 			objaddr = 0
 			value = 0
 			
-			if ($0 ~ "^TC") { #TC1-TC16
+			gsub(/,/, ".", $0)
+
+			if ( $0 ~ "^TC" ) { #TC1-TC16
 				objaddr = substr($1, 3)
 				value = $2
 				type = TYPE["M_SP_TB_1"]
@@ -29,7 +30,7 @@ readvalue()
 				objaddr = 17
 				if ($2 == "OK")
 					value = 0
-				else if ($2 == "FAULT")
+				else if ( $2 == "FAULT" )
 					value = 1
 				type = TYPE["M_SP_TB_1"]
 			}
@@ -40,30 +41,37 @@ readvalue()
 			}
 
 			# Empty_data
-			if (objaddr == 0)
+			if ( objaddr == 0 )
 				next
 			
-			printf("%s %s %s %s %s %s\n", COMADDR, objaddr, type, value, "-", timestamp) >> FILE
+			printf("%s %s %s %s %s %s\n", COMADDR, objaddr, type, value, "-", TIMESTAMP)
+			count += 1
 		}
 		
 		END {
-			close(FILE)
+			if ( count = 0 )
+				exit 2
 		}	
 	' 
 }
 
 comaddr=$1; dcs=$2; scts=$3; sms=$4
 
-sms=$(gsmdecode $sms | tr ',' '.')
+sms=$(smsdecode $dcs $sms)
 
-savedir="$DB_ARCH/$comaddr/$(/bin/date '+%Y-%m-%d')"
+savedir="$DB_ARCH/$comaddr"
 [ -d "$savedir" ] || mkdir -p "$savedir"
 
 tempfile="$savedir/tempfile"
 [ -f $tempfile ] && rm $tempfile 2>/dev/null 
-touch $tempfile
 
-if /usr/bin/printf '%s\n' "$sms" | readvalue "$tempfile" "$comaddr"; then
+timestamp=$(gettimestamp $scts)
+
+if iec_value=$(/usr/bin/printf '%s\n' "$sms" | readvalue "$comaddr" "$timestamp"); then
+	cat - >> $tempfile <<-EOF
+		$iec_value
+	EOF
+	
 	if sync $tempfile; then
 		# Create files that will store the signal values for a general interrogation
 		while read _comaddr _objaddr _type _value _qds _timestamp; do
