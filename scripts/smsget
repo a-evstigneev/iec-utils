@@ -24,7 +24,7 @@ usage()
 smssep()
 {
 	local _line _listid _smsnum _comaddr _cts_name _inode
-	local _id _stat _data _num _number _sp _date _sms _senddev _dropmsg _archivemsg _savedir
+	local _id _stat _data _num _number _sp _date _sms _device _dropmsg _archivemsg _savedir
 
 	_listid=""; _smsnum=0; _comaddr=""
 	
@@ -43,23 +43,12 @@ smssep()
 			$_line
 		EOF
 
-		logmsg "Read sms_id = $_id, phone_number = $_num, encoded_sms = $_data"
-	
+		logmsg "Read sms: id = $_id, phone number = $_num, data coding scheme = $(getencoding $dcs), encoded text = $_data"
 		_comaddr=$(grep -q $_num $RTU_LIST && grep $_num $RTU_LIST | cut -d " " -f 1)
+
 		if [ $_comaddr ]; then
-			_senddev=$(grep $_num $RTU_LIST | cut -d " " -f 3)
-			
-			case $_senddev in
-			granit)
-				smsdrop_granit $_comaddr $_dcs $_scts $_data &
-				;;
-			verset)
-				smsdrop_verset $_comaddr $_dcs $_scts $_data &
-				;;
-			ccu825)
-				smsdrop_ccu825 $_comaddr $_dcs $_scts $_data &
-				;;
-			esac
+			_device=$(grep $_num $RTU_LIST | cut -d " " -f 3)
+			smsdrop $_device $_comaddr $_dcs $_scts $_data &
 			
 			wait %1
 			
@@ -67,7 +56,7 @@ smssep()
 			0)
 				logmsg "Sms id $_id was written synchronously to disk"
 				_listid="${_listid}${_id} "
-				_savedir="$DB_ARCH/$_comaddr" # Если сохранение и чтение происходит на стыке суток? 
+				_savedir="$DB_ARCH/$_comaddr" 
 				
 				# Trigger activation for each instance quemngr
 				while read _cts_name rest; do

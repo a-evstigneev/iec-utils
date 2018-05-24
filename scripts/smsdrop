@@ -1,0 +1,62 @@
+#!/bin/sh
+
+. /opt/iecd/io_utils
+. /opt/iecd/sms_utils
+. /opt/iecd/smsdrop_utils
+set_env IECDIR DB_ACT DB_ARCH
+
+device=$1; comaddr=$2; dcs=$3; scts=$4; sms=$5
+
+timestamp=$(gettimestamp $scts)
+sms=$(smsdecode $dcs $sms)
+
+savedir="$DB_ARCH/$comaddr"
+[ -d "$savedir" ] || mkdir -p "$savedir"
+
+tempfile="$savedir/tempfile"
+[ -f $tempfile ] && rm $tempfile 2>/dev/null 
+
+case $device in
+	ccu825)
+		iecvalue=$(/usr/bin/printf '%s\n' "$sms" | readvalue_ccu825 "$comaddr" "$timestamp")
+	;;
+	granit)
+		iecvalue=$(/usr/bin/printf '%s\n' "$sms" | readvalue_granit "$comaddr" "$timestamp")
+	;;
+	verset)
+		iecvalue=$(/usr/bin/printf '%s\n' "$sms" | readvalue_verset "$comaddr" "$timestamp")
+	;;
+esac
+
+case $? in
+	0)
+		cat - >> $tempfile <<-EOF
+			$iecvalue
+		EOF
+		
+		if sync $tempfile; then
+			# Create files that will store the signal values for a general interrogation
+			while read _comaddr _objaddr _type _value _qds _timestamp; do
+				case $_type in
+					30)
+						_type=1
+					;;
+					36)
+						_type=13
+					;;
+				esac
+				
+				[ -d $DB_ACT/$_comaddr/$_type ] || mkdir -p $DB_ACT/$_comaddr/$_type
+				echo $_value $_qds > $DB_ACT/$_comaddr/$_type/$_objaddr
+				sync $DB_ACT/$_comaddr/$_type/$_objaddr
+			done < $tempfile
+		else
+			exit 1
+		fi
+	;;
+	2)
+		exit 2
+	;;
+esac
+
+exit 0

@@ -71,6 +71,20 @@ getnumber()
 	echo ${numconv%F}
 }
 
+getencoding()
+{
+	local encoding=$1
+	
+	case $encoding in
+		"00")
+			echo "GSM"
+		;;
+		"08")
+			echo "UCS2"
+		;;
+	esac
+}
+
 smsparse()
 {
 	local smsinfo
