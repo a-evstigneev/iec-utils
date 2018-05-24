@@ -70,7 +70,7 @@ trap 'sigchld' CHLD
 trap 'end_defque' USR2
 trap 'rm -rf ${tmpdir}; exit 0' TERM 
 
-exec 2>$LOGDIR/${cts_name}/iecbroker.log
+exec 2>$LOGDIR/${cts_name}/asdusend.log
 while true; do 
 	if read filename; then 
 		printf '%s\n' "$filename 1 $confirm"

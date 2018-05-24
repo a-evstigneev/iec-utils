@@ -4,9 +4,7 @@
 set_env IECDIR VARDIR RUNDIR LOGDIR SMSDROPDIR CTS_LIST GSMDEV IECD_CRONTAB
 
 test -x $IECDIR/smsget || exit 1
-test -x $IECDIR/smsdrop_verset || exit 1
-test -x $IECDIR/smsdrop_granit || exit 1
-test -x $IECDIR/smsdrop_ccu825 || exit 1
+test -x $IECDIR/smsdrop || exit 1
 test -x $IECDIR/quemngr || exit 1
 test -x $IECDIR/asdusend || exit 1
 test -x $IECDIR/asduconv || exit 1
