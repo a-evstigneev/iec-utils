@@ -43,7 +43,7 @@ smssep()
 			$_line
 		EOF
 
-		logmsg "Read sms: id = \"$_id\", phone number = \"$_num\", data coding scheme = \"$(getencoding $_dcs)\", encoded text = \"$_data\""
+		logmsg "Read sms: id = $_id, phone number = $_num, data coding scheme = $(getencoding $_dcs), encoded text = $_data"
 		_comaddr=$(grep -q $_num $RTU_LIST && grep $_num $RTU_LIST | cut -d " " -f 1)
 
 		if [ $_comaddr ]; then

@@ -36,6 +36,11 @@ readvalue_ccu825()
 				value = substr($2, 1, length($2)-1)
 				type = TYPE["M_ME_TF_1"]
 			}
+			else if ( $0 ~ "BATTERY" ) { # TI1
+				objaddr = 2
+				value = substr($2, 1, length($2)-1)
+				type = TYPE["M_ME_TF_1"]
+			}
 
 			# Empty_data
 			if ( objaddr == 0 )
