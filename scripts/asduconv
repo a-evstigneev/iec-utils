@@ -24,6 +24,9 @@ transform_asdu()
 		if (ASDU_TYPE == 0) {
 			init_elem()
 		}
+		else if ($1 != ASDU_ADDR) {
+			print_asdu(); init_elem()
+		}
 		else if ($3 != ASDU_TYPE) {
 			print_asdu(); init_elem()
 		}
