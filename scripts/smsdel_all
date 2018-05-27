@@ -1,0 +1,32 @@
+#!/bin/sh
+. /opt/iecd/io_utils
+
+cmd="AT+CMGD=1,4"
+
+while getopts "F:" opt; do
+    case $opt in
+    F) 
+		file=$OPTARG 
+	;;
+	*) 
+		echo "Usage: $0 -F Device_file"; exit 1
+	;;
+    esac
+done
+
+shift $(($OPTIND - 1))
+
+if [ "$file" = "" ]; then
+	echo "Usage: $0 -F Device_file"
+	exit 1
+elif [ -c $file ]; then
+	if rwdev $file "$cmd" result; then
+		logmsg "$cmd"
+		logmsg "$result"
+	else
+		exit 1
+	fi
+else
+	echo "Usage: $0 -F Device_file"
+	exit 1
+fi

@@ -40,7 +40,17 @@ hextodec()
 	echo $(/bin/echo "obase=10; ibase=16; $1" | bc) 
 }
 
-getnumtype()
+
+dectohex()
+{
+	if [ $1 -gt 15 ]; then	
+		echo $(/bin/echo "obase=16; ibase=10; $1" | bc) 
+	elif [ $1 -le 15 ]; then
+		echo 0$(/bin/echo "obase=16; ibase=10; $1" | bc) 
+	fi
+}
+
+get_numtype()
 {
 	local numtype
 	numtype=$(echo $(hextobin $1) | cut -b 2-4)
@@ -54,24 +64,24 @@ getnumtype()
 	esac
 }
 
-getnumber()
+get_number()
 {
-	local numconv d1 d2 
-	local num=$1
-	local len_num=$(expr length $1)
+	local destaddr=$1
+	local number
 	
-	while [ $len_num -gt 0 ]; do
-		d1=$(echo $num | cut -b 1)
-		d2=$(echo $num | cut -b 2)
-		num=$(echo $num | cut -b 3-)
-		numconv=${numconv}${d2}${d1}
-		len_num=$(($len_num - 2))
-	done
-	
-	echo ${numconv%F}
+	number=$(echo $destaddr | sed -r 's/(.)(.)/\2\1/g')
+	echo ${number%F}
 }
 
-getencoding()
+get_destaddr()
+{
+	local number=${1}F
+	local destaddr	
+	destaddr=$(echo $number | sed -r 's/(.)(.)/\2\1/g')
+	echo $destaddr
+}
+
+get_encoding()
 {
 	local encoding=$1
 	
@@ -122,11 +132,11 @@ smsparse()
 		TP_OA_FORMAT=$(echo $PDU | cut -b -2) # Originating Address format
 			PDU=$(echo $PDU | cut -b 3-)
 
-		TP_OA_TYPE=$(getnumtype $TP_OA_FORMAT) # Originating Address type
+		TP_OA_TYPE=$(get_numtype $TP_OA_FORMAT) # Originating Address type
 
 		case $TP_OA_TYPE in
 			"INTER")
-				TP_OA_NUM=$(getnumber $(echo $PDU | cut -b -$((1+$TP_OA_LENGTH)))) # Originating Address number
+				TP_OA_NUM=$(get_number $(echo $PDU | cut -b -$((1+$TP_OA_LENGTH)))) # Originating Address number
 				PDU=$(echo $PDU | cut -b $((2+$TP_OA_LENGTH))-)
 			;;
 			"ALPHANUM")
@@ -268,17 +278,24 @@ ucs2decode()
 
 smsdecode()
 {
-	local encoding=$1
-	local string=$2
+	local encoding="$1"
+	local string="$2"
 
-	case $encoding in
+	case "$encoding" in
 	"00")
-		gsmdecode $string	
+		gsmdecode "$string"	
 	;;
 	"08")
-		ucs2decode $string
+		ucs2decode "$string"
 	;;
 	esac
+}
+
+ucs2encode()
+{
+	local string
+	read string
+	/usr/bin/printf '%s' "$string" | iconv -t UCS-2BE | xxd -p -u
 }
 
 gettimestamp()

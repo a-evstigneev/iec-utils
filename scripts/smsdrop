@@ -2,7 +2,7 @@
 
 . /opt/iecd/io_utils
 . /opt/iecd/sms_utils
-. /opt/iecd/smsdrop_utils
+. /opt/iecd/sms_parsers
 set_env IECDIR DB_ACT DB_ARCH
 
 device=$1; comaddr=$2; dcs=$3; scts=$4; sms=$5

@@ -91,7 +91,6 @@ rwdev()
 			exec 3<&- 4>&-
 			return 1
 		else
-		#	_resp=$(echo -n "$_resp" | tr -d "'") # Так как используем кодировку UCS2 то больше не нужен, после проверки удалить.
 			eval $_var="'$_resp'"
 			exec 3<&- 4>&-
 		fi	
