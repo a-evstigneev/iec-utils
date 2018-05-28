@@ -61,7 +61,7 @@ readreply()
 		
 		/usr/bin/printf '%s\n' "$_reply" | sed 's/\r$//' | sed '/^$/d'
 		
-		if /usr/bin/printf '%s\n' "$_reply" | grep -e "OK" -e "ERROR" -e "NO CARRIER" -e "BUSY" >/dev/null 2>&1; then
+		if /usr/bin/printf '%s\n' "$_reply" | grep -e "OK" -e ">" -e "ERROR" -e "NO CARRIER" -e "BUSY" >/dev/null 2>&1; then
 			break
 		fi
 		

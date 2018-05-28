@@ -14,20 +14,23 @@ usage()
 
 send_smstext()
 {
-	local number file smstext response
+	local number 
+	local file 
+	local smstext 
+	local response
 
 	/usr/bin/printf '%b' "AT+CMGS=\"${number}\"\r" >$file
-	sleep 1
-	/usr/bin/printf '%b' "${smstext}\x1A" >$file
-
 	exec 3<$file
 	response=$(readreply 3)
-	if [ -z "$response" ]; then
-		exec 3<&-
-		return 1
-	fi
 	exec 3<&-
+	sleep 1
+
+	/usr/bin/printf '%b' "${smstext}\x1A" >$file
+	exec 3<$file
+	response=$(readreply 3)
 	echo $response
+	exec 3<&-
+
 	return 0
 }
 
@@ -43,6 +46,7 @@ send_smspdu()
 	local number=$1 
 	local file=$2
 	local smstext
+	local response
 	local UD
 	local PDU
 
@@ -55,17 +59,17 @@ send_smspdu()
 	TPDU_LEN=$(((${#PDU} - 2)/2)) 
 	
 	/usr/bin/printf '%b' "AT+CMGS=$TPDU_LEN\r" >$file
-	sleep 1
-	/usr/bin/printf '%b' "$PDU\x1A" >$file
-
 	exec 3<$file
 	response=$(readreply 3)
-	if [ -z "$response" ]; then
-		exec 3<&-
-		return 1
-	fi
 	exec 3<&-
+	sleep 1
+	
+	/usr/bin/printf '%b' "$PDU\x1A" >$file
+	exec 3<$file
+	response=$(readreply 3)
 	echo $response
+	exec 3<&-
+
 	return 0
 }
 

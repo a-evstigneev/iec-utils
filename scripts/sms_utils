@@ -75,8 +75,14 @@ get_number()
 
 get_destaddr()
 {
-	local number=${1}F
+	local number
 	local destaddr	
+	local len
+	
+	number=$(echo $1 | tr -d '+')
+	if [ $(expr $(expr length $number) % 2) -gt 0 ]; then
+		number=${number}F
+	fi
 	destaddr=$(echo $number | sed -r 's/(.)(.)/\2\1/g')
 	echo $destaddr
 }
@@ -294,8 +300,14 @@ smsdecode()
 ucs2encode()
 {
 	local string
+	
 	read string
-	/usr/bin/printf '%s' "$string" | iconv -t UCS-2BE | xxd -p -u
+	/usr/bin/printf '%s' "$string" | iconv -t UCS-2BE | xxd -p -u -c 256
+}
+
+gsmencode()
+{
+	:
 }
 
 gettimestamp()

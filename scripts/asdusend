@@ -2,7 +2,7 @@
 
 . /opt/iecd/io_utils
 
-tmpdir=$(mktemp -d /tmp/XXXXX.broker)
+tmpdir=$(mktemp -d /tmp/XXXXX.asdusend)
 cts_name=$1
 jobslist=${tmpdir}/jobslist
 sendfiles=${tmpdir}/sendfiles
@@ -29,22 +29,22 @@ sigchld()
 	trap '' CHLD
 	jobs -l >${jobslist}
 	while read pid state; do
-		if test -z "$state" || printf '%s' "$state" | grep -q '^Running\|^Stopped\|^Suspended'; then
+		if test -z "$state" || /usr/bin/printf '%s' "$state" | grep -q '^Running\|^Stopped\|^Suspended'; then
 			continue
 		else
 			case "$state" in
 			Done*)
-				code=$(printf '%s' "$state" | sed -n 's|^Done(\([0-9]\+\))$|\1|p')
+				code=$(/usr/bin/printf '%s\n' "$state" | sed -n 's|^Done(\([0-9]\+\))$|\1|p')
 				test -z $code && code=0
 				name=$(sed -n "s/$pid //p" $sendfiles)
-				test -n $name && sed -i "/$pid/d" $sendfiles
+				test -n "$name" && sed -i "/$pid/d" "$sendfiles"
 				case "$code" in
 				0) 
-					printf '%s\n' "$name $code $success" 
+					/usr/bin/printf '%s\n' "$name $code $success" 
 					logmsgtime "file $name was transferred successfully, return code 0" 
 					;;
 				2) 
-					printf '%s\n' "$name $code $fail" 
+					/usr/bin/printf '%s\n' "$name $code $fail" 
 					logmsgtime "file $name was not transfered, return code 2" 
 					;;
 				3) 
@@ -73,12 +73,12 @@ trap 'rm -rf ${tmpdir}; exit 0' TERM
 exec 2>$LOGDIR/${cts_name}/asdusend.log
 while true; do 
 	if read filename; then 
-		printf '%s\n' "$filename 1 $confirm"
+		/usr/bin/printf '%s\n' "$filename 1 $confirm"
 		logmsgtime "File $filename from the quemngr is received"
 		
 		sendfile ./act/$filename & 
 		logmsgtime "Send file ./act/$filename to iecproxy" 
 		
-		printf '%s %s\n' $! $filename >> $sendfiles
+		/usr/bin/printf '%s %s\n' $! $filename >>$sendfiles
 	fi
 done
