@@ -77,7 +77,6 @@ get_destaddr()
 {
 	local number
 	local destaddr	
-	local len
 	
 	number=$(echo $1 | tr -d '+')
 	if [ $(expr $(expr length $number) % 2) -gt 0 ]; then
