@@ -2,14 +2,22 @@
 
 . /opt/iecd/io_utils
 
-tmpdir=$(mktemp -d /tmp/XXXXX.asdusend)
-cts_name=$1
-jobslist=${tmpdir}/jobslist
-sendfiles=${tmpdir}/sendfiles
-
 success="Transfer was successful"
 fail="Transfer failed"
 confirm="Ok"
+
+cts_name=$1
+
+tmpdir=$(mktemp -d /tmp/asdusend.XXXXXXXXXX)
+sync $tmpdir
+
+jobslist=${tmpdir}/jobslist
+touch $jobslist; sync $jobslist
+
+sendfiles=${tmpdir}/sendfiles
+touch $sendfiles; sync $sendfiles
+
+sync $tmpdir
 
 sendfile()
 {
@@ -69,6 +77,7 @@ sigchld()
 trap 'sigchld' CHLD
 trap 'end_defque' USR2
 trap 'rm -rf ${tmpdir}; exit 0' TERM 
+
 
 exec 2>$LOGDIR/${cts_name}/asdusend.log
 while true; do 
