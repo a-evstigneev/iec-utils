@@ -34,9 +34,14 @@ case "$1" in
 		fi
         ;;
   stop)
-        echo -n "Stopping daemon: "$NAME
-        start-stop-daemon --stop --quiet --oknodo --pidfile $PIDFILE
-        echo "."
+		if status_of_proc -p $PIDFILE $DAEMON $NAME >/dev/null; then
+			echo " * ${IECDIR}/${NAME} is running"
+			echo -n "Stopping daemon: "$NAME
+			start-stop-daemon --stop --quiet --oknodo --pidfile $PIDFILE
+			echo "."
+		else	
+			echo "Daemon $NAME is not running."
+		fi
         ;;
   restart)
         echo -n "Restarting daemon: "$NAME

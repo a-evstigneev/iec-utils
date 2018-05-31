@@ -36,7 +36,7 @@ send_smstext()
 
 send_smspdu()
 {
-	local SCA="00" # Sim card contains the number of the SCA
+	local SCA="00" # Sim contains the number of the SCA
 	local SB="01" # Service Byte. Bit mask 0 0 0 00 0 01
 	local MR="00" # Message Reference field
 	local DA="0B91" # Destination Address: 0B - 11 digits, 91 - type international
@@ -53,21 +53,36 @@ send_smspdu()
 	read smstext
 
 	DA=${DA}$(get_destaddr $number)
-	UDL=$(dectohex $((2*${#smstext})))
+	UDL=$(dectohex $((2 * $(expr length "$smstext"))))
 	UD=$(echo "$smstext" | ucs2encode)
 	PDU=${SCA}${SB}${MR}${DA}${PID}${DCS}${UDL}${UD}
 	TPDU_LEN=$(((${#PDU} - 2)/2)) 
 	
-	/usr/bin/printf '%b' "AT+CMGS=$TPDU_LEN\r" >$file
-	exec 3<$file
-	response=$(readreply 3)
-	exec 3<&-
+	if rwdev "$file" "AT+CREG?" response; then
+		echo $response  | grep -q "0,1" && logmsgtime "GSM device $file is registered on the network"
+	else
+		logmsgtime "Device $file is not available now"
+#		exit 1
+	fi
+
 	sleep 1
 	
+	/usr/bin/printf '%b' "AT+CMGS=$TPDU_LEN\r" >$file
+	
+	sleep 1.5
+	
 	/usr/bin/printf '%b' "$PDU\x1A" >$file
+	
+	sleep 15 
+	
+	response=""
 	exec 3<$file
 	response=$(readreply 3)
-	echo $response
+	if ! [ -z "$response" ]; then
+		echo $response | grep -q "+CMGS" && logmsgtime "Sms was sent successfully"
+	else
+		logmsgtime "Sending the sms failed"
+	fi
 	exec 3<&-
 
 	return 0
