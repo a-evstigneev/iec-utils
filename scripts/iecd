@@ -40,6 +40,7 @@ case "$1" in
 			start-stop-daemon --stop --quiet --oknodo --pidfile $PIDFILE
 			echo "."
 		else	
+			kill -s 9 $(pgrep smsget) # Костыль. На всякий случай убиваем возможные зависшые процессы.
 			echo "Daemon $NAME is not running."
 		fi
         ;;
