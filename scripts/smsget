@@ -209,6 +209,7 @@ if [ $get ]; then
 						logmsgtime "Undefined string \"$response\" from device $gsmdev"	
 						;;
 					*)
+						logmsgtime "List of messages to delete $smsiddel"
 						for i in $smsiddel; do
 							if  rwdev "$gsmdev" "AT+CMGD=$i" reply; then
 								logmsg "Delete sms id $i"
