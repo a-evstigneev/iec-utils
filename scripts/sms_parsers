@@ -4,7 +4,7 @@ readvalue_ccu825()
 {
 	local comaddr timestamp
 	
-	awk -v comaddr=$1 -v timestamp=$2 '
+	sed 's/\r$//' | awk -v comaddr=$1 -v timestamp=$2 '
 		BEGIN {
 			FS = " "; COMADDR = comaddr; TIMESTAMP = timestamp 
 			TYPE["M_SP_TB_1"] = 30
