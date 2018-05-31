@@ -101,10 +101,11 @@ devinit()
 	local _dev _cmd _result
 	_dev=$1
 
-	for _cmd in 'AT+CSCS="UCS2"' "AT+CSMS=0" 'AT+CMGF=0' 'AT+CSDH=1' 'AT+CPMS="SM","SM","SM"' 'AT+CNMI=2,0,0,0,0'; do
+	for _cmd in 'AT+CSCS="UCS2"' "AT+CSMS=0" 'AT+CMGF=0' 'AT+CSDH=1' 'AT+CPMS="SM"' 'AT+CNMI=2,0,0,0,0'; do
 		if rwdev $_dev "$_cmd" _result; then
 			logmsg "$_cmd"
 			logmsg "$_result"
+			sleep 0.5
 		else
 			return 1
 		fi
@@ -122,6 +123,7 @@ devinfo()
 		if rwdev $_dev "$_cmd" _result; then
 			logmsg "$_cmd"
 			logmsg "$_result"
+			sleep 0.5
 		else
 			return 1
 		fi
