@@ -54,28 +54,54 @@ smssep()
 			
 			case $? in
 			0)
-				logmsg "Sms id $_id was written synchronously to disk"
 				_listid="${_listid}${_id} "
 				_savedir="$DB_ARCH/$_comaddr" 
+				logmsg "Sms id $_id was written synchronously to disk in $_savedir/tempfile"
 				
 				# Trigger activation for each instance quemngr
 				while read _cts_name rest; do
 					_dropmsg="$VARDIR/$_cts_name/work/drop/dropmsg"
-					
-					cp $_savedir/tempfile $_dropmsg
-					_inode="$VARDIR/$_cts_name/work/drop/$(stat -c %i $_dropmsg)"
-					
-					if sync "$_dropmsg"; then
-						mv "$_dropmsg" "$_inode"; sync $_inode
+
+					if cp "$_savedir/tempfile" "$_dropmsg"; then
+						logmsg "Сoping file $_savedir/tempfile to file "$_dropmsg" was done"
+						_inode="$VARDIR/$_cts_name/work/drop/$(stat -c %i $_dropmsg)"
+						if ! sync "$_dropmsg"; then
+							logmsg "Synchronous writing a file "$_dropmsg" to disk failed"
+							rm "$_dropmsg"
+							logmsg "Remove $_dropmsg from disk"
+						elif ! mv "$_dropmsg" "$_inode"; then
+							logmsg "Renaming file "$_dropmsg" to file "$_inode" failed"
+							rm "$_dropmsg"
+							logmsg "Remove $_dropmsg from disk"
+						elif sync "$_inode"; then 
+							logmsg "Renaming file "$_dropmsg" to file "$_inode" was done"
+							logmsg "Synchronous writing a file $_inode to disk was done"
+							/usr/bin/printf "1" > $VARDIR/$_cts_name/work/trigger
+							logmsg "Activation trigger $VARDIR/$_cts_name/work/trigger"
+						else 
+							logmsg "Synchronous writing a file $_inode to disk failed"
+							rm "$_inode"
+							logmsg "Remove $_inode from disk"
+						fi
+					else
+						logmsg "Сoping file $_savedir/tempfile to file "$_dropmsg" is failed"
 					fi
 					
-					/usr/bin/printf "1" > $VARDIR/$_cts_name/work/trigger
 				done <<-EOF
 					$(cat $CTS_LIST | grep -v '^#' | sed '/^$/d')
 				EOF
 				
 				_archive_msg=$_savedir/$(/bin/date '+%G-%m-%d_%H:%M:%S')_$(mktemp -u "XXXXXX")
-				mv "$_savedir/tempfile" "$_archive_msg"; sync "$_archive_msg"
+				if mv "$_savedir/tempfile" "$_archive_msg"; then
+					logmsg "Renaming file $_savedir/tempfile to file $_archive_msg was done"
+					if sync "$_archive_msg"; then
+						logmsg "Synchronous writing a file $_savedir/tempfile to file $_archive_msg was done"
+					else
+						logmsg "Synchronous writing a file "$_archive_msg" to disk failed"
+					fi
+				else
+					logmsg "Renaming file $_savedir/tempfile to file $_archive_msg failed"
+				fi
 			;;
 			1)
 				logmsg "Synchronous recording to disk failed"
