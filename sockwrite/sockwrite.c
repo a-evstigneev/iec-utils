@@ -17,8 +17,9 @@ main(int argc, char **argv)
 	
 	char buf[BUF_SIZE] = {0};
 	char res[RES_SIZE] = {0};    
-
-	int n, gopt, ret, status = 0;
+	
+	ssize_t n, m;
+	int gopt, ret, status = 0;
 
 	while ( (gopt = getopt(argc, argv, ":s:")) != -1) {
 		switch(gopt) {
@@ -34,7 +35,7 @@ main(int argc, char **argv)
 
 	sockfd = socket(AF_UNIX, SOCK_STREAM, 0);
 	if (sockfd == -1) {
-		perror("Socket() error");
+		perror("Error socket()");
 		exit(4); // Возможно задать status и выход сделать через goto?
 	}
 	
@@ -44,12 +45,18 @@ main(int argc, char **argv)
 
 	ret = connect(sockfd, (const struct sockaddr *) &sockun, sizeof(struct sockaddr_un));
 	if (ret == -1) {
-		perror("Proxy-server is down");
-		exit(4);
+		perror("Error connect()");
+		status = errno;
+		goto exit_point;	
+	} 
+	
+	while ( (n = read(STDIN_FILENO, buf, BUF_SIZE)) > 0) {
+		if ( (m = write(sockfd, buf, n)) < 0) {
+			perror("Error write()");
+			status = errno;
+			goto exit_point;	
+		}
 	}
-
-	while ( (n = read(STDIN_FILENO, buf, BUF_SIZE)) > 0)  
-		write(sockfd, buf, n);
 	
 	shutdown(sockfd, SHUT_WR);
 
@@ -62,15 +69,15 @@ main(int argc, char **argv)
 				status = 2;
 				break;
 			case '^':
-				status = 3; // Надо подумать стоит ли ожидать ответа об отправке отложенных сообщений.
+				status = 3; // Стоит ли ожидать ответа об отправке отложенных сообщений?
 				break;
 			default:
 				break;
-				
 		}
 	} 
 	else
 		status = errno;
 	
-	return status;
+	exit_point:
+		return status;
 }

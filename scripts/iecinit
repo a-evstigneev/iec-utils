@@ -58,6 +58,8 @@ while read cts_name cts_address cts_port; do
 		-s asdusend \
 		-l 3 2>$LOGDIR/$cts_name/quemngr.log &
 	
+	sleep 3
+
 	PID_NOTIFY=$! iecproxy \
 		-u $VARDIR/$cts_name/usocket \
 		-s $cts_address \
