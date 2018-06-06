@@ -53,10 +53,10 @@ while read cts_name cts_address cts_port; do
 	
 	quemngr \
 		-n $cts_name \
-		-d $VARDIR/$cts_name/work \
+		-w $VARDIR/$cts_name/work \
 		-t $VARDIR/$cts_name/work/trigger \
 		-s asdusend \
-		-l 3 2>$LOGDIR/$cts_name/quemngr.log &
+		-d 3 2>$LOGDIR/$cts_name/quemngr.log &
 	
 	sleep 3
 
@@ -65,7 +65,8 @@ while read cts_name cts_address cts_port; do
 		-s $cts_address \
 		-p $cts_port \
 		-l ieclink \
-		-g ginterrog 2>$LOGDIR/$cts_name/iecproxy.log &
+		-g ginterrog \
+		-d 3 2>$LOGDIR/$cts_name/iecproxy.log &
 
 done <<-EOF
 	$(cat $CTS_LIST | grep -v '^#' | sed '/^$/d')

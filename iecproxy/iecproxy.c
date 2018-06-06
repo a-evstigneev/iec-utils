@@ -9,6 +9,7 @@
 #include <signal.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include "logging.h"
 
 #define BUF_SIZE 512
 #define BACKLOG 1 
@@ -18,7 +19,19 @@
 #define CON_INTERROG "64010700FFFF00000014"
 #define END_INTERROG "64010A00FFFF00000014"
 
+#ifdef DEBON
+	#define LOG_MSG(macrolevel, ...) \
+	debuglevel >= macrolevel ? logmsg(__FILE__, __FUNCTION__, __LINE__, 0, LOG_INFO, __VA_ARGS__) : 0;
+#else
+	#define LOG_MSG(macrolevel, ...) 
+#endif
+
+extern char *progname;
+extern FILE *logstream;
+extern int daemon_proc;
+
 pid_t childpid;
+int debuglevel;
 
 ssize_t
 readline(int fd, void *buf, size_t maxlen)
@@ -59,8 +72,7 @@ new_usocket(const char *path)
 	
 	sockfd = socket(AF_UNIX, SOCK_STREAM, 0);
 	if (sockfd == -1) {	
-		perror("socket() error");
-		exit(EXIT_FAILURE);
+		ERR_SYS("socket() error");
 	}
 
 	memset(&sockun, 0, sizeof(struct sockaddr_un));
@@ -69,14 +81,12 @@ new_usocket(const char *path)
 
 	ret = bind(sockfd, (const struct sockaddr *) &sockun, sizeof(struct sockaddr_un)); 
 	if ( ret == -1) {
-		perror("bind() error");
-		exit(EXIT_FAILURE);
+		ERR_SYS("bind() error");
 	}
 
 	ret = listen(sockfd, BACKLOG);
 	if (ret == -1) {
-        perror("listen() error");
-        exit(EXIT_FAILURE);
+		ERR_SYS("listen() error");
     }
 	
 	return sockfd;
@@ -154,7 +164,7 @@ main(int argc, char *argv[])
     
 	char *pid_notify = NULL;
 
-	int i, n, nready, gopt, ret, just_connect = 0, new_sockfd = -1;
+	int i, n, nready, gopt, ret, first_connect = 0, new_sockfd = -1;
 		
 	int pipefd1[2], pipefd2[2];
 	
@@ -162,8 +172,9 @@ main(int argc, char *argv[])
 	
 	struct pollfd fdread[FD_MAX];
 	
-	// u - path to unix socket, s - ip address of iecserver, p - port of iecserver, l - ieclink path, g - general interrogation script
-	while ( (gopt = getopt(argc, argv, ":u:s:p:l:g:")) != -1) { 
+	// u - path to unix socket, s - ip address of iecserver, p - port of iecserver
+	// l - ieclink path, g - general interrogation script, d - debug level
+	while ( (gopt = getopt(argc, argv, ":u:s:p:l:g:d:")) != -1) { 
 		switch(gopt) {
 			case 'u':
 				unixsock = optarg; 
@@ -179,33 +190,39 @@ main(int argc, char *argv[])
 				break;
 			case 'g':
 				gi_script = optarg;
+				break;
+			case 'd':
+				debuglevel = atoi(optarg);
+				break;
 			case '?':
 			default:
 				break;
 		}
 	}
 	
+	progname = argv[0];
+	logstream = stderr;
+	daemon_proc = 1;
+
+
 	signal(SIGTERM, sig_term);
 	signal(SIGCHLD, sig_chld);
 	
 	if ( (pid_notify = getenv("PID_NOTIFY")) == NULL)
-		fprintf(stderr, "Variable PID_NOTIFY not defined\n");
+		LOG_MSG(2, "variable PID_NOTIFY not defined");
 	
 	/* delete old unix socket */
     unlink(unixsock);
 
 	/* start iecclient */
 	if ( (pipe(pipefd1)) < 0) {
-		perror("can`t create pipefd1");
-		exit(EXIT_FAILURE);
+		ERR_SYS("pipe() fd1 error");
 	}
 	if ( (pipe(pipefd2)) < 0) {
-		perror("can`t create pipefd2");
-		exit(EXIT_FAILURE);
+		ERR_SYS("pipe() fd2 error");
 	}
 	if ( (childpid = fork()) < 0) {
-		perror("fork() error");
-		exit(EXIT_FAILURE);
+		ERR_SYS("fork() error");
 	}   
 	else if (childpid == 0) {
 		close(pipefd1[1]);
@@ -219,8 +236,7 @@ main(int argc, char *argv[])
 		close(pipefd2[1]);
 
 		if (execlp(ieclink, ieclink, iecserver, iecport, NULL) < 0) 
-			perror("exec() error"); 
-		exit(EXIT_FAILURE);
+			ERR_SYS("exec() error"); 
 	}
 	
 	close(pipefd1[0]);
@@ -240,40 +256,43 @@ main(int argc, char *argv[])
 		if (fdread[0].revents & POLLIN) {
 			if ( (n = readline(fdread[0].fd, buf, BUF_SIZE)) > 0) {
 				
-				if (strncmp(END_INIT, buf, 8) == 0)
-					fprintf(stderr, "iecproxy: received M_EI_NA_1 (cot=4) %s", buf);
+				if (strncmp(END_INIT, buf, 8) == 0) {
+					LOG_MSG(2, "received M_EI_NA_1 (cot=4) %s from ieclink", END_INIT);
+				}
 				else if (strncmp(ACT_INTERROG, buf, n-1) == 0) {
-					fprintf(stderr, "iecproxy: received C_IC_NA_1 (cot=6) %s", buf);
+					LOG_MSG(2, "received C_IC_NA_1 (cot=6) %s from ieclink", ACT_INTERROG);
 					
-					if (just_connect) {
+					if (first_connect) {
 						dprintf(pipefd1[1], "%s\n", CON_INTERROG);
+						LOG_MSG(2, "send CON_INTERROG to ieclink, confirmation of activation general interrogation"); // Заменить END_INTERROG на имя ASDU
 						fdread[1].fd = new_sockfd;
 						fdread[1].events = POLLIN; // Ждем сообщения от менеджера очередей, 
 						// или служебного сообщения, что отложенных сообщений нет
-						just_connect = 0;		
-						fprintf(stderr, "iecproxy: general interrogation activation, just_connect = %d\n", just_connect);
+						first_connect = 0;		
 					}
 					else {
 						dprintf(pipefd1[1], "%s\n", CON_INTERROG);
+						LOG_MSG(2, "send CON_INTERROG to ieclink, confirmation of activation general interrogation"); // Заменить END_INTERROG на имя ASDU
 						ginterrog(pipefd1[1], gi_script);
 						dprintf(pipefd1[1], "%s\n", END_INTERROG);
+						LOG_MSG(2, "send END_INTERROG to ieclink, general interrogation completed"); // Заменить END_INTERROG на имя ASDU
 						dprintf(pipefd1[1], ">\n");
-						
-						fprintf(stderr, "iecproxy: general interrogation is over\n");
+						LOG_MSG(2, "send \">\" to ieclink, transfer completed");
 					}
 				}
 				else { 
 					switch (buf[0]) {
 						case '+':
+							LOG_MSG(2, "received \"+\", connection established");
 							//fdread[1].fd = new_usocket(unixsock); // Может временной переменной
 							new_sockfd = new_usocket(unixsock); // Может временной переменной
 							// присвоить значение дескриптора?
 						//	fdread[1].events = POLLIN; // Ждем пока придет активация общего опроса
 							connect_hook(pid_notify);
-							just_connect = 1; // Соединение было установлено только что
-							fprintf(stderr, "iecproxy: just connect = %d\n", just_connect);
+							first_connect = 1; // Соединение было установлено только что
 							break;
 						case '-':
+							LOG_MSG(2, "received \"-\" from ieclink, connection to CTS lost");
 							if (connfd > 0) {
 								dprintf(connfd, "-\n");
 								close(connfd);
@@ -285,9 +304,11 @@ main(int argc, char *argv[])
 							disconnect_hook(pid_notify);
 							break;
 						case '<':
+							LOG_MSG(2, "received \"<\" from ieclink, ASDU confirmed");
 							if (connfd < 0)
 								break;
 							dprintf(connfd, "<\n");
+							LOG_MSG(2, "send \"<\" to asdusend, ASDU confirmed");
 							close(connfd);
 							connfd = -1;
 							break;
@@ -316,22 +337,23 @@ main(int argc, char *argv[])
 			
 			while ( (n = read(fdread[2].fd, buf, BUF_SIZE)) > 0) { 
 				if (buf[0] == '^') {
-					fprintf(stderr, "iecproxy: receive ^\n");
+					LOG_MSG(2, "receive from quemngr \"^\", there are no more deferred messages");
 					
 					ginterrog(pipefd1[1], gi_script);
 					dprintf(pipefd1[1], "%s\n", END_INTERROG);
 					
-					fprintf(stderr, "iecproxy: general interrogation is over (^)\n");
+					LOG_MSG(2, "send END_INTERROG to ieclink, general interrogation completed"); // Заменить END_INTERROG на имя ASDU
 					dprintf(fdread[2].fd, "^\n");
 					close(fdread[2].fd);
 					connfd = -1;
-					// Надо сделать brake, иначе ошибка read bad file descriptor
+					// Надо сделать break, иначе ошибка read bad file descriptor
 				}
 				else
 					write(pipefd1[1], buf, n);
 			}
 			
-			fprintf(stderr, "iecproxy: read n = %d\n", n);
+			LOG_MSG(2, "read n = %d\n", n);
+		//	fprintf(stderr, "iecproxy: read n = %d\n", n);
 			
 			if (n < 0) {
 				if (errno == ECONNRESET) {
@@ -343,6 +365,7 @@ main(int argc, char *argv[])
 			}				
 			
 			dprintf(pipefd1[1], ">\n");
+			LOG_MSG(2, "send \">\" to ieclink, transfer completed");
 			fdread[2].fd = -1;	
 		}
 	}

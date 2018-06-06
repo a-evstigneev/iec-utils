@@ -383,14 +383,12 @@ main(int argc, char *argv[])
 	
 	struct sigaction sa, saterm, sachld, sahup, sausr1;
 
-	progname = argv[0];
-
-	while ( (gopt = getopt(argc, argv, ":n:d:t:s:l:")) != -1) {
+	while ( (gopt = getopt(argc, argv, ":n:w:t:s:d:")) != -1) {
 		switch(gopt) {
 			case 'n':
 				cts_name = optarg;
 				break;
-			case 'd':
+			case 'w':
 				workdir = optarg;
 				break;
 			case 't':
@@ -399,7 +397,7 @@ main(int argc, char *argv[])
 			case 's':
 				sender = optarg;
 				break;
-			case 'l':
+			case 'd':
 				debuglevel = atoi(optarg); 
 				break;
 			case '?':
@@ -408,6 +406,7 @@ main(int argc, char *argv[])
 		}
 	}
 
+	progname = argv[0];
 	logstream = stderr;
 	daemon_proc = 1;
 	

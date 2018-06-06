@@ -63,7 +63,7 @@ sigchld()
 				
 				test -n "$name" && sed -i "/$pid/d" "$sendfiles"
 				sync $sendfiles
-				logmsgtime "pid = ${pid}, state = ${state}" 
+				logmsgtime "sockwrite pid = ${pid}, state = ${state}" 
 				logmsgtime "name = ${name}, code = ${code}" 
 				case "$code" in
 				0) 
@@ -108,7 +108,7 @@ while true; do
 		sync $sendfiles
 		
 		logmsgtime "Send file ./act/$filename to iecproxy" 
-		logmsgtime "bg_pid = $!, file = $filename"
+#		logmsgtime "bg_pid = $!, file = $filename"
 		
 		trap 'sigchld' CHLD
 	fi
