@@ -61,12 +61,13 @@ while read cts_name cts_address cts_port; do
 	sleep 3
 
 	PID_NOTIFY=$! iecproxy \
-		-u $VARDIR/$cts_name/usocket \
-		-s $cts_address \
-		-p $cts_port \
-		-l ieclink \
+		-u "$VARDIR/$cts_name/usocket" \
+		-s "$cts_address" \
+		-p "$cts_port" \
+		-c ieclink \
 		-g ginterrog \
-		-d 3 2>$LOGDIR/$cts_name/iecproxy.log &
+		-l "$LOGDIR/$cts_name/" \
+		-d 3 &
 
 done <<-EOF
 	$(cat $CTS_LIST | grep -v '^#' | sed '/^$/d')

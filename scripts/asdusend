@@ -40,7 +40,7 @@ sendfile()
 end_defque()
 {
 	printf '^\n' | sockwrite -s $VARDIR/$cts_name/usocket 
-	logmsgtime "Receive signal SIGUSR2 from quemngr and send \"^\" to iecproxy" 
+	logmsgtime "Receive signal SIGUSR2 from quemngr and send \"^\" to iecproxy, return code $?" 
 }
 
 sigchld()

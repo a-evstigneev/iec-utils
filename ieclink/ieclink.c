@@ -112,12 +112,14 @@ static void stdin_read(int fd, short events, void *opaque)
 			discard:
 				if (cp == end && asdulen != 0) {
 					fprintf(stderr, "%s: received a new message from iecproxy\n", __FUNCTION__);	
+					fflush(stderr);
 					
 					if (iecsock_can_queue(s)) {
 						iec_asdu_send(s, asdubuf, asdulen);
 					}
 					else {
 						fprintf(stderr, "%s: window size overflowed, save ASDU in asdulist\n", __FUNCTION__);
+						fflush(stderr);
 						struct asduhead *h;
 						h = xmalloc(sizeof(*h) + asdulen);
 						h->next = NULL;
@@ -133,6 +135,7 @@ static void stdin_read(int fd, short events, void *opaque)
 				rbuflen = 0;
 				endmsg = 1;
 				fprintf(stderr, "%s: received \">\" end of message from iecproxy\n", __FUNCTION__);	
+				fflush(stderr);
 				return;	
 			}
 			
@@ -156,6 +159,7 @@ static void stdin_read(int fd, short events, void *opaque)
 		
 		if (curlistsize == limlistsize) {
 			fprintf(stderr, "%s: limit size of asdulist reached, disable reading from stdin\n", __FUNCTION__);
+			fflush(stderr);
 			event_del(&s->user);
 			return;
 		}
@@ -165,6 +169,7 @@ static void stdin_read(int fd, short events, void *opaque)
 static void iec_kick_callback(struct iecsock *s)
 {
 	fprintf(stderr, "%s: Sucess 0x%lu\n", __FUNCTION__, (unsigned long) s);
+	fflush(stderr);
 	struct asduhead *p = NULL, *next = NULL;
 	
 	for (p = asdulist; p != NULL; p = next) {
@@ -182,12 +187,14 @@ static void iec_kick_callback(struct iecsock *s)
 		asdulistlast = &asdulist;
 		event_add(&s->user, NULL);
 		fprintf(stderr, "%s: asdulist is empty, set event_add(&s->user, NULL)\n", __FUNCTION__);
+		fflush(stderr);
 	}
 	else if ( (p == NULL) && (endmsg == 1)) {
 		fprintf(stdout, "<\n");	
 		fflush(stdout);
 
-		fprintf(stderr, "%s: confirmation received, send \"<\" for iecproxy\n", __FUNCTION__);	
+		fprintf(stderr, "%s: confirmation received, send \"<\" to iecproxy\n", __FUNCTION__);	
+		fflush(stderr);
 		fflush(stdout);
 
 		event_add(&s->user, NULL);
@@ -200,6 +207,7 @@ static void iec_kick_callback(struct iecsock *s)
 void disconnect_hook(struct iecsock *s, short reason)
 {	
 	fprintf(stderr, "%s: what=0x%02x\n", __FUNCTION__, reason);
+	fflush(stderr);
 
 	fprintf(stdout, "-\n"); 
 	fflush(stdout);
@@ -212,6 +220,7 @@ void data_received_hook(struct iecsock *s, struct iec_buf *b)
 	int i;
 
 	fprintf(stderr, "%s: data_len=%d Success\n", __FUNCTION__, b->data_len);
+	fflush(stderr);
 	
 	for (i = 0; i < b->data_len; ++i)
 		fprintf(stdout, "%02X", b->data[i]);
@@ -231,7 +240,8 @@ void activation_hook(struct iecsock *s)
 	int ret;
 
 	fprintf(stderr, "%s: Sucess 0x%lu\n", __FUNCTION__, (unsigned long) s);
-	
+	fflush(stderr);
+
 	event_set(&s->user, 0, EV_READ, stdin_read, s);
 	event_add(&s->user, NULL);
 	
@@ -244,11 +254,24 @@ void activation_hook(struct iecsock *s)
 void connect_hook(struct iecsock *s)
 {	
 	fprintf(stderr, "%s: Sucess 0x%lu\n", __FUNCTION__, (unsigned long) s);
+	fflush(stderr);
 }
 
 int main(int argc, char **argv)
 {
 	struct sockaddr_in addr;
+	char *logfile = NULL;
+	FILE *logstream = NULL;
+
+	/* Очень грубо, только для отладки
+	Note however, that in other systems stdin, stdout, and stderr are macros 
+	that you cannot assign to in the normal way. 
+	But you can use freopen to get the effect of closing one and reopening it
+	*/
+	logfile = calloc(strlen(argv[3]) + strlen("ieclink.log") + 1, 1);
+	sprintf(logfile, "%s%s", argv[3], "ieclink.log");
+	if ( (logstream = freopen(logfile, "a", stderr)) == NULL)
+		exit(2);
 	
 	event_init();
 	
