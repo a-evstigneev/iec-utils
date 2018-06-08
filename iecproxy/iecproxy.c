@@ -14,10 +14,10 @@
 #define BUF_SIZE 512
 #define BACKLOG 1 
 #define FD_MAX 3
-#define END_INIT	 "46010400000000000000" 
-#define ACT_INTERROG "64010600FFFF00000014"
-#define CON_INTERROG "64010700FFFF00000014"
-#define END_INTERROG "64010A00FFFF00000014"
+#define END_INIT "46010400000000000000" 
+#define GI_ACT "64010600FFFF00000014"
+#define GI_CON "64010700FFFF00000014"
+#define GI_END "64010A00FFFF00000014"
 
 #ifdef DEBON
 	#define LOG_MSG(macrolevel, ...) \
@@ -265,26 +265,28 @@ main(int argc, char *argv[])
 		if (fdread[0].revents & POLLIN) {
 			if ( (n = readline(fdread[0].fd, buf, BUF_SIZE)) > 0) {
 				if (strncmp(END_INIT, buf, 8) == 0) {
-					LOG_MSG(2, "received END_INIT (M_EI_NA_1 cot=4) %s from ieclink", END_INIT);
+					buf[strlen(buf)-1] = '\0';
+					LOG_MSG(2, "received END_INIT (M_EI_NA_1 cot=4) %s from ieclink", buf);
 					continue;
 				}
-				else if (strncmp(ACT_INTERROG, buf, n-1) == 0) {
-					LOG_MSG(2, "received ACT_INTERROG (C_IC_NA_1 cot=6) %s from ieclink", ACT_INTERROG);
+				else if (strncmp(GI_ACT, buf, n-1) == 0) {
+					buf[strlen(buf)-1] = '\0';
+					LOG_MSG(2, "received GI_ACT (C_IC_NA_1 cot=6) %s from ieclink", buf);
 					if (new_connect) {
 						fdread[1].fd = new_sockfd;
 						fdread[1].events = POLLIN; // Ждем подключений от sockwrite, который передаст ASDU или уведомит, что отложенных сообщений в очереди нет
 						connect_hook(pid_notify);
 						
-						dprintf(pipefd1[1], "%s\n", CON_INTERROG);
-						LOG_MSG(2, "send CON_INTERROG to ieclink, confirmation of activation general interrogation"); // Заменить END_INTERROG на имя ASDU
+						dprintf(pipefd1[1], "%s\n", GI_CON);
+						LOG_MSG(2, "send GI_CON (C_IC_NA_1 cot=7) %s to ieclink", GI_CON);
 						new_connect = 0;		
 					}
 					else {
-						dprintf(pipefd1[1], "%s\n", CON_INTERROG);
-						LOG_MSG(2, "send CON_INTERROG to ieclink, confirmation of activation general interrogation"); // Заменить END_INTERROG на имя ASDU
+						dprintf(pipefd1[1], "%s\n", GI_CON);
+						LOG_MSG(2, "send GI_CON (C_IC_NA_1 cot=7) %s to ieclink", GI_CON);
 						ginterrog(pipefd1[1], gi_script);
-						dprintf(pipefd1[1], "%s\n", END_INTERROG);
-						LOG_MSG(2, "send END_INTERROG to ieclink, general interrogation completed"); // Заменить END_INTERROG на имя ASDU
+						dprintf(pipefd1[1], "%s\n", GI_END);
+						LOG_MSG(2, "send GI_END (C_IC_NA_1 cot=10) %s to ieclink", GI_END);
 						dprintf(pipefd1[1], ">\n");
 						LOG_MSG(2, "send \">\" to ieclink, transfer completed");
 					}
@@ -292,7 +294,7 @@ main(int argc, char *argv[])
 				else { 
 					switch (buf[0]) {
 						case '+':
-							LOG_MSG(2, "received \"+\", connection established");
+							LOG_MSG(2, "received \"+\", connection with CTS established");
 							new_sockfd = new_usocket(unixsock);
 							new_connect = 1;
 							break;
@@ -306,14 +308,16 @@ main(int argc, char *argv[])
 							close(fdread[1].fd);
 							fdread[1].fd = -1;
 							unlink(unixsock);
+							LOG_MSG(2, "file unix_socket %s removed", unixsock);
 							disconnect_hook(pid_notify);
+							LOG_MSG(2, "start disconnect_hook for process pid = %d", pid_notify);
 							break;
 						case '<':
-							LOG_MSG(2, "received \"<\" from ieclink, ASDU confirmed");
+							LOG_MSG(2, "received \"<\" from ieclink, transmission confirmed");
 							if (fdread[2].fd < 0)
 								break;
 							dprintf(fdread[2].fd, "<\n");
-							LOG_MSG(2, "send \"<\" to sockwrite, ASDU confirmed");
+							LOG_MSG(2, "send \"<\" to sockwrite, transmission confirmed");
 							close(fdread[2].fd);
 							LOG_MSG(2, "close connection with sockwrite, socket fd = %d", fdread[2].fd);
 							fdread[2].fd = -1;
@@ -339,13 +343,13 @@ main(int argc, char *argv[])
 		if (fdread[2].revents & POLLIN) {
 			while ( (n = read(fdread[2].fd, buf, BUF_SIZE)) > 0) { 
 				if (buf[0] == '^') {
-					LOG_MSG(2, "receive \"^\" from sockwrite, there are no more deferred messages");
+					LOG_MSG(2, "received \"^\" from sockwrite, there are no more deferred messages");
 					dprintf(fdread[2].fd, "^\n");
 					close(fdread[2].fd);
 					fdread[2].fd = -1;
 					ginterrog(pipefd1[1], gi_script);
-					dprintf(pipefd1[1], "%s\n", END_INTERROG);
-					LOG_MSG(2, "send END_INTERROG to ieclink, general interrogation completed"); // Заменить END_INTERROG на имя ASDU
+					dprintf(pipefd1[1], "%s\n", GI_END);
+					LOG_MSG(2, "send GI_END (C_IC_NA_1 cot=10) %s to ieclink", GI_END);
 				}
 				else
 					if (write(pipefd1[1], buf, n) < 0)

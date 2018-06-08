@@ -39,8 +39,12 @@ sendfile()
 
 end_defque()
 {
+	local retcode
+
 	printf '^\n' | sockwrite -s $VARDIR/$cts_name/usocket 
-	logmsgtime "Receive signal SIGUSR2 from quemngr and send \"^\" to iecproxy, return code $?" 
+	retcode=$?
+	logmsgtime "receive signal SIGUSR2 from quemngr (all deferred messages have been sent)"
+	logmsgtime "send \"^\" to iecproxy, return code $retcode" 
 }
 
 sigchld()
@@ -63,23 +67,24 @@ sigchld()
 				
 				test -n "$name" && sed -i "/$pid/d" "$sendfiles"
 				sync $sendfiles
-				logmsgtime "sockwrite pid = ${pid}, state = ${state}" 
-				logmsgtime "name = ${name}, code = ${code}" 
+
+				logmsgtime "sockwrite was completed pid = ${pid}, name = ${name}, state = ${state}, return code = ${code}" 
 				case "$code" in
-				0) 
-					/usr/bin/printf '%s\n' "$name $code $success" 
-					logmsgtime "file $name was transferred successfully, return code 0" 
-				;;
-				2) 
-					/usr/bin/printf '%s\n' "$name $code $fail" 
-					logmsgtime "file $name was not transfered, return code 2" 
-				;;
-				3) 
-					logmsgtime "all deferred messages were received by iecproxy, return code 3"
-				;;
-				*) 
-					true 
-				;;
+					0) 
+						/usr/bin/printf '%s\n' "$name $code $success" 
+						logmsgtime "file $name was transferred successfully, return code 0" 
+					;;
+					2) 
+						/usr/bin/printf '%s\n' "$name $code $fail" 
+						logmsgtime "connection with CTS lost, return code 2" 
+					;;
+					3) 
+						logmsgtime "all deferred messages have been sent, return code 3"
+					;;
+					*) 
+						/usr/bin/printf '%s\n' "$name $code $fail" 
+						logmsgtime "file $name was not delivered, return code ${code}"
+					;;
 				esac
 			;;
 			*)
@@ -99,16 +104,15 @@ trap 'rm -rf ${tmpdir}; exit 0' TERM
 while true; do 
 	if read filename; then 
 		/usr/bin/printf '%s\n' "$filename 1 $confirm"
-		logmsgtime "File name $filename from quemngr is received"
+		logmsgtime "File name $filename from quemngr received"
 		
 		sendfile ./act/$filename & 
+
 		trap '' CHLD
 
 		/usr/bin/printf '%s %s\n' $! $filename >>$sendfiles
 		sync $sendfiles
-		
 		logmsgtime "Send file ./act/$filename to iecproxy" 
-#		logmsgtime "bg_pid = $!, file = $filename"
 		
 		trap 'sigchld' CHLD
 	fi

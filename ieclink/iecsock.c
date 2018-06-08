@@ -43,9 +43,12 @@
 
 #define MODNAME "iecsock"
 #define debug(format, arg...)						\
-fprintf(stderr, "%s: " format ": %s\n", MODNAME, ##arg, strerror(errno))
+fprintf(stderr, "%s: " format ": %s\n", MODNAME, ##arg, strerror(errno)); \
+fflush(stderr);
+
 #define proto_debug(format, arg...)					\
-fprintf(stderr, "%s: " format "\n", MODNAME, ##arg)
+fprintf(stderr, "%s: " format "\n", MODNAME, ##arg); \
+fflush(stderr);
 
 void bufferevent_setwatermark(struct bufferevent *bufev, short events, size_t lowmark, size_t highmark);
 
@@ -194,16 +197,19 @@ void iecsock_run_write_queue(struct iecsock *s)
 		s->xmit_cnt++;
 	}
 	
-	if (s->vs == (s->va + s->k) % 32767)
+	if (s->vs == (s->va + s->k) % 32767) {
 		proto_debug("reached k, no frames will be sent"); 
+	}
 }
 
 static void iecsock_run_ackw_queue(struct iecsock *s, unsigned short nr)
 {
 	struct iec_buf *b;
 	
-	if (s->type == IEC_SLAVE) proto_debug("received ack for N(s)=%d-1", nr); 
-	
+	if (s->type == IEC_SLAVE) { 
+		proto_debug("received ack for N(s)=%d-1", nr); 
+	}
+
 	while (!(TAILQ_EMPTY(&s->ackw_q))) {
 		b = TAILQ_FIRST(&s->ackw_q);
 		if (b->h.ic.ns == nr) break;
