@@ -313,10 +313,10 @@ main(int argc, char *argv[])
 							if (fdread[2].fd < 0)
 								break;
 							dprintf(fdread[2].fd, "<\n");
-							LOG_MSG(2, "send \"<\" to asdusend, ASDU confirmed");
+							LOG_MSG(2, "send \"<\" to sockwrite, ASDU confirmed");
 							close(fdread[2].fd);
+							LOG_MSG(2, "close connection with sockwrite, socket fd = %d", fdread[2].fd);
 							fdread[2].fd = -1;
-							
 							break;
 						default:
 							break;
@@ -330,7 +330,7 @@ main(int argc, char *argv[])
 		if (fdread[1].revents & POLLIN) {
 			fdread[2].fd = accept(fdread[1].fd, NULL, NULL);
 			fdread[2].events = POLLIN;
-			LOG_MSG(2, "Connection with unix socket established");
+			LOG_MSG(2, "Connection with sockwrite established, socket fd = %d", fdread[2].fd);
 			
 			if (--nready <= 0)
 				continue;
@@ -339,7 +339,7 @@ main(int argc, char *argv[])
 		if (fdread[2].revents & POLLIN) {
 			while ( (n = read(fdread[2].fd, buf, BUF_SIZE)) > 0) { 
 				if (buf[0] == '^') {
-					LOG_MSG(2, "receive from quemngr \"^\", there are no more deferred messages");
+					LOG_MSG(2, "receive \"^\" from sockwrite, there are no more deferred messages");
 					dprintf(fdread[2].fd, "^\n");
 					close(fdread[2].fd);
 					fdread[2].fd = -1;
