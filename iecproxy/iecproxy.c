@@ -301,7 +301,7 @@ main(int argc, char *argv[])
 						case '-':
 							LOG_MSG(2, "received \"-\" from ieclink, connection to CTS lost");
 							if (fdread[2].fd > 0) {
-								dprintf(fdread[2].fd, "-\n");
+								write(fdread[2].fd, buf, 1);
 								close(fdread[2].fd);
 								fdread[2].fd = -1;
 							}
@@ -316,7 +316,7 @@ main(int argc, char *argv[])
 							LOG_MSG(2, "received \"<\" from ieclink, transmission confirmed");
 							if (fdread[2].fd < 0)
 								break;
-							dprintf(fdread[2].fd, "<\n");
+							write(fdread[2].fd, buf, 1);
 							LOG_MSG(2, "send \"<\" to sockwrite, transmission confirmed");
 							close(fdread[2].fd);
 							LOG_MSG(2, "close connection with sockwrite, socket fd = %d", fdread[2].fd);
@@ -344,7 +344,7 @@ main(int argc, char *argv[])
 			while ( (n = read(fdread[2].fd, buf, BUF_SIZE)) > 0) { 
 				if (buf[0] == '^') {
 					LOG_MSG(2, "received \"^\" from sockwrite, there are no more deferred messages");
-					dprintf(fdread[2].fd, "^\n");
+					write(fdread[2].fd, buf, 1);
 					close(fdread[2].fd);
 					fdread[2].fd = -1;
 					ginterrog(pipefd1[1], gi_script);

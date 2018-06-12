@@ -4,9 +4,23 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <errno.h>
+#include "logging.h"
 
 #define BUF_SIZE 512
 #define RESPONSE_SIZE 32
+
+#ifdef DEBON
+	#define LOG_MSG(macrolevel, ...) \
+	debuglevel >= macrolevel ? logmsg(__FILE__, __FUNCTION__, __LINE__, 0, LOG_INFO, __VA_ARGS__) : 0;
+#else
+	#define LOG_MSG(macrolevel, ...) 
+#endif
+
+extern char *progname;
+extern FILE *logstream;
+extern int daemon_proc;
+
+int debuglevel;
 
 int
 main(int argc, char **argv)
@@ -16,15 +30,18 @@ main(int argc, char **argv)
 	char *sockpath = NULL;
 	
 	char buf[BUF_SIZE] = {0};
-	char res[RESPONSE_SIZE] = {0};    
+	char response[RESPONSE_SIZE] = {0};    
 	
 	ssize_t n, m;
 	int gopt, ret, status = 0;
 
-	while ( (gopt = getopt(argc, argv, ":s:")) != -1) {
+	while ( (gopt = getopt(argc, argv, ":d:s:")) != -1) {
 		switch(gopt) {
 			case 's':
 				sockpath = optarg;
+				break;
+			case 'd':
+				debuglevel = atoi(optarg);
 				break;
 			default:
 				fprintf(stderr, "Use %s -s \"socket_path\"\n", argv[0]);
@@ -33,6 +50,10 @@ main(int argc, char **argv)
 		}	
 	}
 
+	progname = argv[0];
+	logstream = stderr;
+	daemon_proc = 1;
+	
 	sockfd = socket(AF_UNIX, SOCK_STREAM, 0);
 	if (sockfd == -1) {
 		perror("socket() error");
@@ -61,8 +82,8 @@ main(int argc, char **argv)
 	
 	shutdown(sockfd, SHUT_WR);
 
-	if ( (n = read(sockfd, res, RESPONSE_SIZE)) > 0) {
-		switch (*res) {
+	if ( (n = read(sockfd, response, RESPONSE_SIZE)) > 0) {
+		switch (*response) {
 			case '<':
 				status = 0;
 				break;
@@ -70,7 +91,7 @@ main(int argc, char **argv)
 				status = 2;
 				break;
 			case '^':
-				status = 3; // Стоит ли ожидать ответа об отправке отложенных сообщений?
+				status = 3;
 				break;
 			default:
 				break;
@@ -81,5 +102,6 @@ main(int argc, char **argv)
 		status = errno;
 	
 	exit_point:
+		LOG_MSG(2, "sockwrite read %c, exit code = %d", *response, status);
 		return status;
 }

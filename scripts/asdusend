@@ -34,14 +34,14 @@ fi
 
 sendfile()
 {
-	asduconv -c 3 $1 | sockwrite -s $VARDIR/$cts_name/usocket 
+	asduconv -c 3 $1 | sockwrite -d 3 -s $VARDIR/$cts_name/usocket 
 }
 
 end_defque()
 {
 	local retcode
 
-	printf '^\n' | sockwrite -s $VARDIR/$cts_name/usocket 
+	printf '^\n' | sockwrite -d 3 -s $VARDIR/$cts_name/usocket 
 	retcode=$?
 	logmsgtime "receive signal SIGUSR2 from quemngr (all deferred messages have been sent)"
 	logmsgtime "send \"^\" to iecproxy, return code $retcode" 
@@ -106,10 +106,9 @@ while true; do
 		/usr/bin/printf '%s\n' "$filename 1 $confirm"
 		logmsgtime "File name $filename from quemngr received"
 		
-		sendfile ./act/$filename & 
-
 		trap '' CHLD
 
+		sendfile ./act/$filename & 
 		/usr/bin/printf '%s %s\n' $! $filename >>$sendfiles
 		sync $sendfiles
 		logmsgtime "Send file ./act/$filename to iecproxy" 
