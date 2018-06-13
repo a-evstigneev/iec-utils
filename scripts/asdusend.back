@@ -1,0 +1,118 @@
+#!/bin/sh
+
+. /opt/iecd/io_utils
+
+success="Transfer was successful"
+fail="Transfer failed"
+confirm="Ok"
+cts_name=$1
+
+exec 2>$LOGDIR/${cts_name}/asdusend.log
+
+if ! tmpdir=$(/bin/mktemp -d /tmp/asdusend.XXXXXXXXXX 2>/dev/null); then
+	logmsgtime "Temporary directory /tmp/asdusend.XXXXXXXXX could not be created" 
+else
+	sync $tmpdir
+	sync /tmp
+fi
+
+jobslist=${tmpdir}/jobslist
+if ! touch $jobslist; then
+	logmsgtime "File $jobslist could not be created" 
+else
+	sync $jobslist
+	sync $tmpdir
+fi
+
+sendfiles=${tmpdir}/sendfiles
+if ! touch $sendfiles; then
+	logmsgtime "File $sendfiles could not be created" 
+else
+	sync $sendfiles
+	sync $tmpdir
+fi
+
+sendfile()
+{
+	asduconv -c 3 $1 | sockwrite -d 3 -s $VARDIR/$cts_name/usocket 
+}
+
+end_defque()
+{
+	local retcode
+
+	printf '^\n' | sockwrite -d 3 -s $VARDIR/$cts_name/usocket 
+	retcode=$?
+	logmsgtime "receive signal SIGUSR2 from quemngr (all deferred messages have been sent)"
+	logmsgtime "send \"^\" to iecproxy, return code $retcode" 
+}
+
+sigchld()
+{
+	local pid state code name
+	
+	trap '' CHLD
+	jobs -l >$jobslist
+	sync $jobslist
+	while read pid state; do
+		if test -z "$state" || /usr/bin/printf '%s' "$state" | grep -q '^Running\|^Stopped\|^Suspended'; then
+			continue
+		else
+			case "$state" in
+			Done*)
+				code=$(/usr/bin/printf '%s\n' "$state" | sed -n 's/^Done(\([0-9]\+\))$/\1/p')
+				
+				test -z $code && code=0
+				name=$(sed -n "s/$pid //p" $sendfiles)
+				
+				test -n "$name" && sed -i "/$pid/d" "$sendfiles"
+				sync $sendfiles
+
+				logmsgtime "sockwrite was completed pid = ${pid}, name = ${name}, state = ${state}, return code = ${code}" 
+				case "$code" in
+					0) 
+						/usr/bin/printf '%s\n' "$name $code $success" 
+						logmsgtime "file $name was transferred successfully, return code 0" 
+					;;
+					2) 
+						/usr/bin/printf '%s\n' "$name $code $fail" 
+						logmsgtime "connection with CTS lost, return code 2" 
+					;;
+					3) 
+						logmsgtime "all deferred messages have been sent, return code 3"
+					;;
+					*) 
+						/usr/bin/printf '%s\n' "$name $code $fail" 
+						logmsgtime "file $name was not delivered, return code ${code}"
+					;;
+				esac
+			;;
+			*)
+				true
+			;;
+			esac
+		fi
+	done <<-EOF
+		$(sed 's/^.* \([0-9].*\)/\1/' <$jobslist)	
+	EOF
+	trap 'sigchld' CHLD
+}
+
+trap 'end_defque' USR2
+trap 'rm -rf ${tmpdir}; exit 0' TERM 
+
+while true; do 
+	if read filename; then 
+		/usr/bin/printf '%s\n' "$filename 1 $confirm"
+		logmsgtime "File name $filename from quemngr received"
+		
+		trap '' CHLD
+		sendfile ./act/$filename & 
+		/usr/bin/printf '%s %s\n' $! $filename >>$sendfiles
+		sync $sendfiles
+		trap 'sigchld' CHLD
+
+		logmsgtime "Send file ./act/$filename to iecproxy" 
+		
+	fi
+done
