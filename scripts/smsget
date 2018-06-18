@@ -10,7 +10,7 @@ errmsg=""
 
 usage() 
 {
-	echo "Usage: $0 [-idcgt] [-F DEVICE]"
+	echo "Usage: $0 [-idcgt -F gsm_device]"
 	echo " "
 	echo "  -i  Device information"
 	echo "  -d  Device initialization"

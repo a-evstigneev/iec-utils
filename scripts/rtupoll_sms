@@ -1,0 +1,147 @@
+#!/bin/sh
+
+. /opt/iecd/io_utils
+set_env IECDIR GSMDEV DEVLOCK
+
+DURATION_CALL=11
+WAITING_ENDCALL=8
+TIMEWAIT=6
+
+usage() 
+{
+    echo "Usage: $0 [-m mode -n phone_number -F gsm_device message] [RTU_LIST]"
+}
+
+send_smstext()
+{
+	true
+}
+
+send_smspdu()
+{
+    local SCA="00" # Sim contains the number of the SCA
+    local SB="01" # Service Byte. Bit mask 0 0 0 00 0 01
+    local MR="00" # Message Reference field
+    local DA="0B91" # Destination Address: 0B - 11 digits, 91 - type international
+    local PID="00" # Protocol ID
+    local DCS="08" # UCS2
+    local UDL="" # User Data Length. For encoding UCS2 each byte is encoded by two. Length(smstext) * 2
+    local number=$1
+    local file=$2
+    local smstext
+    local response
+    local UD
+    local PDU
+
+    read smstext
+
+    DA=${DA}$(get_destaddr $number)
+    UDL=$(dectohex $((2 * $(expr length "$smstext"))))
+    UD=$(echo "$smstext" | ucs2encode)
+    PDU=${SCA}${SB}${MR}${DA}${PID}${DCS}${UDL}${UD}
+    TPDU_LEN=$(((${#PDU} - 2)/2))
+
+    if rwdev "$file" "AT+CREG?" response; then
+        echo $response  | grep -q "0,1" && logmsgtime "GSM device $file is registered on the network"
+    else
+        logmsgtime "Device $file is not available now"
+#       exit 1
+    fi
+
+    sleep 1
+    /usr/bin/printf '%b' "AT+CMGS=$TPDU_LEN\r" >$file
+    sleep 1.5
+    /usr/bin/printf '%b' "$PDU\x1A" >$file
+    sleep 15
+
+    response=""
+    exec 3<$file
+    response=$(readreply 3)
+    if ! [ -z "$response" ]; then
+        echo $response | grep -q "+CMGS" && logmsgtime "Sms was sent successfully"
+    else
+        logmsgtime "Sending the sms failed"
+    fi
+    exec 3<&-
+
+    return 0
+}
+
+while getopts "m:n:F:" opt; do
+    case $opt in
+    m) mode=$OPTARG ;;
+    n) number=$OPTARG ;;
+    F) file=$OPTARG ;;  
+    *) usage; exit ;;
+    esac
+done
+
+shift $(($OPTIND - 1))
+
+if [ -n "$number" ]; then
+	[ -n "$file" ] || file=$GSMDEV
+
+	if ! [ -c "$file" ]; then
+		echo "File $file is not character device"
+		usage
+		exit 0
+	fi
+
+	[ -n "$mode" ] || mode="pdu"
+
+	read smstext
+
+	case "$mode" in
+	"text")
+		(
+			flock 9
+			/usr/bin/printf '%s\n' "$smstext" | send_smstext "$number" "$file"
+		) 9>$DEVLOCK
+	;;
+	"pdu")
+		(
+			flock 9
+			/usr/bin/printf '%s\n' "$smstext" | send_smspdu "$number" "$file"
+		) 9>$DEVLOCK
+	;;
+	esac
+
+	exit $?
+fi
+
+if [ $# -eq 1 ] && [ -f "$1" ]; then 
+	rtu_list="$1" 
+else 
+	usage 
+	exit 0
+fi 
+
+while read rtu number type; do
+	[ -n "$mode" ] || mode="pdu"
+
+	case "$type" in
+	"granit") smstext="" ;;
+	"ccu825") smstext="test" ;;
+	"verset") smstext="" ;;	
+	*) smstext="" ;;
+	esac
+
+	if [ -n "$smstex" ]; then
+		case "$mode" in
+		"text")
+			(
+				flock 9
+				/usr/bin/printf '%s\n' "$smstext" | send_smstext "$number" "$GSMDEV"
+			) 9>$DEVLOCK
+		;;
+		"pdu")
+			(
+				flock 9
+				/usr/bin/printf '%s\n' "$smstext" | send_smspdu "$number" "$GSMDEV"
+			) 9>$DEVLOCK
+		;;
+		esac
+	else
+		continue
+	fi
+done <$rtu_list

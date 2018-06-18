@@ -1,0 +1,79 @@
+#!/bin/sh
+
+. /opt/iecd/io_utils
+set_env IECDIR GSMDEV DEVLOCK
+
+DURATION_CALL=11
+WAITING_ENDCALL=8
+TIMEWAIT=6
+
+usage()
+{
+	echo "Usage: $0 [-n phone_number] [RTU_LIST]"
+}
+
+rtupoll()
+{
+	local number=$1 
+	local response 
+	local status 
+
+	number=8$(echo $number | cut -c 2-11)
+	
+	if ! rwdev "$GSMDEV" "ATD${number};" response; then
+		logmsgtime "Device $GSMDEV is not available now"	
+		sleep $TIMEWAIT 
+		status=2
+	else			
+		logmsgtime "Result of calling to the number $number is $response"
+		sleep $DURATION_CALL
+		
+		if rwdev "$GSMDEV" "ATH0" response; then
+			logmsgtime "Result of ending call on the number $number is $response"
+			sleep $WAITING_ENDCALL
+			status=0
+		else
+			logmsgtime "Device $GSMDEV is not available now"	
+			sleep $TIMEWAIT
+			status=2
+		fi	
+	fi	
+
+	return "$status"
+}
+
+while getopts "n:" opt; do
+    case $opt in
+    n) number=$OPTARG ;;
+    *) usage; exit ;;
+    esac
+done
+
+shift $(($OPTIND - 1))
+
+if [ -n "$number" ]; then
+	(
+		flock 9
+		rtupoll $number
+	) 9>$DEVLOCK
+	exit $?
+fi
+
+if [ $# -eq 1 ] && [ -f $1 ]; then 
+	rtu_list=$1 
+else 
+	usage 
+	exit 0
+fi 
+
+while read rtu number type; do
+	case $type in
+	"granit")
+		(
+			flock 9
+			rtupoll $number
+		) 9>$DEVLOCK
+	;;
+	*) true	;;
+	esac
+done <$rtu_list
