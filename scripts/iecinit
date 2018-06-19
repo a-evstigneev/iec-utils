@@ -1,7 +1,7 @@
 #!/bin/sh
 
-. /opt/iecd/io_utils
-set_env IECDIR VARDIR RUNDIR LOGDIR SMSDROPDIR CTS_LIST GSMDEV IECD_CRONTAB
+. $IECDIR/io_utils
+. $IECDIR/iecenv # VARDIR RUNDIR LOGDIR SMSDROPDIR CTS_LIST GSMDEV
 
 test -x $IECDIR/smsget || exit 1
 test -x $IECDIR/smsdrop || exit 1
@@ -12,7 +12,6 @@ test -x $IECDIR/sockwrite || exit 1
 test -x $IECDIR/iecproxy || exit 1
 test -x $IECDIR/ieclink || exit 1
 test -x $IECDIR/ginterrog || exit 1
-test -x $IECDIR/rtupoll || exit 1
 
 tmpfile=$(mktemp -p $RUNDIR childpids.XXXXXX)
 
@@ -79,6 +78,6 @@ if [ -c $GSMDEV ]; then
 	smsget -t 10 -g -F $GSMDEV 2>>$LOGDIR/smsget.log & 
 fi
 
-crontab $IECD_CRONTAB
+#crontab $IECD_CRONTAB
 
 wait

@@ -1,8 +1,8 @@
 #!/bin/sh
 
-. /opt/iecd/io_utils
-. /opt/iecd/sms_utils
-set_env DEVLOCK RTU_LIST DB_ARCH
+. $IECDIR/iecenv
+. $IECDIR/io_utils
+. $IECDIR/sms_utils
 
 WAIT_NEXTPOLL=10
 smslistdel=""
@@ -63,8 +63,8 @@ smssep()
 					_dropmsg="$VARDIR/$_cts_name/work/drop/dropmsg"
 
 					if cp "$_savedir/tempfile" "$_dropmsg"; then
-						logmsg "Сoping file $_savedir/tempfile to file "$_dropmsg" was done"
 						_inode="$VARDIR/$_cts_name/work/drop/$(stat -c %i $_dropmsg)"
+						logmsg "Сoping file $_savedir/tempfile to file "$_dropmsg" was done"
 						if ! sync "$_dropmsg"; then
 							logmsg "Synchronous writing a file "$_dropmsg" to disk failed"
 							rm "$_dropmsg"
@@ -127,7 +127,7 @@ devinit()
 	local _dev _cmd _result
 	_dev=$1
 
-	for _cmd in 'AT+CSCS="UCS2"' "AT+CSMS=0" 'AT+CMGF=0' 'AT+CSDH=1' 'AT+CPMS="SM"' 'AT+CNMI=2,0,0,0,0'; do
+	for _cmd in 'AT+CSCS="UCS2"' "AT+CSMS=0" 'AT+CMGF=0' 'AT+CSDH=1' 'AT+CPMS="SM","SM","SM"' 'AT+CNMI=2,0,0,0,0'; do
 		if rwdev $_dev "$_cmd" _result; then
 			logmsg "$_cmd"
 			logmsg "$_result"

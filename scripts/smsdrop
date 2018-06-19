@@ -1,9 +1,9 @@
 #!/bin/sh
 
-. /opt/iecd/io_utils
-. /opt/iecd/sms_utils
-. /opt/iecd/sms_parsers
-set_env IECDIR DB_ACT DB_ARCH
+. $IECDIR/iecenv # DB_ACT, DB_ARCH
+. $IECDIR/io_utils
+. $IECDIR/sms_utils
+. $IECDIR/sms_parsers
 
 device=$1; comaddr=$2; dcs=$3; scts=$4; sms=$5
 
@@ -17,15 +17,15 @@ tempfile="$savedir/tempfile"
 [ -f $tempfile ] && rm $tempfile 2>/dev/null 
 
 case $device in
-	ccu825)
-		iecvalue=$(/usr/bin/printf '%s\n' "$sms" | readvalue_ccu825 "$comaddr" "$timestamp")
-	;;
-	granit)
-		iecvalue=$(/usr/bin/printf '%s\n' "$sms" | readvalue_granit "$comaddr" "$timestamp")
-	;;
-	verset)
-		iecvalue=$(/usr/bin/printf '%s\n' "$sms" | readvalue_verset "$comaddr" "$timestamp")
-	;;
+ccu825)
+	iecvalue=$(/usr/bin/printf '%s\n' "$sms" | readvalue_ccu825 "$comaddr" "$timestamp")
+;;
+granit)
+	iecvalue=$(/usr/bin/printf '%s\n' "$sms" | readvalue_granit "$comaddr" "$timestamp")
+;;
+verset)
+	iecvalue=$(/usr/bin/printf '%s\n' "$sms" | readvalue_verset "$comaddr" "$timestamp")
+;;
 esac
 
 case $? in

@@ -1,6 +1,8 @@
 #!/bin/sh
 
 . /opt/iecd/io_utils
+. /opt/iecd/sms_utils
+# ./opt/iecd/iecenv # IECDIR GSMDEV DEVLOCK
 set_env IECDIR GSMDEV DEVLOCK
 
 DURATION_CALL=11
@@ -41,16 +43,8 @@ send_smspdu()
     PDU=${SCA}${SB}${MR}${DA}${PID}${DCS}${UDL}${UD}
     TPDU_LEN=$(((${#PDU} - 2)/2))
 
-    if rwdev "$file" "AT+CREG?" response; then
-        echo $response  | grep -q "0,1" && logmsgtime "GSM device $file is registered on the network"
-    else
-        logmsgtime "Device $file is not available now"
-#       exit 1
-    fi
-
-    sleep 1
     /usr/bin/printf '%b' "AT+CMGS=$TPDU_LEN\r" >$file
-    sleep 1.5
+    sleep 2
     /usr/bin/printf '%b' "$PDU\x1A" >$file
     sleep 15
 
@@ -91,6 +85,15 @@ if [ -n "$number" ]; then
 
 	read smstext
 
+
+	if rwdev "$file" "AT+CREG?" response; then
+		echo $response  | grep -q "0,1" && logmsgtime "GSM device $file is registered on the network"
+	else
+		logmsgtime "Device $file is not available now"
+		exit 2
+	fi
+	sleep 1
+
 	case "$mode" in
 	"text")
 		(
@@ -116,6 +119,14 @@ else
 	exit 0
 fi 
 
+if rwdev "$GSMDEV" "AT+CREG?" response; then
+	echo $response  | grep -q "0,1" && logmsgtime "GSM device $GSMDEV is registered on the network"
+else
+	logmsgtime "Device $GSMDEV is not available now"
+	exit 2
+fi
+sleep 1
+
 while read rtu number type; do
 	[ -n "$mode" ] || mode="pdu"
 
@@ -126,7 +137,7 @@ while read rtu number type; do
 	*) smstext="" ;;
 	esac
 
-	if [ -n "$smstex" ]; then
+	if [ -n "$smstext" ]; then
 		case "$mode" in
 		"text")
 			(
@@ -144,4 +155,5 @@ while read rtu number type; do
 	else
 		continue
 	fi
+
 done <$rtu_list

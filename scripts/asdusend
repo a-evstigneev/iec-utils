@@ -1,36 +1,12 @@
 #!/bin/sh
 
-. /opt/iecd/io_utils
+. $IECDIR/iecenv # $LOGDIR, $VARDIR
+. $IECDIR/io_utils
 
-success="Transfer was successful"
-fail="Transfer failed"
-confirm="Ok"
+SUCCESS="Transfer was successful"
+FAIL="Transfer failed"
+CONFIRM="Ok"
 cts_name=$1
-
-exec 2>$LOGDIR/${cts_name}/asdusend.log
-
-if ! tmpdir=$(/bin/mktemp -d /tmp/asdusend.XXXXXXXXXX 2>/dev/null); then
-	logmsgtime "Temporary directory /tmp/asdusend.XXXXXXXXX could not be created" 
-else
-	sync $tmpdir
-	sync /tmp
-fi
-
-jobslist=${tmpdir}/jobslist
-if ! touch $jobslist; then
-	logmsgtime "File $jobslist could not be created" 
-else
-	sync $jobslist
-	sync $tmpdir
-fi
-
-sendfiles=${tmpdir}/sendfiles
-if ! touch $sendfiles; then
-	logmsgtime "File $sendfiles could not be created" 
-else
-	sync $sendfiles
-	sync $tmpdir
-fi
 
 sendfile()
 {
@@ -50,31 +26,33 @@ end_defque()
 trap 'end_defque' USR2
 trap 'rm -rf ${tmpdir}; exit 0' TERM 
 
+exec 2>$LOGDIR/$cts_name/asdusend.log
+
 while true; do 
 	if read filename; then 
-		/usr/bin/printf '%s\n' "$filename 1 $confirm"
+		/usr/bin/printf '%s\n' "$filename 1 $CONFIRM"
 		logmsgtime "File name $filename from quemngr received"
 		
-		sendfile ./act/$filename
 		logmsgtime "Send file ./act/$filename to iecproxy" 
-		
+		sendfile ./act/$filename
 		status=$?
+		
 		case "$status" in
-			0) 
-				/usr/bin/printf '%s\n' "$filename $status $success" 
-				logmsgtime "file $filename was transferred successfully, return code 0" 
-			;;
-			2) 
-				/usr/bin/printf '%s\n' "$filename $status $fail" 
-				logmsgtime "connection with CTS lost, return code 2" 
-			;;
-			3) 
-				logmsgtime "all deferred messages have been sent, return code 3"
-			;;
-			*) 
-				/usr/bin/printf '%s\n' "$filename $status $fail" 
-				logmsgtime "file $filename was not delivered, return code ${status}"
-			;;
+		0) 
+			/usr/bin/printf '%s\n' "$filename $status $SUCCSESS" 
+			logmsgtime "file $filename was transferred successfully, return code 0" 
+		;;
+		2) 
+			/usr/bin/printf '%s\n' "$filename $status $FAIL" 
+			logmsgtime "connection with CTS lost, return code 2" 
+		;;
+		3) 
+			logmsgtime "all deferred messages have been sent, return code 3"
+		;;
+		*) 
+			/usr/bin/printf '%s\n' "$filename $status $FAIL" 
+			logmsgtime "file $filename was not delivered, return code $status"
+		;;
 		esac
 	fi
 done
