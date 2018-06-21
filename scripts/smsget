@@ -5,8 +5,6 @@
 . $IECDIR/sms_utils
 
 WAIT_NEXTPOLL=10
-smslistdel=""
-errmsg=""
 
 usage() 
 {
@@ -23,84 +21,66 @@ usage()
 
 smssep()
 {
-	local _line _listid _smsnum _comaddr _cts_name _inode
-	local _id _stat _data _num _number _sp _date _sms _device _dropmsg _archivemsg _savedir
+	local line id listid num dcs scts data dev 
+	local inode dropmsg archmsg archdir
+	local cts_name comaddr
+	local smsnum=0
 
-	_listid=""; _smsnum=0; _comaddr=""
-	
-	while read _line; do
-		if echo "$_line" | grep -q 'OK'; then
-			if [ $_smsnum -eq 0 ]; then
-				_listid="empty"
+	while read line; do
+		if echo "$line" | grep -q 'OK'; then
+			if [ $smsnum -eq 0 ]; then
+				listid="empty"
 			fi
 			break
-		elif echo "$_line" | grep -q 'ERROR'; then
-			_listid="error"
+		elif echo "$line" | grep -q 'ERROR'; then
+			listid="error"
 			break
 		fi
 		
-		IFS=":" read _id _num _dcs _scts _data <<-EOF
-			$_line
+		IFS=":" read id num dcs scts data <<-EOF
+			$line
 		EOF
 
-		logmsg "Read sms: id = $_id, phone number = $_num, data coding scheme = $(get_encoding $_dcs), encoded text = $_data"
-		_comaddr=$(grep -q $_num $RTU_LIST && grep $_num $RTU_LIST | cut -d " " -f 1)
+		logmsg "Sms received: id = $id, phone number = $num, data coding scheme = $(get_encoding $dcs), encoded text = $data"
+		comaddr=$(grep -q $num $RTU_LIST && grep $num $RTU_LIST | cut -d " " -f 1)
 
-		if [ $_comaddr ]; then
-			_device=$(grep $_num $RTU_LIST | cut -d " " -f 3)
-			smsdrop $_device $_comaddr $_dcs $_scts $_data &
+		if [ $comaddr ]; then
+			dev=$(grep $num $RTU_LIST | cut -d " " -f 3)
+			smsdrop $dev $comaddr $dcs $scts $data &
 			
 			wait %1
 			
 			case $? in
 			0)
-				_listid="${_listid}${_id} "
-				_savedir="$DB_ARCH/$_comaddr" 
-				logmsg "Sms id $_id was written synchronously to disk in $_savedir/tempfile"
+				listid="${listid}${id} "
+				archdir="$DB_ARCH/$comaddr" 
+				logmsg "Sms id $id was written synchronously to disk in $archdir/tempfile"
 				
-				# Trigger activation for each instance quemngr
-				while read _cts_name rest; do
-					_dropmsg="$VARDIR/$_cts_name/work/drop/dropmsg"
+				while read cts_name rest; do
+					dropmsg="$VARDIR/$cts_name/work/drop/dropmsg"
 
-					if cp "$_savedir/tempfile" "$_dropmsg"; then
-						_inode="$VARDIR/$_cts_name/work/drop/$(stat -c %i $_dropmsg)"
-						logmsg "Сoping file $_savedir/tempfile to file "$_dropmsg" was done"
-						if ! sync "$_dropmsg"; then
-							logmsg "Synchronous writing a file "$_dropmsg" to disk failed"
-							rm "$_dropmsg"
-							logmsg "Remove $_dropmsg from disk"
-						elif ! mv "$_dropmsg" "$_inode"; then
-							logmsg "Renaming file "$_dropmsg" to file "$_inode" failed"
-							rm "$_dropmsg"
-							logmsg "Remove $_dropmsg from disk"
-						elif sync "$_inode"; then 
-							logmsg "Renaming file "$_dropmsg" to file "$_inode" was done"
-							logmsg "Synchronous writing a file $_inode to disk was done"
-							/usr/bin/printf "1" > $VARDIR/$_cts_name/work/trigger
-							logmsg "Activation trigger $VARDIR/$_cts_name/work/trigger"
-						else 
-							logmsg "Synchronous writing a file $_inode to disk failed"
-							rm "$_inode"
-							logmsg "Remove $_inode from disk"
+					if cp "$archdir/tempfile" "$dropmsg" 2>/dev/null && sync "$dropmsg" 2>/dev/null; then
+						inode="$VARDIR/$cts_name/work/drop/$(stat -c %i $dropmsg)"
+						if mv "$dropmsg" "$inode" 2>/dev/null && sync "$inode" 2>/dev/null; then
+							printf "1" > $VARDIR/$cts_name/work/trigger # Trigger activation for each instance quemngr
+							logmsg "File $archdir/tempfile was written synchronously in $inode"
+						else
+							rm "$inode" 2>/dev/null	
+							logmsg "Сoping file $archdir/tempfile to file $inode is failed"
 						fi
 					else
-						logmsg "Сoping file $_savedir/tempfile to file "$_dropmsg" is failed"
+						rm "$dropmsg" 2>/dev/null	
+						logmsg "Сoping file $archdir/tempfile to file "$dropmsg" is failed"
 					fi
-					
 				done <<-EOF
 					$(cat $CTS_LIST | grep -v '^#' | sed '/^$/d')
 				EOF
 				
-				_archive_msg=$_savedir/$(/bin/date '+%G-%m-%d_%H:%M:%S')_$(mktemp -u "XXXXXX")
-				if mv "$_savedir/tempfile" "$_archive_msg"; then
-					logmsg "Renaming file $_savedir/tempfile to file $_archive_msg was done"
-					if sync "$_archive_msg"; then
-						logmsg "Synchronous writing a file $_savedir/tempfile to file $_archive_msg was done"
-					else
-						logmsg "Synchronous writing a file "$_archive_msg" to disk failed"
-					fi
+				archmsg=$archdir/$(/bin/date '+%G-%m-%d_%H:%M:%S')_$(mktemp -u "XXXXXX")
+				if mv "$archdir/tempfile" "$archmsg" 2>/dev/null && sync "$archmsg" 2>/dev/null; then
+					logmsg "Renaming file $archdir/tempfile to file $archmsg was done"
 				else
-					logmsg "Renaming file $_savedir/tempfile to file $_archive_msg failed"
+					logmsg "Renaming file $archdir/tempfile to file $archmsg failed"
 				fi
 			;;
 			1)
@@ -108,29 +88,29 @@ smssep()
 			;;
 			2)
 				logmsg "Sms message format is incorrect"
-				_listid="${_listid}${_id} "
+				listid="${listid}${id} "
 			;;
 			esac
 		else
 			logmsg "Phone number $_num is not valid"
-			_listid="${_listid}${_id} "
+			listid="${listid}${id} "
 		fi
 		
-		_smsnum=$(($_smsnum + 1))
+		smsnum=$(($smsnum + 1))
 	done
 	
-	echo "$_listid"
+	echo "$listid"
 }
 
 devinit()
 {
-	local _dev _cmd _result
-	_dev=$1
+	local cmd response
+	local dev=$1
 
-	for _cmd in 'AT+CSCS="UCS2"' "AT+CSMS=0" 'AT+CMGF=0' 'AT+CSDH=1' 'AT+CPMS="SM","SM","SM"' 'AT+CNMI=2,0,0,0,0'; do
-		if rwdev $_dev "$_cmd" _result; then
-			logmsg "$_cmd"
-			logmsg "$_result"
+	for cmd in 'AT+CSCS="UCS2"' "AT+CSMS=0" 'AT+CMGF=0' 'AT+CSDH=1' 'AT+CPMS="SM","SM","SM"' 'AT+CNMI=2,0,0,0,0'; do
+		if rwdev "$dev" "$cmd" response; then
+			logmsg "$cmd"
+			logmsg "$response"
 			sleep 0.5
 		else
 			return 1
@@ -142,13 +122,13 @@ devinit()
 
 devinfo()
 {
-	local _dev _cmd _result
-	_dev=$1
+	local cmd response
+	local dev=$1
 
-	for _cmd in "AT#LSCRIPT" "AT+CREG?" "AT+CPIN?" "AT+CSQ" "AT+CREG?" "AT+COPS?"; do
-		if rwdev $_dev "$_cmd" _result; then
-			logmsg "$_cmd"
-			logmsg "$_result"
+	for cmd in "AT#LSCRIPT" "AT+CREG?" "AT+CPIN?" "AT+CSQ" "AT+CREG?" "AT+COPS?"; do
+		if rwdev "$dev" "$cmd" response; then
+			logmsg "$cmd"
+			logmsg "$response"
 			sleep 0.5
 		else
 			return 1
@@ -220,9 +200,9 @@ if [ $get ]; then
 			logmsgtime "Get sms list from $gsmdev"
 			
 			if rwdev "$gsmdev" "AT+CMGL=4" response; then
-				smsiddel=$(printf '%s\n' "$response" | smsparse | sort -n -t: -k 7 -k 6 -k 5,5 | smsjoin | sort -t: | smssep)
+				smslistid=$(printf '%s\n' "$response" | smsparse | sort -n -t: -k 7 -k 6 -k 5,5 | smsjoin | sort -t: | smssep)
 
-				case $smsiddel in
+				case $smslistid in
 					"empty")
 						logmsgtime "Sms list is empty"			
 						;;
@@ -236,10 +216,10 @@ if [ $get ]; then
 						;;
 					*)
 						logmsgtime "List of messages to delete $smsiddel"
-						for i in $smsiddel; do
-							if  rwdev "$gsmdev" "AT+CMGD=$i" reply; then
+						for i in $smslistid; do
+							if  rwdev "$gsmdev" "AT+CMGD=$i" response; then
 								logmsg "Delete sms id $i"
-								logmsg "$reply"
+								logmsg "$response"
 							else
 								logmsgtime "Device $gsmdev is not available"
 								errmsg="Device $gsmdev is not available now"
@@ -249,7 +229,7 @@ if [ $get ]; then
 						;;	
 				esac
 
-				smsiddel=""
+				smslistid=""
 			else
 				logmsgtime "Device $gsmdev is not available now"
 				errmsg="Device $gsmdev is not available now"
@@ -257,7 +237,5 @@ if [ $get ]; then
 		) 9>$DEVLOCK
 
 		sleep $WAIT_NEXTPOLL
-		
-		echo $errmsg
 	done
 fi

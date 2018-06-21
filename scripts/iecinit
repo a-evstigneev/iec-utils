@@ -20,12 +20,6 @@ sigterm()
 	local pid 
 	trap '' TERM CHLD
 	
-	# Если iecd будет запускаться от конкретного пользователя,
-	# то по завершению демона можно просто удалять все задания с помощью crontab -r
-	tasks=$(crontab -l 2>/dev/null | grep -v rtupoll)
-	crontab -r
-	[ -z "$tasks" ] || echo "$tasks" | crontab -
-	
 	jobs -p >$tmpfile
 	while read pid; do
 		kill -s TERM $pid >/dev/null 2>&1
@@ -77,7 +71,5 @@ if [ -c $GSMDEV ]; then
 	smsget -d -F $GSMDEV 2>>$LOGDIR/smsget.log
 	smsget -t 10 -g -F $GSMDEV 2>>$LOGDIR/smsget.log & 
 fi
-
-#crontab $IECD_CRONTAB
 
 wait

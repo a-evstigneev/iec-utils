@@ -1,15 +1,12 @@
 #!/bin/sh
 
 . $IECDIR/iecenv # $DB_ACT
-#. /opt/iecd/io_utils
-#set_env IECDIR DB_ACT
 
 if ! [ -z "$(ls $DB_ACT)" ]; then 
 	find $DB_ACT -type f -printf "%P\n" | \
 	while IFS="/" read comaddr type objaddr; do 
 		echo $comaddr $objaddr $type $(cat $DB_ACT/$comaddr/$type/$objaddr 2>/dev/null) 
 	done | asduconv -c 20
-	#done | $IECDIR/asduconv -c 20
 else
 	exit 1
 fi

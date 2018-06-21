@@ -5,18 +5,18 @@
 . $IECDIR/sms_utils
 . $IECDIR/sms_parsers
 
-device=$1; comaddr=$2; dcs=$3; scts=$4; sms=$5
+dev=$1; comaddr=$2; dcs=$3; scts=$4; sms=$5
 
-timestamp=$(gettimestamp $scts)
-sms=$(smsdecode $dcs $sms)
+timestamp=$(gettimestamp "$scts")
+sms=$(smsdecode "$dcs" "$sms")
 
-savedir="$DB_ARCH/$comaddr"
-[ -d "$savedir" ] || mkdir -p "$savedir"
+archdir="$DB_ARCH/$comaddr"
+[ -d "$archdir" ] || mkdir -p "$archdir"
 
-tempfile="$savedir/tempfile"
-[ -f $tempfile ] && rm $tempfile 2>/dev/null 
+tempfile="$archdir/tempfile"
+[ -f "$tempfile" ] && rm "$tempfile" 2>/dev/null 
 
-case $device in
+case "$dev" in
 ccu825)
 	iecvalue=$(/usr/bin/printf '%s\n' "$sms" | readvalue_ccu825 "$comaddr" "$timestamp")
 ;;
@@ -30,26 +30,26 @@ esac
 
 case $? in
 	0)
-		cat - >> $tempfile <<-EOF
+		cat - >> "$tempfile" <<-EOF
 			$iecvalue
 		EOF
 		
-		if sync $tempfile; then
+		if sync "$tempfile"; then
 			# Create files that will store the signal values for a general interrogation
-			while read _comaddr _objaddr _type _value _qds _timestamp; do
-				case $_type in
+			while read t_comaddr t_objaddr t_type t_value t_qds t_timestamp; do
+				case "$t_type" in
 					30)
-						_type=1
+						t_type=1
 					;;
 					36)
-						_type=13
+						t_type=13
 					;;
 				esac
 				
-				[ -d $DB_ACT/$_comaddr/$_type ] || mkdir -p $DB_ACT/$_comaddr/$_type
-				echo $_value $_qds > $DB_ACT/$_comaddr/$_type/$_objaddr
-				sync $DB_ACT/$_comaddr/$_type/$_objaddr
-			done < $tempfile
+				[ -d $DB_ACT/$t_comaddr/$t_type ] || mkdir -p $DB_ACT/$t_comaddr/$t_type
+				echo $t_value $t_qds > $DB_ACT/$t_comaddr/$t_type/$t_objaddr
+				sync $DB_ACT/$t_comaddr/$t_type/$t_objaddr
+			done < "$tempfile"
 		else
 			exit 1
 		fi
