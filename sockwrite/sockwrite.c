@@ -102,6 +102,6 @@ main(int argc, char **argv)
 		status = errno;
 	
 	exit_point:
-		LOG_MSG(2, "sockwrite read %c, exit code = %d", *response, status);
+//		LOG_MSG(2, "sockwrite read %c, exit code = %d", *response, status);
 		return status;
 }

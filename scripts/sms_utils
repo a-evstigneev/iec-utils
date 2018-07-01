@@ -52,14 +52,24 @@ dectohex()
 
 get_numtype()
 {
-	local numtype
-	numtype=$(echo $(hextobin $1) | cut -b 2-4)
-	case $numtype in
+	local NPI # Numbering plan identification
+	local TON # Type of number	
+	
+	NPI=$(echo $(hextobin $1) | cut -b 5-)
+	TON=$(echo $(hextobin $1) | cut -b 2-4)
+	
+	# NPI="0001" # ISDN/telephone numbering plan
+	# NPI="0000" # Unknown
+	
+	case $TON in
 		"001")
 			echo "INTER"
 		;;
 		"101")
 			echo "ALPHANUM"
+		;;
+		"000")
+			echo "UNKNOWN"
 		;;
 	esac
 }
@@ -257,19 +267,23 @@ smsparse()
 		TP_OA_TYPE=$(get_numtype $TP_OA_FORMAT) # Originating Address type
 
 		case $TP_OA_TYPE in
-			"INTER")
-				TP_OA_NUM=$(get_number $(echo $PDU | cut -b -$((1+$TP_OA_LENGTH)))) # Originating Address number
-				PDU=$(echo $PDU | cut -b $((2+$TP_OA_LENGTH))-)
-			;;
-			"ALPHANUM")
-				if [ $(($TP_OA_LENGTH % 2)) -eq 0 ]; then 
-					TP_OA_NUM=$(gsmdecode $(echo $PDU | cut -b -$(($TP_OA_LENGTH)))) 
-					PDU=$(echo $PDU | cut -b $(($TP_OA_LENGTH + 1))-)
-				else
-					TP_OA_NUM=$(gsmdecode $(echo $PDU | cut -b -$(($TP_OA_LENGTH + 1)))) 
-					PDU=$(echo $PDU | cut -b $(($TP_OA_LENGTH + 2))-)
-				fi
-			;;
+		"INTER")
+			TP_OA_NUM=$(get_number $(echo $PDU | cut -b -$((1+$TP_OA_LENGTH)))) # Originating Address number
+			PDU=$(echo $PDU | cut -b $((2+$TP_OA_LENGTH))-)
+		;;
+		"ALPHANUM")
+			if [ $(($TP_OA_LENGTH % 2)) -eq 0 ]; then 
+				TP_OA_NUM=$(gsmdecode $(echo $PDU | cut -b -$(($TP_OA_LENGTH)))) 
+				PDU=$(echo $PDU | cut -b $(($TP_OA_LENGTH + 1))-)
+			else
+				TP_OA_NUM=$(gsmdecode $(echo $PDU | cut -b -$(($TP_OA_LENGTH + 1)))) 
+				PDU=$(echo $PDU | cut -b $(($TP_OA_LENGTH + 2))-)
+			fi
+		;;
+		"UNKNOWN")
+			TP_OA_NUM=$(get_number $(echo $PDU | cut -b -$TP_OA_LENGTH))
+			PDU=$(echo $PDU | cut -b $((1+$TP_OA_LENGTH))-)	
+		;;
 		esac
 		
 		TP_PID=$(echo $PDU | cut -b -2) # Protocol identifier
@@ -309,7 +323,7 @@ smsparse()
 					TP_UD=${PDU} # Delete the header for sms with UCS2 encoding
 				fi
 				
-				if [ "$TP_OA_TYPE" = "ALPHANUM" ]; then # Если номер буквенно-цифровой, отдельные части не объединяем
+				if [ "$TP_OA_TYPE" = "ALPHANUM" ] || [ "$TP_OA_TYPE" = "UNKNOWN" ]; then # Если номер буквенно-цифровой, отдельные части не объединяем
 					TP_REF_NUM=""
 					TP_TOTAL_PART=""
 					TP_SER_PART=""
