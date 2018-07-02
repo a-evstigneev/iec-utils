@@ -1,0 +1,29 @@
+.PS
+scale=2.54
+
+h = 0.4
+w = 2.6
+
+P1: box ht h wid w "pipe"; 
+P2: box ht h wid w "pipe" with .t at P1.b
+
+Ip: box "iecproxy" with .e at P1.sw + (-1.4,0)
+Il: box "ieclink" with .w at P1.se + (1.4,0)
+
+line <- from P1.w to Ip.e + (0,0.1) 
+line -> from P1.e to Il.w + (0,0.1)
+
+line -> from P2.w to Ip.e - (0,0.1)
+line <- from P2.e to Il.w - (0,0.1)
+
+BrIp: box wid (w + 2*1.4 + 2*boxwid + 2*0.4) ht (boxht + 2*0.4) at P1.b dashed
+
+Us: box ht 0.8 wid w "unix-сокет" with .e rad 0.3 at BrIp.w - (2, 0)
+####line <- left 3 from 2/5 <Pr.Ip.nw, Pr.Ip.sw> "ascii-hex" above
+####line -> left 3 from 3/5 <Pr.Ip.nw, Pr.Ip.sw> "status" below
+
+Cts: box "CTS" with .w at BrIp.e + (2, 0)
+####line -> right 4 from 2/5 <Pr.Il.ne, Pr.Il.se> "APDU iec104" above 
+####line <- right 4 from 3/5 <Pr.Il.ne, Pr.Il.se> "APDU iec104" below
+
+.PE
