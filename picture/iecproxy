@@ -9,17 +9,18 @@ P2: box ht h wid w "pipe" with .t at P1.b
 "ASDU ascii-hex" with .s at P1.n + (0,0.3)
 "статус передачи" with .n at P2.s - (0,0.3)
 
-Ip: box "iecproxy" with .e at P1.sw + (-1.4,0)
-Il: box "ieclink" with .w at P1.se + (1.4,0)
+Ip: box "iecproxy" with .e at P1.sw + (-1.5,0)
+Il: box "ieclink" with .w at P1.se + (1.5,0)
 
-line <- from P1.w to Ip.e + (0,0.1) 
-line -> from P1.e to Il.w + (0,0.1)
+left
+line <- 1.5 from P1.w
+right
+line -> 1.5 from P1.e
 
-line -> from P2.w to Ip.e - (0,0.1)
-line <- from P2.e to Il.w - (0,0.1)
-
-BrIp: box wid (w + 2*1.4 + 2*boxwid + 2*0.4) ht (boxht + 0.9) at P1.b dashed
-"ieclink" ljust "устанавливает" ljust "TCP соединение" ljust "с CTS" ljust with .w at BrIp.e + (0.4,0)
+left
+line -> 1.5 from P2.w
+right
+line <- 1.5 from P2.e
 
 Us: box ht 0.8 wid 2.6 "UNIX socket" rad 0.3 with .n at Ip.s - (0,2)
 down

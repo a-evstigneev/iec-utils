@@ -9,8 +9,11 @@ P2: box ht hp wid wp "pipe" with .t at P1.b
 "имя файла, статус передачи" with .n at P2.s - (0,0.3)
 
 As: box "asdusend" with .w at P1.se + (2,0)
-line -> from P1.e to As.w + (0,0.1) 
-line <- from P2.e to As.w - (0,0.1) 
+
+left
+line <- 2 from P1.w 
+right
+line -> 2 from P1.e
 
 h = 0.8
 Qs: [
@@ -37,15 +40,19 @@ Qs: [
 QmgrBr: box ht Qs.ht + h wid Qs.wid + h at Qs.c 
 "quemngr" at QmgrBr.se - (0.9, -0.3)   
 
-line <- from P1.w to QmgrBr.ne - (0,0.3 + boxht/2)
-line -> from P2.w to QmgrBr.ne - (0,0.5 + boxht/2)  
+left
+line -> 2 from P2.w
+right
+line <- 2 from P2.e
 
 htr = 0.6
 wtr = 2.4
-Tr: box ht htr wid wtr "FIFO trigger" with .nw at QmgrBr.sw - (0,0.5)
-arc -> rad 0.68 from Tr.e to QmgrBr.s 
+Tr: box ht htr wid wtr "FIFO trigger" with .nw at QmgrBr.sw + (1,-0.5)
+arc -> rad 0.68 from Tr.e to QmgrBr.s + (1,0)
+left
+line <- 1 from Tr.w 
 
-Sw: box "sockwrite" with .w at As.w + (0,Tr.c.y - 2)
+Sw: box "sockwrite" with .w at As.w + (0,Tr.c.y - 1)
 
 Ac: box "asduconv" at 1/3 <As.c, Sw.c> - (0.5*As.wid, 0)
 
@@ -57,23 +64,23 @@ line <- left sleft - 1.3 from 3/5 <Sw.nw, Sw.sw>
 "cтатус" "передачи" at last line.c - (0,0.5)
 
 boxht = 0.6
-Fn: box "file" rad 0.2 at Ac.c - (sleft - 0.5*As.wid, 0)
+Fn: box "file" rad 0.2 at As.c - (sleft + As.wid/2, As.c.y - Ac.c.y)
 AcDir: box ht Fn.ht + 1 wid Fn.wid + 0.4 at Fn.c - (0, 0.15) dashed
 "work/act" at AcDir.s above
 line -> from Fn.e to Ac.w
 
-Fni: box "file" rad 0.2 at Ac.c - (sleft - 0.5*As.wid + boxwid + 1, 0)
+Fni: box "file" rad 0.2 at Fn.c - (0, 2.5)
 QiDir: box ht Fni.ht + 1 wid Fni.wid + 0.4 at Fni.c - (0, 0.15) dashed
 "work/queue_i" at QiDir.s above
 
-arc -> rad 1.7 from Fni.n to Fn.n cw
+arc -> rad 1.3 from Fni.w to Fn.w cw
 
 line -> from 3/4 <Sw.nw, Sw.ne> to 3/4 <As.sw, As.se> "  код" ljust "  возврата" ljust
 line -> from 1/4 <As.sw, As.se> to 3/4 <Ac.nw, Ac.ne> "имя  " rjust "файла  " rjust
 
 Cr: line -> from 1/4 <Sw.nw, Sw.ne> to 3/4 <Ac.sw, Ac.se> invis sprintf("pipe") aligned 
 down
-P3: box wid 0.4 ht 3 at Cr.c
+P3: box wid 0.4 ht 2.8 at Cr.c
 "ASDU" rjust "ascii-hex" rjust at P3.c - (0.4,0)
 
 line -> from P3.s to Cr.start  
