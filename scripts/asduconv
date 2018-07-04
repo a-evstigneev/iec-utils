@@ -205,4 +205,4 @@ done
 
 shift $(($OPTIND - 1))
 
-cat $* | sort -n -k 1 -k 3 -k 2 | transform_asdu $cause
+cat $* | sort sort -b -s -n -k1,1 -k3,3 -k2,2 | transform_asdu $cause
