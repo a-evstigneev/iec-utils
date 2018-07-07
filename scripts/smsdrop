@@ -17,15 +17,15 @@ tempfile="$archdir/tempfile"
 [ -f "$tempfile" ] && rm "$tempfile" 2>/dev/null 
 
 case "$dev" in
-ccu825)
-	iecvalue=$(/usr/bin/printf '%s\n' "$sms" | readvalue_ccu825 "$comaddr" "$timestamp")
-;;
-granit)
-	iecvalue=$(/usr/bin/printf '%s\n' "$sms" | readvalue_granit "$comaddr" "$timestamp")
-;;
-verset)
-	iecvalue=$(/usr/bin/printf '%s\n' "$sms" | readvalue_verset "$comaddr" "$timestamp")
-;;
+	ccu825)
+		iecvalue=$(/usr/bin/printf '%s\n' "$sms" | readvalue_ccu825 "$comaddr" "$timestamp")
+	;;
+	granit)
+		iecvalue=$(/usr/bin/printf '%s\n' "$sms" | readvalue_granit "$comaddr" "$timestamp")
+	;;
+	verset)
+		iecvalue=$(/usr/bin/printf '%s\n' "$sms" | readvalue_verset "$comaddr" "$timestamp")
+	;;
 esac
 
 case $? in
