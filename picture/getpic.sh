@@ -5,3 +5,4 @@ for i in *.roff; do
 	iconv -futf8 -tkoi8r "$i" | preconv -ekoi8r | groff -p -Tps -mru > "${fname}.ps"
 	ps2pdf ${fname}.ps
 done
+rm *.ps
