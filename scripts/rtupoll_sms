@@ -2,8 +2,7 @@
 
 . /opt/iecd/io_utils
 . /opt/iecd/sms_utils
-# ./opt/iecd/iecenv # IECDIR GSMDEV DEVLOCK
-set_env IECDIR GSMDEV DEVLOCK
+. /opt/iecd/iecenv # IECDIR GSMDEV DEVLOCK
 
 DURATION_CALL=11
 WAITING_ENDCALL=8
