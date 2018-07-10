@@ -1,0 +1,103 @@
+.PS
+scale=2.54
+
+h = 0.4
+w = 3
+down; move 2
+P1: box ht h wid w "pipe"; 
+P2: box ht h wid w "pipe" with .t at P1.b
+"C_IC_NA_1 COT=7" "M_SP_NA_1 COT=20, M_ME_NC_1 COT=20" "C_IC_NA_1 COT=10" with .s at P1.n + (0,0.75)
+"C_IC_NA_1 COT=6" with .n at P2.s - (0,0.4)
+
+Ip: box "iecproxy" with .e at P1.sw + (-1.25,0)
+Il: box "ieclink" with .w at P1.se + (1.25,0)
+
+left
+line <- 1.25 from P1.w
+right
+line -> 1.25 from P1.e
+
+left
+line -> 1.25 from P2.w
+right
+line <- 1.25 from P2.e
+
+Gi: box "ginterrog" with .e at Ip.w - (5.5,0) 
+
+P3: box ht h wid w "pipe" with .e at P2.w - (2.5+boxwid,0)
+"M_SP_NA_1 COT=20" "M_ME_NC_1 COT=20" with .n at P3.s - (0,0.6)
+
+left
+line <- 1.25 from P3.w
+right
+line -> 1.25 from P3.e
+left
+line -> 5.5 from P1.e - (4.25+boxwid,0) 
+
+Ac: box "asduconv" with .t at Gi.b - (0,5.5)
+P4: box ht w wid h at 1/2 <Gi.c,Ac.c> + (0.2,0)
+Cr: line -> from P4.b to P4.t invis sprintf("pipe") aligned
+
+down
+line -> 5.5 from Gi.b - (0.2,0) 
+"M_SP_NA_1" ljust "COT=20" ljust " " ljust "M_ME_NC_1" ljust "COT=20" ljust at P4.c + (0.4,0)
+
+down
+line <- 1.25 from P4.b
+up
+line -> 1.25 from P4.t
+
+Cts: box "CTS" with .n at Il.s - (0,2)
+down
+line <- 2 from 2/5 <Il.sw, Il.se>
+"APDU  " rjust "iec104  " rjust at last line.c - (0,0.2)
+line -> 2 from 3/5 <Il.sw, Il.se> 
+"  APDU" ljust "  iec104" ljust at last line.c - (0,0.2)
+
+Db_active: [
+	Com: [
+		down
+		h = boxht/1.7
+		box "comaddr_1" dashed
+		In1: box "..." ht h invis
+		Ca_i: box "comaddr_i" dashed
+		In2: box "..." ht h invis
+		Ca_n: box "comaddr_n" dashed
+	] 
+
+	T1: box "1" dashed with .w at Com.In1.ne + (1.5,0)
+	T13: box "13" dashed with .w at Com.In2.se + (1.5,0)
+
+	spline left 0.75 from T1.w then down (T1.c.y - Com.Ca_i.c.y) then left 0.75
+	spline left 0.75 from T13.w then up (Com.Ca_i.c.y - T13.c.y) then left 0.75
+
+	r = 0.2; boxht = 0.6
+	F1: [
+		down
+		Ts1: box "TS_1" rad r
+		Ts2: box "TS_2" rad r
+		box "..." invis
+		Tsn: box "TS_n" rad r
+	] with .w at T1.e + (1.5,0)
+
+	spline left 0.6 from F1.nw - (0.15,0) then down F1.ht/2 then left 0.75
+	spline left 0.6 from F1.sw - (0.15,0) then up F1.ht/2 then left 0.75
+
+	F13: [
+		down
+		box "TI_1" rad r
+		box "TI_2" rad r
+		box "..." invis
+		box "TI_n" rad r
+	] with .w at T13.e + (1.5,0)
+
+	spline left 0.6 from F13.nw - (0.15,0) then down F13.ht/2 then left 0.75
+	spline left 0.6 from F13.sw - (0.15,0) then up F13.ht/2 then left 0.75
+] with .sw at Ac.se + (2.5,0)
+
+box above at Db_active.c ht Db_active.ht+0.6 wid Db_active.wid+0.6 dashed
+"db_active" at last box.b + (0,0.3)
+
+line -> from Db_active.Com.Ca_n.w - (0.3,0) to Ac.e
+
+.PE
