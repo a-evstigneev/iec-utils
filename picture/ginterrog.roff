@@ -6,8 +6,8 @@ w = 3
 down; move 2
 P1: box ht h wid w "pipe"; 
 P2: box ht h wid w "pipe" with .t at P1.b
-"C_IC_NA_1 COT=7" "M_SP_NA_1 COT=20, M_ME_NC_1 COT=20" "C_IC_NA_1 COT=10" with .s at P1.n + (0,0.75)
-"C_IC_NA_1 COT=6" with .n at P2.s - (0,0.4)
+"C_IC_NA_1 COT = 7" "M_SP_NA_1 COT = 20, M_ME_NC_1 COT = 20" "C_IC_NA_1 COT = 10" with .s at P1.n + (0,0.75)
+"C_IC_NA_1 COT = 6" with .n at P2.s - (0,0.4)
 
 Ip: box "iecproxy" with .e at P1.sw + (-1.25,0)
 Il: box "ieclink" with .w at P1.se + (1.25,0)
@@ -25,7 +25,7 @@ line <- 1.25 from P2.e
 Gi: box "ginterrog" with .e at Ip.w - (5.5,0) 
 
 P3: box ht h wid w "pipe" with .e at P2.w - (2.5+boxwid,0)
-"M_SP_NA_1 COT=20" "M_ME_NC_1 COT=20" with .n at P3.s - (0,0.6)
+"M_SP_NA_1 COT = 20" "M_ME_NC_1 COT = 20" with .n at P3.s - (0,0.6)
 
 left
 line <- 1.25 from P3.w
@@ -40,7 +40,7 @@ Cr: line -> from P4.b to P4.t invis sprintf("pipe") aligned
 
 down
 line -> 5.5 from Gi.b - (0.2,0) 
-"M_SP_NA_1" ljust "COT=20" ljust " " ljust "M_ME_NC_1" ljust "COT=20" ljust at P4.c + (0.4,0)
+"M_SP_NA_1" ljust "COT = 20" ljust " " ljust "M_ME_NC_1" ljust "COT = 20" ljust at P4.c + (0.4,0)
 
 down
 line <- 1.25 from P4.b
