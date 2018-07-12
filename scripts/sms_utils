@@ -107,6 +107,9 @@ get_encoding()
 		"08")
 			echo "UCS2"
 		;;
+		"19")
+			echo "UCS2"
+		;;
 	esac
 }
 
