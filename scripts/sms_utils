@@ -110,6 +110,9 @@ get_encoding()
 		"19")
 			echo "UCS2"
 		;;
+		*) 
+			echo "Unknown"
+		;;
 	esac
 }
 
@@ -169,6 +172,9 @@ smsdecode()
 		;;
 		"19")
 			ucs2decode "$string"
+		;;
+		*)
+			echo "$string"
 		;;
 	esac
 }
