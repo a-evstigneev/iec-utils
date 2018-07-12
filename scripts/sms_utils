@@ -161,12 +161,15 @@ smsdecode()
 	local string="$2"
 
 	case "$encoding" in
-	"00")
-		gsmdecode "$string"	
-	;;
-	"08")
-		ucs2decode "$string"
-	;;
+		"00")
+			gsmdecode "$string"	
+		;;
+		"08")
+			ucs2decode "$string"
+		;;
+		"19")
+			ucs2decode "$string"
+		;;
 	esac
 }
 
