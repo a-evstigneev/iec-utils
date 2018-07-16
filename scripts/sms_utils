@@ -111,7 +111,7 @@ get_encoding()
 			echo "UCS2"
 		;;
 		*) 
-			echo "Unknown"
+			echo "Unknown (${encoding})"
 		;;
 	esac
 }
