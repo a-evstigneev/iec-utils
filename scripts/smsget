@@ -1,10 +1,8 @@
 #!/bin/sh
 
-. $IECDIR/iecenv
+. $IECDIR/iecenv # RTU_LIST, DB_ARCH, VARDIR, CTS_LIST, DEVLOCK, SMS_NEXTPOLL
 . $IECDIR/io_utils
 . $IECDIR/sms_utils
-
-WAIT_NEXTPOLL=10
 
 usage() 
 {
@@ -191,14 +189,7 @@ if [ $get ]; then
 		(
 			flock 9
 			
-			if [ -n "$errmsg" ]; then
-				sendnotice "$errmsg" # Send a notification if the device is unavailable. Optional.
-
-				errmsg=""
-			fi
-			
 			logmsgtime "Get sms list from $gsmdev"
-			
 			if rwdev "$gsmdev" "AT+CMGL=4" response; then
 				smslistid=$(printf '%s\n' "$response" | smsparse | sort -n -t: -k 7 -k 6 -k 5,5 | smsjoin | sort -t: | smssep)
 
@@ -207,8 +198,8 @@ if [ $get ]; then
 						logmsgtime "Sms list is empty"			
 						;;
 					"error")
-						logmsgtime "Error was detected on the device $gsmdev"
 						errmsg="Error was detected on the device $gsmdev"
+						logmsgtime "$errmsg"
 						devinit $gsmdev	
 						;;
 					"undef")
@@ -221,8 +212,8 @@ if [ $get ]; then
 								logmsg "Delete sms id $i"
 								logmsg "$response"
 							else
-								logmsgtime "Device $gsmdev is not available"
 								errmsg="Device $gsmdev is not available now"
+								logmsgtime "$errmsg"
 								break
 							fi
 						done
@@ -231,11 +222,14 @@ if [ $get ]; then
 
 				smslistid=""
 			else
-				logmsgtime "Device $gsmdev is not available now"
 				errmsg="Device $gsmdev is not available now"
+				logmsgtime "$errmsg"
 			fi
+
+			test -n "$errmsg" && sendnotice "$errmsg" # Send a notification if the device is unavailable. Optional.
+
 		) 9>$DEVLOCK
 
-		sleep $WAIT_NEXTPOLL
+		sleep $SMS_NEXTPOLL
 	done
 fi
