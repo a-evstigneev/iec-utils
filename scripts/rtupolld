@@ -6,7 +6,7 @@ set -e
 IECDIR="/opt/iecd" # Возможно лучше использовать переменную WORK_DIR
 
 # Must be a valid filename
-NAME="iec_init"
+NAME="rtupoll_init"
 PIDFILE=/opt/iecd/var/run/$NAME.pid
 
 # Full path to executable

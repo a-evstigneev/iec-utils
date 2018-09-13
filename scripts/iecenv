@@ -9,5 +9,5 @@ RTU_LIST="$IECDIR/rtu_list.conf"
 CTS_LIST="$IECDIR/cts_list.conf"
 GSMDEV="/dev/ttyUSB1"
 DEVLOCK="$IECDIR/device.lock"
-IECD_CRONTAB="$IECDIR/iecd_crontab"
+RTUPOLL_SHEDULE="$IECDIR/rtupoll_shedule"
 SMS_NEXTPOLL=15
