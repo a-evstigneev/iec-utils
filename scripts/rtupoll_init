@@ -20,30 +20,23 @@ make_crontab()
 	done <<-EOF
 		$(cat $RTUPOLL_SHEDULE)
 	EOF
-	echo >> $CRONTAB_FILE
 }
 
 sigterm()
 {
 	local pid 
-	trap '' TERM CHLD
 	
-	jobs -p >$tmpfile
-	while read pid; do
-		kill -s TERM $pid >/dev/null 2>&1
-	done <<-EOF
-		$(cat $tmpfile)
-	EOF
-
+	trap '' TERM CHLD
+	crontab -r
 	trap '-' TERM
+	
+	exit 0
 }
 
-#trap 'rm -rf $RUNDIR/*; exit 0' EXIT
-#trap 'sigterm' TERM
-# m h dom mon dow
+trap 'sigterm' TERM
 
 make_crontab $RTUPOLL_SHEDULE
 crontab $CRONTAB_FILE
-#rm $CRONTAB_FILE
+rm $CRONTAB_FILE
 
-#wait
+while true; do sleep 10; done
