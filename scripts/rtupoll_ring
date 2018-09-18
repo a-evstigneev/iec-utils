@@ -2,7 +2,6 @@
 
 . /opt/iecd/io_utils
 . /opt/iecd/iecenv # GSMDEV, DEVLOCK
-#set_env IECDIR GSMDEV DEVLOCK
 
 DURATION_CALL=11
 WAITING_ENDCALL=8
@@ -83,7 +82,7 @@ fi
 
 while read rtu number type; do
 	case $type in
-	"ccu825")
+	"granit")
 		(
 			flock 9
 			rtupoll "$number"

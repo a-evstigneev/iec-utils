@@ -11,12 +11,13 @@ CRONTAB_FILE="$RUNDIR/rtupoll_crontab"
 make_crontab()
 {
 	local shedule=$1	
-	local time
+	local time cmd
 
 	echo 'MAILTO=""' >> $CRONTAB_FILE
-
-	while read time;do 
-		echo "$time $IECDIR/rtupoll_ring $RTU_LIST 2>>$LOGDIR/rtupoll.log" >> $CRONTAB_FILE
+	echo "PATH=$PATH" >> $CRONTAB_FILE
+	
+	while read time cmd;do 
+		echo "$time $cmd $RTU_LIST 2>>$LOGDIR/rtupoll.log" >> $CRONTAB_FILE
 	done <<-EOF
 		$(cat $RTUPOLL_SHEDULE)
 	EOF
@@ -39,4 +40,4 @@ make_crontab $RTUPOLL_SHEDULE
 crontab $CRONTAB_FILE
 rm $CRONTAB_FILE
 
-while true; do sleep 10; done
+while true; do sleep 5; done

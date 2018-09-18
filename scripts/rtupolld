@@ -21,7 +21,7 @@ USER=artem
 # Work direction
 WORK_DIR="/"
 
-export PATH="${PATH:+$PATH:}/usr/sbin:/sbin:/opt/iecd"
+export PATH="${PATH:+$PATH:}/usr/sbin:/sbin:${IECDIR}"
 export IECDIR
 
 case "$1" in
