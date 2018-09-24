@@ -1,7 +1,7 @@
 #!/bin/sh
 
 . $IECDIR/io_utils
-. $IECDIR/iecenv # VARDIR RUNDIR LOGDIR SMSDROPDIR CTS_LIST GSMDEV
+. $IECDIR/iecenv #VARDIR, RUNDIR, LOGDIR, SMSDROPDIR, CTS, GSMDEV
 
 test -x $IECDIR/smsget || exit 1
 test -x $IECDIR/smsdrop || exit 1
@@ -33,7 +33,7 @@ sigterm()
 trap 'rm -rf $RUNDIR/*; exit 0' EXIT
 trap 'sigterm' TERM
 
-cd $IECDIR
+#cd $IECDIR
 while read cts_name cts_address cts_port; do
 	mkdir -p $LOGDIR/$cts_name
 	mkdir -p $VARDIR/$cts_name/work/drop
@@ -63,7 +63,7 @@ while read cts_name cts_address cts_port; do
 		-d 3 &
 
 done <<-EOF
-	$(cat $CTS_LIST | grep -v '^#' | sed '/^$/d')
+	$(cat $CTS | grep -v '^#' | sed '/^$/d')
 EOF
 
 if [ -c $GSMDEV ]; then

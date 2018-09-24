@@ -1,8 +1,8 @@
 #!/bin/sh
 
-. $IECDIR/iecenv # RTU_LIST, DB_ARCH, VARDIR, CTS_LIST, DEVLOCK, SMS_NEXTPOLL
 . $IECDIR/io_utils
 . $IECDIR/sms_utils
+. $IECDIR/iecenv #RTU, CTS, DB_ARCH, VARDIR, DEVLOCK, SMS_NEXTPOLL
 
 usage() 
 {
@@ -40,10 +40,10 @@ smssep()
 		EOF
 
 		logmsg "Sms received: id = $id, phone number = $num, data coding scheme = $(get_encoding $dcs), encoded text = $data"
-		comaddr=$(grep -q $num $RTU_LIST && grep $num $RTU_LIST | cut -d " " -f 1)
+		comaddr=$(grep -q $num $RTU && grep $num $RTU | cut -d " " -f 1)
 
 		if [ $comaddr ]; then
-			dev=$(grep $num $RTU_LIST | cut -d " " -f 3)
+			dev=$(grep $num $RTU | cut -d " " -f 3)
 			smsdrop $dev $comaddr $dcs $scts $data &
 			
 			wait %1
@@ -71,7 +71,7 @@ smssep()
 						logmsg "Сoping file $archdir/tempfile to file "$dropmsg" is failed"
 					fi
 				done <<-EOF
-					$(cat $CTS_LIST | grep -v '^#' | sed '/^$/d')
+					$(cat $CTS | grep -v '^#' | sed '/^$/d')
 				EOF
 				
 				archmsg=$archdir/$(/bin/date '+%G-%m-%d_%H:%M:%S')_$(mktemp -u "XXXXXX")

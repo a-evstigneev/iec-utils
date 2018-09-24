@@ -105,6 +105,7 @@ ginterrog(int fdw, const char *script_path)
 	fp = popen(script_path, "r");
 	while (fgets(asdu, BUF_SIZE, fp) != NULL) {
 		dprintf(fdw, "%s", asdu);
+		LOG_MSG(2, "GI ASDU - %s", asdu); // Пример того как выглядит ASDU в ascii-hex в iecproxy.log
 	}
 	pclose(fp);
 	

@@ -1,8 +1,8 @@
 #!/bin/sh
 
-. /opt/iecd/io_utils
-. /opt/iecd/sms_utils
-. /opt/iecd/iecenv # IECDIR GSMDEV DEVLOCK
+. $IECDIR/io_utils
+. $IECDIR/sms_utils
+. $IECDIR/iecenv #IECDIR, GSMDEV, DEVLOCK
 
 DURATION_CALL=11
 WAITING_ENDCALL=8
@@ -10,7 +10,7 @@ TIMEWAIT=6
 
 usage() 
 {
-    echo "Usage: $0 [-m mode -n phone_number -F gsm_device message] [RTU_LIST]"
+    echo "Usage: $0 [-m mode -n phone_number -F gsm_device message] [RTU]"
 }
 
 send_smstext()
@@ -112,7 +112,7 @@ if [ -n "$number" ]; then
 fi
 
 if [ $# -eq 1 ] && [ -f "$1" ]; then 
-	rtu_list="$1" 
+	rtu="$1" 
 else 
 	usage 
 	exit 0
@@ -155,4 +155,4 @@ while read rtu number type; do
 		continue
 	fi
 
-done <$rtu_list
+done <$rtu

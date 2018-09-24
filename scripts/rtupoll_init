@@ -1,9 +1,10 @@
 #!/bin/sh
 
 . $IECDIR/io_utils
-. $IECDIR/iecenv # LOGDIR RTU_LIST GSMDEV RTUPOLL_SHEDULE
+. $IECDIR/iecenv #LOGDIR, RUNDIR, RTU, GSMDEV, RTUPOLL_SHEDULE
 
 test -x $IECDIR/rtupoll_ring || exit 1
+test -x $IECDIR/rtupoll_sms || exit 1
 test -f $RTUPOLL_SHEDULE || exit 1
 
 CRONTAB_FILE="$RUNDIR/rtupoll_crontab"
@@ -15,9 +16,10 @@ make_crontab()
 
 	echo 'MAILTO=""' >> $CRONTAB_FILE
 	echo "PATH=$PATH" >> $CRONTAB_FILE
+	echo "IECDIR=$IECDIR" >> $CRONTAB_FILE
 	
 	while read time cmd;do 
-		echo "$time $cmd $RTU_LIST 2>>$LOGDIR/rtupoll.log" >> $CRONTAB_FILE
+		echo "$time $cmd $RTU 2>>$LOGDIR/rtupoll.log" >> $CRONTAB_FILE
 	done <<-EOF
 		$(cat $RTUPOLL_SHEDULE)
 	EOF

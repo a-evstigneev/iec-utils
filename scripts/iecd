@@ -3,11 +3,10 @@
 set -e
 . /lib/lsb/init-functions
 
-IECDIR="/opt/iecd" # Возможно лучше использовать переменную WORK_DIR
-
 # Must be a valid filename
-NAME="iec_init"
-PIDFILE=/opt/iecd/var/run/$NAME.pid
+NAME="iecinit"
+IECDIR="/opt/iecd"
+PIDFILE=$IECDIR/var/run/$NAME.pid
 
 # Full path to executable
 DAEMON="/usr/bin/setsid $IECDIR/$NAME"
@@ -19,9 +18,9 @@ DAEMON_OPTS=""
 USER=artem
 
 # Work direction
-WORK_DIR="/"
+WORK_DIR="$IECDIR"
 
-export PATH="${PATH:+$PATH:}/usr/sbin:/sbin:/opt/iecd"
+export PATH="${PATH:+$PATH:}/usr/sbin:/sbin:$IECDIR"
 export IECDIR
 
 case "$1" in
