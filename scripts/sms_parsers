@@ -23,14 +23,14 @@ readvalue_ccu825()
 				value = $2
 				type = TYPE["M_SP_TB_1"]
 			}
-			else if ( $0 ~ "POWER" ) { #TC17
-				objaddr = 17
-				if ($2 == "OK")
-					value = 0
-				else if ( $2 == "FAULT" )
-					value = 1
-				type = TYPE["M_SP_TB_1"]
-			}
+#			else if ( $0 ~ "POWER" ) { #TC17
+#				objaddr = 17
+#				if ($2 == "OK")
+#					value = 0
+#				else if ( $2 == "FAULT" )
+#					value = 1
+#				type = TYPE["M_SP_TB_1"]
+#			}
 			else if ( $0 ~ "TEMPERAT" ) { # TI1
 				objaddr = 1
 				value = substr($2, 1, length($2)-1)
