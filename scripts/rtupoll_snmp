@@ -1,0 +1,117 @@
+#!/bin/sh
+
+. $IECDIR/io_utils
+. $IECDIR/iecenv #DB_ARCH, DB_ACT, RTU, CTS, VARDIR, OID
+
+usage() 
+{
+    echo "Usage: $0 [ -d dir ]"
+    echo " "
+    echo "  -d  oid file directory"
+    echo " "
+}
+
+uncover()
+{
+    if echo "$1" | grep -q "-"; then 
+        seq -s " " $(echo "$1" | tr - " ")
+    else
+        echo "$1"
+    fi  
+}
+
+putqueue()
+{
+	local file="$1"
+	local cts rest
+
+	while read cts rest; do
+		dropmsg="$VARDIR/$cts/work/drop/dropmsg"
+
+		if cp "$file" "$dropmsg" 2>/dev/null && sync "$dropmsg" 2>/dev/null; then
+			inode="$VARDIR/$cts/work/drop/$(stat -c %i $dropmsg)"
+			if mv "$dropmsg" "$inode" 2>/dev/null && sync "$inode" 2>/dev/null; then
+				printf "1" > $VARDIR/$cts/work/trigger # Trigger activation for each instance quemngr
+				logmsg "File $file was written synchronously in $inode"
+			else
+				rm "$inode" 2>/dev/null
+				logmsg "Сoping file $file to file $inode is failed"
+			fi
+	    else
+			rm "$dropmsg" 2>/dev/null   
+			logmsg "Сoping file $file to file "$dropmsg" is failed"
+		fi
+	done <<-EOF
+		$(cat "$CTS" | grep -v '^#' | sed '/^$/d')
+	EOF
+}
+
+putdbarch()
+{
+	local file="$1"
+	local asduaddr
+
+	read asduaddr rest <$file
+	echo $asduaddr
+	archmsg=$DB_ARCH/$asduaddr/$(/bin/date '+%G-%m-%d_%H:%M:%S')_$(mktemp -u "XXXXXX")
+	if cp "$file" "$archmsg" 2>/dev/null && sync "$archmsg" 2>/dev/null; then
+		logmsg "Copying file $file to file $archmsg was done"
+	else
+		logmsg "Copying file $file to file $archmsg failed"
+	fi
+}
+
+putdbact()
+{
+	local file="$1"
+	local asduasddr objaddr type value qds timestamp
+
+	while read asduaddr objaddr type value qds timestamp; do
+		case "$type" in
+			30)
+				type=1
+			;;
+			36) 
+				type=13
+			;;
+		esac
+		
+		[ -d "$DB_ACT/$asduaddr/$type" ] || mkdir -p "$DB_ACT/$asduaddr/$type"
+		echo "$value" "$qds" > "$DB_ACT/$asduaddr/$type/$objaddr"
+		sync "$DB_ACT/$asduaddr/$type/$objaddr"
+	done <"$file"
+}
+
+while getopts "d:" opt; do
+    case $opt in
+    d) oid=$OPTARG ;;
+    *) usage; exit ;;
+    esac
+done
+
+shift $(($OPTIND - 1))
+
+[ -n "$oid" ] && OID=$oid
+
+while read asduaddr ip model; do
+    if [ "$model" = "mikrotik" ]; then
+        mkdir -p $DB_ARCH/$asduaddr
+		tmpfile="$DB_ARCH/$asduaddr/snmppoll"	
+		
+		while read objaddr type oidtable oidnum; do  
+            j=0
+			#Как реализовать проверку доступности хоста, чтобы если хост не доступен не проводить опрос по всем oid?
+			for i in $(uncover $oidnum); do
+                value=$(snmpget -Oqn -v2c -c public "$ip" "${oidtable}.$i" | cut -d " " -f 2)
+                echo $asduaddr $(($objaddr + $j)) $type $value - time #Написать общую функцию для меток времени
+                j=$(($j + 1))
+            done >>$tmpfile
+       
+		done <"$OID/$model"
+
+		putqueue  "$tmpfile" 
+		putdbact  "$tmpfile"
+		putdbarch "$tmpfile"
+		rm "$tmpfile"	
+    fi  
+done <"$RTU"
