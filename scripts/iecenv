@@ -10,10 +10,11 @@ DB_ARCH="$IECDIR/db_archive"
 RTU="$IECDIR/rtu.conf"
 CTS="$IECDIR/cts.conf"
 
-GSMDEV="/dev/ttyUSB0"
+GSMDEV="/dev/ttyUSB1"
 DEVLOCK="$IECDIR/device.lock"
 SMS_NEXTPOLL=15
 
 OID="$IECDIR/oid"
+SMSPARSER="$IECDIR/smsparser"
 
 RTUPOLL_SHEDULE="$IECDIR/rtupoll_shedule"

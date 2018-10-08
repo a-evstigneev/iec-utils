@@ -41,7 +41,7 @@ smssep()
 		EOF
 
 		logmsg "Sms received: id = $id, phone number = $num, data coding scheme = $(get_encoding $dcs), encoded text = $data"
-		comaddr=$(grep -q $num $RTU && grep $num $RTU | cut -d " " -f 1)
+		asduaddr=$(grep -q $num $RTU && grep $num $RTU | cut -d " " -f 1)
 
 		if [ $asduaddr ]; then
 			dev=$(grep $num $RTU | cut -d " " -f 3)
@@ -52,40 +52,12 @@ smssep()
 			case $? in
 			0)
 				listid="${listid}${id} "
-				tmpfile="$DB_ARCH/$asduaddr/tmpsms" #File was created smsdrop 
+				tmpfile="$DB_ARCH/$asduaddr/tmpsms" #File was created by smsdrop 
 				logmsg "Sms id $id was written synchronously to disk in $tmpfile"
-				
+				putdbact "$tmpfile"
 				putqueue "$tmpfile"
-				
-				
-		####	while read cts_name rest; do
-		####		dropmsg="$VARDIR/$cts_name/work/drop/dropmsg"
-
-		####		if cp "$archdir/tempfile" "$dropmsg" 2>/dev/null && sync "$dropmsg" 2>/dev/null; then
-		####			inode="$VARDIR/$cts_name/work/drop/$(stat -c %i $dropmsg)"
-		####			if mv "$dropmsg" "$inode" 2>/dev/null && sync "$inode" 2>/dev/null; then
-		####				printf "1" > $VARDIR/$cts_name/work/trigger # Trigger activation for each instance quemngr
-		####				logmsg "File $archdir/tempfile was written synchronously in $inode"
-		####			else
-		####				rm "$inode" 2>/dev/null	
-		####				logmsg "Сoping file $archdir/tempfile to file $inode is failed"
-		####			fi
-		####		else
-		####			rm "$dropmsg" 2>/dev/null	
-		####			logmsg "Сoping file $archdir/tempfile to file "$dropmsg" is failed"
-		####		fi
-		####	done <<-EOF
-		####		$(cat $CTS | grep -v '^#' | sed '/^$/d')
-		####	EOF
-				
 				putdbarch "$tmpfile"
-
-	########	archmsg=$archdir/$(/bin/date '+%G-%m-%d_%H:%M:%S')_$(mktemp -u "XXXXXX")
-	########	if mv "$archdir/tempfile" "$archmsg" 2>/dev/null && sync "$archmsg" 2>/dev/null; then
-	########		logmsg "Renaming file $archdir/tempfile to file $archmsg was done"
-	########	else
-	########		logmsg "Renaming file $archdir/tempfile to file $archmsg failed"
-	########	fi
+				rm "$tmpfile"
 			;;
 			1)
 				logmsg "Synchronous recording to disk failed"
@@ -212,7 +184,7 @@ if [ $get ]; then
 						logmsgtime "Undefined string \"$response\" from device $gsmdev"	
 						;;
 					*)
-						logmsgtime "List of messages to delete $smsiddel"
+						logmsgtime "List of messages to delete $smslistid"
 						for i in $smslistid; do
 							if  rwdev "$gsmdev" "AT+CMGD=$i" response; then
 								logmsg "Delete sms id $i"

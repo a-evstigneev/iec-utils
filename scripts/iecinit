@@ -1,7 +1,7 @@
 #!/bin/sh
 
-. $IECDIR/io_utils
 . $IECDIR/iecenv #VARDIR, RUNDIR, LOGDIR, SMSDROPDIR, CTS, GSMDEV
+. $IECDIR/io_utils
 
 test -x $IECDIR/smsget || exit 1
 test -x $IECDIR/smsdrop || exit 1

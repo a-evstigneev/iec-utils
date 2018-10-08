@@ -1,14 +1,13 @@
 #!/bin/sh
 
-. $IECDIR/iecenv # DB_ACT, DB_ARCH
+. $IECDIR/iecenv #DB_ACT, DB_ARCH, SMSPARSER
 . $IECDIR/io_utils
 . $IECDIR/sms_utils
-. $IECDIR/smsparser/*
 . $IECDIR/db_utils
 
 dev=$1; asduaddr=$2; dcs=$3; scts=$4; sms=$5
 
-timestamp=$(gettimestamp "$scts")
+timestamp=$(get_smststamp "$scts")
 sms=$(smsdecode "$dcs" "$sms")
 
 archdir="$DB_ARCH/$asduaddr"
@@ -17,17 +16,9 @@ archdir="$DB_ARCH/$asduaddr"
 tmpfile="$archdir/tmpsms"
 [ -f "$tmpfile" ] && rm "$tmpfile" 2>/dev/null 
 
-case "$dev" in
-	ccu825)
-		iecvalue=$(/usr/bin/printf '%s\n' "$sms" | ccu825 "$asduaddr" "$timestamp")
-	;;
-	granit)
-		iecvalue=$(/usr/bin/printf '%s\n' "$sms" | granit "$asduaddr" "$timestamp")
-	;;
-	verset)
-		iecvalue=$(/usr/bin/printf '%s\n' "$sms" | verset "$asduaddr" "$timestamp")
-	;;
-esac
+if [ -f "$SMSPARSER/$dev" ]; then 
+	iecvalue=$(/usr/bin/printf '%s\n' "$sms" | $SMSPARSER/$dev "$asduaddr" "$timestamp")
+fi
 
 case $? in
 	0)
@@ -35,26 +26,7 @@ case $? in
 			$iecvalue
 		EOF
 		
-		if sync "$tmpfile"; then
-			# Create files that will store the signal values for a general interrogation
-			putdbact "$tmpfile"
-####		while read t_comaddr t_objaddr t_type t_value t_qds t_timestamp; do
-####			case "$t_type" in
-####				30)
-####					t_type=1
-####				;;
-####				36)
-####					t_type=13
-####				;;
-####			esac
-####			
-####			[ -d $DB_ACT/$t_comaddr/$t_type ] || mkdir -p $DB_ACT/$t_comaddr/$t_type
-####			echo $t_value $t_qds > $DB_ACT/$t_comaddr/$t_type/$t_objaddr
-####			sync $DB_ACT/$t_comaddr/$t_type/$t_objaddr
-####		done < "$tmpfile"
-		else
-			exit 1
-		fi
+		sync "$tmpfile" || exit 1
 	;;
 	2)
 		exit 2

@@ -1,7 +1,7 @@
 #!/bin/sh
 
 . $IECDIR/iecenv #DB_ARCH, DB_ACT, RTU, CTS, VARDIR, OID
-. $IECDIR/io_utils
+. $IECDIR/io_utils #get_pctstamp
 . $IECDIR/db_utils
 
 usage() 
@@ -41,15 +41,16 @@ while read asduaddr ip model; do
             j=0
 			for i in $(uncover $oidnum); do
                 value=$(snmpget -Oqn -v2c -c public "$ip" "${oidtable}.$i" | cut -d " " -f 2)
-                echo $asduaddr $(($objaddr + $j)) $type $value - time #Написать общую функцию для меток времени
+                echo $asduaddr $(($objaddr + $j)) $type $value - $(get_pctstamp)
                 j=$(($j + 1))
             done >>$tmpfile
-       
 		done <"$OID/$model"
 
-		putqueue  "$tmpfile" 
-		putdbact  "$tmpfile"
-		putdbarch "$tmpfile"
+		if sync "$tmpfile"; then 	
+			putdbact  "$tmpfile"
+			putqueue  "$tmpfile" 
+			putdbarch "$tmpfile"
+		fi
 		rm "$tmpfile"	
     fi  
 done <"$RTU"
