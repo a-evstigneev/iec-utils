@@ -21,6 +21,12 @@ uncover()
     fi  
 }
 
+setqds()
+{
+	local qds=$1
+	echo $qds
+}
+
 while getopts "d:" opt; do
     case $opt in
     d) oid=$OPTARG ;;
@@ -36,21 +42,48 @@ while read asduaddr ip model; do
     if [ "$model" = "mikrotik" ]; then
         mkdir -p $DB_ARCH/$asduaddr
 		tmpfile="$DB_ARCH/$asduaddr/tmpsnmp"	
-		
+		fail=0
+
 		while read objaddr type oidtable oidnum; do  
             j=0
 			for i in $(uncover $oidnum); do
-                value=$(snmpget -Oqn -v2c -c public "$ip" "${oidtable}.$i" | cut -d " " -f 2)
-                echo $asduaddr $(($objaddr + $j)) $type $value - $(get_pctstamp)
+            	if value=$(snmpget -Oqn -v2c -c public "$ip" "${oidtable}.$i" 2>/dev/null); then
+					value=$(echo $value | cut -d " " -f 2)
+					echo $asduaddr $(($objaddr + $j)) $type $value - $(get_pctstamp) >> "$tmpfile"
+                else
+					fail=1
+					break 2
+				fi
                 j=$(($j + 1))
-            done >>$tmpfile
+            done
 		done <"$OID/$model"
 
-		if sync "$tmpfile"; then 	
-			putdbact  "$tmpfile"
-			putqueue  "$tmpfile" 
-			putdbarch "$tmpfile"
-		fi
-		rm "$tmpfile"	
-    fi  
+		case $fail in
+		0)
+			if sync "$tmpfile"; then 	
+				putdbact  "$tmpfile"
+				putqueue  "$tmpfile" 
+				putdbarch "$tmpfile"
+			fi
+			rm "$tmpfile"	
+    	;;
+		1)
+			rm "$tmpfile" 2>/dev/null	
+			while read objaddr type oidtable oidnum; do  
+				j=0
+				for i in $(uncover $oidnum); do
+					echo $asduaddr $(($objaddr + $j)) $type "1" $(setqds "IV") $(get_pctstamp) >> "$tmpfile"
+					j=$(($j + 1))
+				done
+			done <"$OID/$model"
+			
+			if sync "$tmpfile"; then 	
+				putdbact  "$tmpfile"
+				putqueue  "$tmpfile" 
+				putdbarch "$tmpfile"
+			fi
+			rm "$tmpfile"	
+		;;
+		esac
+	fi  
 done <"$RTU"
