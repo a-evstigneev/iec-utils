@@ -39,7 +39,7 @@ shift $(($OPTIND - 1))
 [ -n "$oid" ] && OID=$oid
 
 while read asduaddr ip model; do
-    if [ "$model" = "mikrotik" ]; then
+    if [ -f "$OID/$model" ]; then
         mkdir -p $DB_ARCH/$asduaddr
 		tmpfile="$DB_ARCH/$asduaddr/tmpsnmp"	
 		fail=0
