@@ -58,3 +58,13 @@ putdbact()
 		sync "$DB_ACT/$asduaddr/$type/$objaddr"
 	done <"$file"
 }
+
+rangetosec()
+{
+    if echo "$1" | grep -q "-"; then
+        seq -s " " $(echo "$1" | tr - " ")
+    else
+        echo "$1"
+    fi
+}
+
