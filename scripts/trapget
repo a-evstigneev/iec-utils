@@ -24,6 +24,7 @@ snmptrapd -Lo -OnQ -n -f -F "%V;% %b;%v\n" |  sed -u -n 's/.*: \[\(.*\)\]:.*->.*
 		EOF
 
 		if [ -f "$OID/$model" ]; then
+			mkdir -p $DB_ARCH/$asduaddr
 			tmpfile="$DB_ARCH/$asduaddr/tmpsnmptrap"
 			while read objaddr type oidtable oidrange; do
 				j=0

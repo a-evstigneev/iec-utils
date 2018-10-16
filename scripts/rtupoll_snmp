@@ -51,7 +51,7 @@ while read asduaddr ip model; do
 
 		case $fail in
 		0)
-			if sync "$tmpfile"; then 	
+			if sync "$tmpfile" 2>/dev/null; then 	
 				putdbact  "$tmpfile"
 				putqueue  "$tmpfile" 
 				putdbarch "$tmpfile"
@@ -68,7 +68,7 @@ while read asduaddr ip model; do
 				done
 			done <"$OID/$model"
 			
-			if sync "$tmpfile"; then 	
+			if sync "$tmpfile" 2>/dev/null; then 	
 				putdbact  "$tmpfile"
 				putqueue  "$tmpfile" 
 				putdbarch "$tmpfile"
