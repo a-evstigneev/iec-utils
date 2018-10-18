@@ -4,44 +4,67 @@
 . $IECDIR/io_utils #get_pctstamp
 . $IECDIR/db_utils
 
+getvboid()
+{
+	echo "$1" | cut -d'=' -f 1 | tr -d ' '
+
+}
+
+getvbval()
+{
+	echo "$1" | cut -d'=' -f 2 | tr -d ' '
+}
+
+# Traptype
 LINKDOWN=".1.3.6.1.6.3.1.1.5.3"
 LINKUP=".1.3.6.1.6.3.1.1.5.4"
+
 trset="1,2 0,1"
 
 snmptrapd -Lo -OnQ -n -f -F "%V;% %b;%v\n" |  sed -u -n 's/.*: \[\(.*\)\]:.*->.*;\(.*;.*;.*;.*;\)/\1;\2/p' | \
-	while IFS=";" read agentaddr uptime snmpTrapOid ifIndex ifAdminStatus ifOperStatus; do
-		ifInd_oid=$(echo $ifIndex | cut -d'=' -f 1)
-		ifInd_val=$(echo $ifIndex | cut -d'=' -f 2)
-
-		ifAdmStat_oid=$(echo $ifAdminStatus | cut -d'=' -f 1)
-		ifAdmStat_val=$(echo $ifAdminStatus | cut -d'=' -f 2)
+	while IFS=";" read agentaddr uptime snmpTrapOid varbinds; do 
+		traptype=$(getvbval "$snmpTrapOid")
 		
-		ifOperStat_oid=$(echo $ifOperStatus | cut -d'=' -f 1)
-		ifOperStat_val=$(echo $ifOperStatus | cut -d'=' -f 2)
+		case "$traptype" in
+		"$LINKDOWN" | "$LINKUP")
+			IFS=";" read ifIndex ifAdminStatus ifOperStatus <<-EOF
+				$varbinds
+			EOF
+
+			ifInd_oid=$(getvboid "$ifIndex")
+			ifInd_val=$(getvbval "$ifIndex")
+			
+			ifAdmStat_oid=$(getvboid "$ifAdminStatus")
+			ifAdmStat_val=$(getvbval "$ifAdminStatus")
+			
+			ifOperStat_oid=$(getvboid "$ifOperStatus")
+			ifOperStat_val=$(getvbval "$ifOperStatus")
+			
+			read asduaddr ipaddr model <<-EOF
+				$(grep "$agentaddr" $RTU)
+			EOF
+
+			if [ -f "$OID/$model" ]; then
+				mkdir -p $DB_ARCH/$asduaddr
+				tmpfile="$DB_ARCH/$asduaddr/tmpsnmptrap"
+				while read objaddr type oidtable oidrange; do
+					j=0
+					for i in $(rangetosec $oidrange); do
+						if echo "${oidtable}.$i" | grep -q $ifOperStat_oid; then
+							echo $asduaddr $(($objaddr + $j)) $type $(echo $ifOperStat_val | tr $trset) - $(get_pctstamp) >> $tmpfile
+							break 2
+						fi
+						j=$(($j + 1))
+					done
+				done <"$OID/$model"
+			fi
+		;;
+		esac
 		
-		read asduaddr ipaddr model <<-EOF
-			$(grep "$agentaddr" $RTU)
-		EOF
-
-		if [ -f "$OID/$model" ]; then
-			mkdir -p $DB_ARCH/$asduaddr
-			tmpfile="$DB_ARCH/$asduaddr/tmpsnmptrap"
-			while read objaddr type oidtable oidrange; do
-				j=0
-				for i in $(rangetosec $oidrange); do
-					if echo "${oidtable}.$i" | grep -q $ifOperStat_oid; then
-						echo $asduaddr $(($objaddr + $j)) $type $(echo $ifOperStat_val | tr $trset) - $(get_pctstamp) >> $tmpfile
-						break 2
-					fi
-					j=$(($j + 1))
-				done
-			done <"$OID/$model"
-		fi
-
 		if sync "$tmpfile" 2>/dev/null; then
 			putdbact  "$tmpfile"
 			putqueue  "$tmpfile"
 			putdbarch "$tmpfile"
 		fi
-		rm "$tmpfile"
+		rm "$tmpfile" 2>/dev/null
 	done

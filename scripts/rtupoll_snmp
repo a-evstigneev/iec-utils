@@ -56,7 +56,6 @@ while read asduaddr ip model; do
 				putqueue  "$tmpfile" 
 				putdbarch "$tmpfile"
 			fi
-			rm "$tmpfile"	
     	;;
 		1)
 			rm "$tmpfile" 2>/dev/null	
@@ -73,8 +72,9 @@ while read asduaddr ip model; do
 				putqueue  "$tmpfile" 
 				putdbarch "$tmpfile"
 			fi
-			rm "$tmpfile"	
 		;;
 		esac
-	fi  
+	fi
+
+	rm "$tmpfile" 2>/dev/null
 done <"$RTU"
