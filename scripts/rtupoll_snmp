@@ -2,7 +2,8 @@
 
 . $IECDIR/iecenv #DB_ARCH, DB_ACT, RTU, CTS, VARDIR, OID
 . $IECDIR/io_utils #get_pctstamp
-. $IECDIR/db_utils
+. $IECDIR/db_utils # putdbact(), putqueue(), putdbarch()
+. $IECDIR/snmp_utils # rangetosec(), getvboid(), getvbval()
 
 usage() 
 {
@@ -18,18 +19,20 @@ setqds()
 	echo $qds
 }
 
+trset="1,2 0,1"
+
 while getopts "d:" opt; do
     case $opt in
-    d) oid=$OPTARG ;;
+    d) oiddir=$OPTARG ;;
     *) usage; exit ;;
     esac
 done
 
 shift $(($OPTIND - 1))
 
-[ -n "$oid" ] && OID=$oid
+[ -n "$oid" ] && OID="$oiddir"
 
-while read asduaddr ip model; do
+while read asduaddr ipaddr model; do
     if [ -f "$OID/$model" ]; then
         mkdir -p $DB_ARCH/$asduaddr
 		tmpfile="$DB_ARCH/$asduaddr/tmpsnmp"	
@@ -38,10 +41,12 @@ while read asduaddr ip model; do
 		while read objaddr type oidtable oidrange; do  
             j=0
 			for i in $(rangetosec $oidrange); do
-            	if value=$(snmpget -Oqn -v2c -c public "$ip" "${oidtable}.$i" 2>/dev/null); then
-					value=$(echo $value | cut -d " " -f 2)
-					echo $asduaddr $(($objaddr + $j)) $type $value - $(get_pctstamp) >> "$tmpfile"
-                else
+            	if value=$(snmpget -Oqn -v2c -c public "$ipaddr" "${oidtable}.$i" 2>/dev/null); then
+					value=$(echo $value | cut -d' ' -f 2- | sed 's/^[[:blank:]]*//;s/[[:blank:]]*$//')
+					if ! [ "$value" = "No Such Object available on this agent at this OID" ]; then
+						echo $asduaddr $(($objaddr + $j)) $type $(echo $value | tr $trset) - $(get_pctstamp) >> "$tmpfile"
+                	fi
+				else
 					fail=1
 					break 2
 				fi
