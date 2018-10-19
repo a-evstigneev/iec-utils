@@ -11,14 +11,14 @@ LINKUP=".1.3.6.1.6.3.1.1.5.4"
 
 trset="1,2 0,1"
 
-snmptrapd -Lo -OnQ -n -f -F "%V;% %b;%v\n" |  sed -u -n 's/.*: \[\(.*\)\]:.*->.*;\(.*;.*;.*;.*;\)/\1;\2/p' | \
-	while IFS=";" read agentaddr uptime snmpTrapOid varbinds; do 
+snmptrapd -Lo -OnQ -n -f -F "%V;% %b;%v\n" |  sed -u -n 's/.*: \[\(.*\)\]:.*->\[.*\]:[0-9]\{1,5\};\(.*;\)/\1;\2/p' | \
+	while IFS=";" read agentaddr uptime snmpTrapOid varbind; do 
 		traptype=$(getvbval "$snmpTrapOid")
-		
+
 		case "$traptype" in
 		"$LINKDOWN" | "$LINKUP")
 			IFS=";" read ifIndex ifAdminStatus ifOperStatus <<-EOF
-				$varbinds
+				$varbind
 			EOF
 
 			ifInd_oid=$(getvboid "$ifIndex")
