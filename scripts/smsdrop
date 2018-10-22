@@ -5,7 +5,7 @@
 . $IECDIR/sms_utils
 . $IECDIR/db_utils
 
-dev=$1; asduaddr=$2; dcs=$3; scts=$4; sms=$5
+model=$1; asduaddr=$2; dcs=$3; scts=$4; sms=$5
 
 timestamp=$(get_smststamp "$scts")
 sms=$(smsdecode "$dcs" "$sms")
@@ -16,7 +16,7 @@ archdir="$DB_ARCH/$asduaddr"
 tmpfile="$archdir/tmpsms"
 [ -f "$tmpfile" ] && rm "$tmpfile" 2>/dev/null 
 
-if [ -f "$SMSPARSER/$dev" ]; then 
+if [ -f "$SMSPARSER/$model" ]; then 
 	iecvalue=$(/usr/bin/printf '%s\n' "$sms" | $SMSPARSER/$dev "$asduaddr" "$timestamp")
 fi
 
@@ -26,10 +26,13 @@ case $? in
 			$iecvalue
 		EOF
 		
-		sync "$tmpfile" || exit 1
+		sync "$tmpfile" || exit 3
+	;;
+	1)
+		exit 1 # missing parser for message $model 
 	;;
 	2)
-		exit 2
+		exit 2 # incorrect format
 	;;
 esac
 

@@ -1,13 +1,13 @@
 #!/bin/sh
 
-. $IECDIR/iecenv #DB_ARCH, DB_ACT, RTU, CTS, VARDIR, OID
-. $IECDIR/io_utils #get_pctstamp
+. $IECDIR/iecenv # DB_ARCH, DB_ACT, RTU, CTS, VARDIR, OID
+. $IECDIR/io_utils # get_pctstamp(), rangeconv()
 . $IECDIR/db_utils # putdbact(), putqueue(), putdbarch()
-. $IECDIR/snmp_utils # rangetosec(), getvboid(), getvbval()
+. $IECDIR/snmp_utils # rangeconv(), getvboid(), getvbval()
 
 usage() 
 {
-    echo "Usage: $0 [ -d dir ]"
+    echo "Usage: $0 [ -d dir ] [ rtu.conf ]"
     echo " "
     echo "  -d  oid file directory"
     echo " "
@@ -29,52 +29,59 @@ while getopts "d:" opt; do
 done
 
 shift $(($OPTIND - 1))
+[ -n "$oiddir" ] && OID="$oiddir"
 
-[ -n "$oid" ] && OID="$oiddir"
+if [ $# -eq 1 ] && [ -f "$1" ]; then rtu="$1"; else rtu=$RTU; fi 
 
 while read asduaddr ipaddr model; do
     if [ -f "$OID/$model" ]; then
         mkdir -p $DB_ARCH/$asduaddr
 		tmpfile="$DB_ARCH/$asduaddr/tmpsnmp"	
-		fail=0
-
+		isfail=0
+		
 		while read objaddr type oidtable oidrange; do  
             j=0
-			for i in $(rangetosec $oidrange); do
+			for i in $(rangeconv $oidrange); do
             	if value=$(snmpget -Oqn -v2c -c public "$ipaddr" "${oidtable}.$i" 2>/dev/null); then
 					value=$(echo $value | cut -d' ' -f 2- | sed 's/^[[:blank:]]*//;s/[[:blank:]]*$//')
 					if ! [ "$value" = "No Such Object available on this agent at this OID" ]; then
 						echo $asduaddr $(($objaddr + $j)) $type $(echo $value | tr $trset) - $(get_pctstamp) >> "$tmpfile"
-                	fi
+					else
+						logmsgtime "Object not available at OID ${oidtable}.$i on agent $model ($ipaddr)"
+					fi
 				else
-					fail=1
+					isfail=1
 					break 2
 				fi
                 j=$(($j + 1))
             done
 		done <"$OID/$model"
-
-		case $fail in
+		
+		case $isfail in
 		0)
+			logmsgtime "Device $model ($ipaddr) polled successfully"
 			if sync "$tmpfile" 2>/dev/null; then 	
-				putdbact  "$tmpfile"
 				putqueue  "$tmpfile" 
+				putdbact  "$tmpfile"
 				putdbarch "$tmpfile"
+			else
+				rm "$tmpfile" 2>/dev/null	
 			fi
     	;;
 		1)
+			logmsgtime "Device $model ($ipaddr) polled failed"
 			rm "$tmpfile" 2>/dev/null	
-			while read objaddr type oidtable oidnum; do  
+			while read objaddr type oidtable oidrange; do  
 				j=0
-				for i in $(uncover $oidnum); do
+				for i in $(rangeconv $oidrange); do
 					echo $asduaddr $(($objaddr + $j)) $type "1" $(setqds "IV") $(get_pctstamp) >> "$tmpfile"
 					j=$(($j + 1))
 				done
 			done <"$OID/$model"
 			
 			if sync "$tmpfile" 2>/dev/null; then 	
-				putdbact  "$tmpfile"
 				putqueue  "$tmpfile" 
+				putdbact  "$tmpfile"
 				putdbarch "$tmpfile"
 			fi
 		;;
@@ -82,4 +89,4 @@ while read asduaddr ipaddr model; do
 	fi
 
 	rm "$tmpfile" 2>/dev/null
-done <"$RTU"
+done <"$rtu"

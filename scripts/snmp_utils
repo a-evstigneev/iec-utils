@@ -1,12 +1,3 @@
-rangetosec()
-{
-    if echo "$1" | grep -q "-"; then
-        seq -s " " $(echo "$1" | tr - " ")
-    else
-        echo "$1"
-    fi
-}
-
 getvboid()
 {
     echo "$1" | cut -d'=' -f 1 | sed 's/^[[:blank:]]*//;s/[[:blank:]]*$//'

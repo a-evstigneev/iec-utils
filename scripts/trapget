@@ -1,9 +1,11 @@
 #!/bin/sh
 
-. $IECDIR/iecenv # DB_ARCH, RTU, OID
-. $IECDIR/io_utils # get_pctstamp()
+# Before first start do "sudo setcap CAP_NET_BIND_SERVICE=+eip /usr/sbin/snmptrapd"
+
+. $IECDIR/iecenv # DB_ARCH, RTU, OID, TRAPCONF
+. $IECDIR/io_utils # get_pctstamp(), rangeconv()
 . $IECDIR/db_utils # putdbact(), putqueue(), putdbarch()
-. $IECDIR/snmp_utils # rangetosec(), getvboid(), getvbval()
+. $IECDIR/snmp_utils # getvboid(), getvbval()
 
 # Traptype
 LINKDOWN=".1.3.6.1.6.3.1.1.5.3"
@@ -11,7 +13,7 @@ LINKUP=".1.3.6.1.6.3.1.1.5.4"
 
 trset="1,2 0,1"
 
-snmptrapd -Lo -OnQ -n -f -F "%V;% %b;%v\n" |  sed -u -n 's/.*: \[\(.*\)\]:.*->\[.*\]:[0-9]\{1,5\};\(.*;\)/\1;\2/p' | \
+snmptrapd -Lo -OnQ -n -f -F "%V;% %b;%v\n" -c "$TRAPCONF" | sed -u -n 's/.*: \[\(.*\)\]:.*->\[.*\]:[0-9]\{1,5\};\(.*;\)/\1;\2/p' | \
 	while IFS=";" read agentaddr uptime snmpTrapOid varbind; do 
 		traptype=$(getvbval "$snmpTrapOid")
 
@@ -33,15 +35,15 @@ snmptrapd -Lo -OnQ -n -f -F "%V;% %b;%v\n" |  sed -u -n 's/.*: \[\(.*\)\]:.*->\[
 			read asduaddr ipaddr model <<-EOF
 				$(grep "$agentaddr" $RTU)
 			EOF
-
+			
 			if [ -f "$OID/$model" ]; then
 				mkdir -p $DB_ARCH/$asduaddr
 				tmpfile="$DB_ARCH/$asduaddr/tmpsnmptrap"
 				while read objaddr type oidtable oidrange; do
 					j=0
-					for i in $(rangetosec $oidrange); do
+					for i in $(rangeconv $oidrange); do
 						if [ "${oidtable}.$i" = "$ifOperStat_oid" ]; then
-							echo $asduaddr $(($objaddr + $j)) $type $(echo "$ifOperStat_val" | tr $trset) - $(get_pctstamp) >> $tmpfile
+							echo $asduaddr $(($objaddr + $j)) $type $(echo "$ifOperStat_val" | tr $trset) - $(get_pctstamp) >> "$tmpfile"
 							break 2
 						fi
 						j=$(($j + 1))
@@ -50,11 +52,11 @@ snmptrapd -Lo -OnQ -n -f -F "%V;% %b;%v\n" |  sed -u -n 's/.*: \[\(.*\)\]:.*->\[
 			fi
 		;;
 		esac
-		
-		if sync "$tmpfile" 2>/dev/null; then
-			putdbact  "$tmpfile"
+
+		if [ -f "$tmpfile" ] && sync "$tmpfile" 2>/dev/null; then
 			putqueue  "$tmpfile"
+			putdbact  "$tmpfile"
 			putdbarch "$tmpfile"
+			rm "$tmpfile" 2>/dev/null
 		fi
-		rm "$tmpfile" 2>/dev/null
 	done

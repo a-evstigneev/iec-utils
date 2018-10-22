@@ -44,8 +44,8 @@ smssep()
 		asduaddr=$(grep -q $num $RTU && grep $num $RTU | cut -d " " -f 1)
 
 		if [ $asduaddr ]; then
-			dev=$(grep $num $RTU | cut -d " " -f 3)
-			smsdrop $dev $asduaddr $dcs $scts $data &
+			model=$(grep $num $RTU | cut -d " " -f 3)
+			smsdrop $model $asduaddr $dcs $scts $data &
 			
 			wait %1
 			
@@ -54,17 +54,22 @@ smssep()
 				listid="${listid}${id} "
 				tmpfile="$DB_ARCH/$asduaddr/tmpsms" #File was created by smsdrop 
 				logmsg "Sms id $id was written synchronously to disk in $tmpfile"
-				putdbact "$tmpfile"
 				putqueue "$tmpfile"
+				putdbact "$tmpfile"
 				putdbarch "$tmpfile"
 				rm "$tmpfile"
 			;;
 			1)
-				logmsg "Synchronous recording to disk failed"
+				logmsg "Missing parser for sms"
+				listid="${listid}${id} "
 			;;
 			2)
 				logmsg "Sms message format is incorrect"
 				listid="${listid}${id} "
+			;;
+			3)
+
+				logmsg "Synchronous recording to disk failed"
 			;;
 			esac
 		else

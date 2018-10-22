@@ -18,3 +18,5 @@ OID="$IECDIR/oid"
 SMSPARSER="$IECDIR/smsparser"
 
 RTUPOLL_SHEDULE="$IECDIR/rtupoll_shedule"
+
+SNMPTRAPCONF="$IECDIR/snmptrapd.conf"

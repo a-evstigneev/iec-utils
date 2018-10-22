@@ -18,8 +18,8 @@ make_crontab()
 	echo "PATH=$PATH" >> $CRONTAB_FILE
 	echo "IECDIR=$IECDIR" >> $CRONTAB_FILE
 	
-	while read time cmd;do 
-		echo "$time $cmd $RTU 2>>$LOGDIR/rtupoll.log" >> $CRONTAB_FILE
+	while read cmd time;do 
+		echo "$time $cmd $RTU 2>>$LOGDIR/${cmd}.log" >> $CRONTAB_FILE
 	done <<-EOF
 		$(cat $RTUPOLL_SHEDULE)
 	EOF

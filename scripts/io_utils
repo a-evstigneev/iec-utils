@@ -116,3 +116,13 @@ get_pctstamp()
 
 	/usr/bin/printf '%s\n' "${nanosec}:${min}:${hour}:${day_m}:${day_w}:${month}:${year}"
 }
+
+rangeconv()
+{
+    if echo "$1" | grep -q "-"; then
+        seq -s " " $(echo "$1" | tr - " ")
+    else
+        echo "$1"
+    fi
+}
+

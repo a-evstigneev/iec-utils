@@ -9,15 +9,15 @@ putqueue()
 		if cp "$file" "$dropmsg" 2>/dev/null && sync "$dropmsg" 2>/dev/null; then
 			inode="$VARDIR/$cts/work/drop/$(stat -c %i $dropmsg)"
 			if mv "$dropmsg" "$inode" 2>/dev/null && sync "$inode" 2>/dev/null; then
-				printf "1" > $VARDIR/$cts/work/trigger # Trigger activation for each instance quemngr
-				logmsg "File $file was written synchronously in $inode"
+				printf "1" > $VARDIR/$cts/work/trigger 2>/dev/null # Trigger activation for each instance quemngr
+				logmsgtime "File $file was written synchronously in $inode"
 			else
 				rm "$inode" 2>/dev/null
-				logmsg "Сoping file $file to file $inode is failed"
+				logmsgtime "Сoping file $file to file $inode is failed"
 			fi
 	    else
 			rm "$dropmsg" 2>/dev/null   
-			logmsg "Сoping file $file to file "$dropmsg" is failed"
+			logmsgtime "Сoping file $file to file "$dropmsg" is failed"
 		fi
 	done <<-EOF
 		$(cat "$CTS" | grep -v '^#' | sed '/^$/d')
@@ -32,9 +32,9 @@ putdbarch()
 	read asduaddr rest <"$file"
 	archmsg=$DB_ARCH/$asduaddr/$(/bin/date '+%G-%m-%d_%H:%M:%S')_$(mktemp -u "XXXXXX")
 	if cp "$file" "$archmsg" 2>/dev/null && sync "$archmsg" 2>/dev/null; then
-		logmsg "Copying file $file to file $archmsg was done"
+		logmsgtime "Copying file $file to file $archmsg was done"
 	else
-		logmsg "Copying file $file to file $archmsg failed"
+		logmsgtime "Copying file $file to file $archmsg failed"
 	fi
 }
 
@@ -57,14 +57,6 @@ putdbact()
 		echo "$value" "$qds" > "$DB_ACT/$asduaddr/$type/$objaddr"
 		sync "$DB_ACT/$asduaddr/$type/$objaddr"
 	done <"$file"
-}
 
-rangetosec()
-{
-    if echo "$1" | grep -q "-"; then
-        seq -s " " $(echo "$1" | tr - " ")
-    else
-        echo "$1"
-    fi
+	logmsgtime "Copying file $file to dir $DB_ACT was done"
 }
-
