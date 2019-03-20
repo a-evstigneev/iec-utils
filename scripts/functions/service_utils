@@ -1,0 +1,23 @@
+get_pctstamp()
+{
+	local year month day_w day_m hour min nanosec
+
+	year=$(date "+%y")
+	month=$(date "+%-m")
+	day_w=$(date "+%-u")
+	day_m=$(date "+%-d")
+	hour=$(date "+%-H")
+	min=$(date "+%-M")
+	nanosec=$(date "+%-N")
+
+	/usr/bin/printf '%s\n' "${nanosec}:${min}:${hour}:${day_m}:${day_w}:${month}:${year}"
+}
+
+rangeconv()
+{
+    if echo "$1" | grep -q "-"; then
+        seq -s " " $(echo "$1" | tr - " ")
+    else
+        echo "$1"
+    fi
+}

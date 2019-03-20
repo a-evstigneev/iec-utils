@@ -1,0 +1,393 @@
+hextoint()
+{
+	/bin/echo "ibase=16; $1" | bc
+}
+
+hextobin()
+{
+	local binstr 
+	local strlen
+	local addlen
+
+	binstr=$(/bin/echo "obase=2; ibase=16; $1" | bc) 
+	strlen=$(expr length "$binstr")		
+
+	if ! [ $(expr $strlen % 8) -eq 0 ]; then
+		if [ $strlen -gt 8 ]; then
+			addlen=$(expr $strlen % 8)
+		elif [ $strlen -lt 8 ]; then
+			addlen=$(expr 8 - $strlen)	
+		fi
+	
+		while [ $addlen -gt 0 ]; do
+			binstr=0${binstr}
+			addlen=$(($addlen - 1))
+		done
+	fi
+
+	echo "$binstr"
+}
+
+bintohex()
+{
+	echo $(/bin/echo "obase=16; ibase=2; $1" | bc) 
+}
+
+hextodec()
+{
+	echo $(/bin/echo "obase=10; ibase=16; $1" | bc) 
+}
+
+
+dectohex()
+{
+	if [ $1 -gt 15 ]; then	
+		echo $(/bin/echo "obase=16; ibase=10; $1" | bc) 
+	elif [ $1 -le 15 ]; then
+		echo 0$(/bin/echo "obase=16; ibase=10; $1" | bc) 
+	fi
+}
+
+get_numtype()
+{
+	local NPI # Numbering plan identification
+	local TON # Type of number	
+	
+	NPI=$(echo $(hextobin $1) | cut -b 5-)
+	TON=$(echo $(hextobin $1) | cut -b 2-4)
+	
+	# NPI="0001" # ISDN/telephone numbering plan
+	# NPI="0000" # Unknown
+	
+	case $TON in
+		"001")
+			echo "INTER"
+		;;
+		"101")
+			echo "ALPHANUM"
+		;;
+		"000")
+			echo "UNKNOWN"
+		;;
+	esac
+}
+
+get_number()
+{
+	local destaddr=$1
+	local number
+	
+	number=$(echo $destaddr | sed -r 's/(.)(.)/\2\1/g')
+	echo ${number%F}
+}
+
+get_destaddr()
+{
+	local number
+	local destaddr	
+	
+	number=$(echo $1 | tr -d '+')
+	if [ $(expr $(expr length $number) % 2) -gt 0 ]; then
+		number=${number}F
+	fi
+	destaddr=$(echo $number | sed -r 's/(.)(.)/\2\1/g')
+	echo $destaddr
+}
+
+get_encoding()
+{
+	local encoding=$1
+	
+	case $encoding in
+		"00")
+			echo "GSM"
+		;;
+		"08")
+			echo "UCS2"
+		;;
+		"19")
+			echo "UCS2"
+		;;
+		*) 
+			echo "Unknown (${encoding})"
+		;;
+	esac
+}
+
+gsmdecode()
+{
+	local str=$1
+	local strlen=$(expr length $str)
+	local pos=2
+	local rest=""
+	local strdecode=""
+	local ch
+
+	while [ $strlen -gt 0 ]; do
+		octet=$(hextobin $(echo $str | cut -b -2))
+		ch=$(echo $octet | cut -b $(($pos))-)${rest} # 7-bit character in binary representation
+		rest=$(echo $octet | cut -b -$(($pos - 1)))
+	
+		if ! [ "$ch" = "0000000" ]; then 
+			strdecode=${strdecode}\\x$(bintohex ${ch})
+		fi
+
+		pos=$(($pos + 1))
+		
+		if [ $pos -eq 9 ]; then 
+			pos=2
+			strdecode=${strdecode}\\x$(bintohex ${rest})
+			rest=""
+		fi
+		
+		strlen=$(($strlen - 2))
+		if [ ! $strlen -eq 0 ]; then
+			str=$(echo $str | cut -b 3-) 
+		fi
+	done
+	
+	/usr/bin/printf '%b\n' "$strdecode"
+}
+
+ucs2decode()
+{
+	local str=$1
+
+	/bin/echo -n -e `/bin/echo $str | sed -r 's/.{2}/\\\\x&/g'` | /usr/bin/iconv -f UCS-2BE 2>/dev/null
+}
+
+smsdecode()
+{
+	local encoding="$1"
+	local string="$2"
+
+	case "$encoding" in
+		"00")
+			gsmdecode "$string"	
+		;;
+		"08")
+			ucs2decode "$string"
+		;;
+		"19")
+			ucs2decode "$string"
+		;;
+		*)
+			echo "$string"
+		;;
+	esac
+}
+
+ucs2encode()
+{
+	local string
+	
+	read string
+	/usr/bin/printf '%s' "$string" | iconv -t UCS-2BE | xxd -p -u -c 256
+}
+
+gsmencode()
+{
+	:
+}
+
+get_smststamp()
+{
+	local scts=$1
+	local d1 d2
+	local year month day_m day_w hour min nanosec
+
+	d1=$(echo $scts | cut -b 1)
+	d2=$(echo $scts | cut -b 2)
+	scts=$(echo $scts | cut -b 3-)
+	year=${d2}${d1}
+
+	d1=$(echo $scts | cut -b 1)
+	d2=$(echo $scts | cut -b 2)
+	scts=$(echo $scts | cut -b 3-)
+	[ "$d2" -eq 0 ] && d2=""
+	month=${d2}${d1}
+	
+	d1=$(echo $scts | cut -b 1)
+	d2=$(echo $scts | cut -b 2)
+	scts=$(echo $scts | cut -b 3-)
+	[ "$d2" -eq 0 ] && d2=""
+	day_m=${d2}${d1}
+
+	d1=$(echo $scts | cut -b 1)
+	d2=$(echo $scts | cut -b 2)
+	scts=$(echo $scts | cut -b 3-)
+	[ "$d2" -eq 0 ] && d2=""
+	hour=${d2}${d1}
+	
+	d1=$(echo $scts | cut -b 1)
+	d2=$(echo $scts | cut -b 2)
+	scts=$(echo $scts | cut -b 3-)
+	[ "$d2" -eq 0 ] && d2=""
+	min=${d2}${d1}
+	
+	
+	d1=$(echo $scts | cut -b 1)
+	d2=$(echo $scts | cut -b 2)
+	scts=$(echo $scts | cut -b 3-)
+	[ "$d2" -eq 0 ] && d2=""
+	nanosec=$((${d2}${d1}*1000))
+	
+	day_w=$(date -d $year-$month-$day_m +%u)
+
+	/usr/bin/printf '%s\n' "${nanosec}:${min}:${hour}:${day_m}:${day_w}:${month}:${year}"
+}
+
+smsparse()
+{
+	local smsinfo
+	local PDU
+	
+	while read smsindex; do
+		
+		if echo "$smsindex" | grep -q -e 'OK' -e 'ERROR'; then
+			/usr/bin/printf '%s\n' $smsindex
+			break
+		fi
+		
+		SMSIND=$(echo $smsindex | sed 's/+CMGL: \([0-9]\{1,\}\),.*/\1/')	
+
+		read PDU
+		PDUOLD=$PDU
+		
+		TP_SCA_LEN=$(hextoint $(echo $PDU | cut -b -2)) # Service Center Address length
+			PDU=$(echo $PDU | cut -b 3-)
+		
+		TP_SCA_TYPE=$(echo $PDU | cut -b -2) # Service Center Address type
+			PDU=$(echo $PDU | cut -b 3-)
+		
+		TP_SCA_NUM=$(echo $PDU | cut -b -$((2*$TP_SCA_LEN - 2))) # Service Center Address number
+			PDU=$(echo $PDU | cut -b $((2*$TP_SCA_LEN - 1))-)
+
+		
+		TP_TYPE=$(echo $PDU | cut -b -2) # Type PDU 
+		TP_UDHI=$(echo $(hextobin $TP_TYPE) | cut -b 2) #User Data Header Indicator
+			PDU=$(echo $PDU | cut -b 3-)
+
+		TP_OA_LENGTH=$(hextoint $(echo $PDU | cut -b -2)) # Originating Address length
+			PDU=$(echo $PDU | cut -b 3-)
+
+		TP_OA_FORMAT=$(echo $PDU | cut -b -2) # Originating Address format
+			PDU=$(echo $PDU | cut -b 3-)
+
+		TP_OA_TYPE=$(get_numtype $TP_OA_FORMAT) # Originating Address type
+
+		case $TP_OA_TYPE in
+		"INTER")
+			TP_OA_NUM=$(get_number $(echo $PDU | cut -b -$((1+$TP_OA_LENGTH)))) # Originating Address number
+			PDU=$(echo $PDU | cut -b $((2+$TP_OA_LENGTH))-)
+		;;
+		"ALPHANUM")
+			if [ $(($TP_OA_LENGTH % 2)) -eq 0 ]; then 
+				TP_OA_NUM=$(gsmdecode $(echo $PDU | cut -b -$(($TP_OA_LENGTH)))) 
+				PDU=$(echo $PDU | cut -b $(($TP_OA_LENGTH + 1))-)
+			else
+				TP_OA_NUM=$(gsmdecode $(echo $PDU | cut -b -$(($TP_OA_LENGTH + 1)))) 
+				PDU=$(echo $PDU | cut -b $(($TP_OA_LENGTH + 2))-)
+			fi
+		;;
+		"UNKNOWN")
+			TP_OA_NUM=$(get_number $(echo $PDU | cut -b -$TP_OA_LENGTH))
+			PDU=$(echo $PDU | cut -b $((1+$TP_OA_LENGTH))-)	
+		;;
+		esac
+		
+		TP_PID=$(echo $PDU | cut -b -2) # Protocol identifier
+			PDU=$(echo $PDU | cut -b 3-)
+
+		TP_DCS=$(echo $PDU | cut -b -2) # Data Coding Scheme
+			PDU=$(echo $PDU | cut -b 3-)
+
+		TP_SCTS=$(echo $PDU | cut -b -14) # Service Centre Time Stamp
+			PDU=$(echo $PDU | cut -b 15-)
+
+		TP_UDL=$(echo $PDU | cut -b -2) # User Data Length
+			PDU=$(echo $PDU | cut -b 3-)
+
+		case $TP_UDHI in
+			"0") 
+				TP_UDH=""
+				TP_UD=$PDU
+			;;
+			"1")
+				LENBYTE=$(hextodec $(echo $PDU | cut -b -2)) # Length header in bytes
+				HL=$((2 * ($LENBYTE + 1))) # Full length header equals 12 or 14 symbols
+				TP_UDH=$(echo $PDU | cut -b -$HL) # User Data Header
+					PDU=$(echo $PDU | cut -b $((1+$HL))-)
+				
+				if [ $HL -eq 12 ]; then
+					TP_REF_NUM=$(echo $TP_UDH | cut -b 7-8) # CSMS reference number
+				elif [ $HL -eq 14 ]; then
+					TP_REF_NUM=$(echo $TP_UDH | cut -b 7-10)
+				fi
+				TP_TOTAL_PART=$(hextoint $(echo $TP_UDH | cut -b $(($HL-3))-$(($HL-2)))) # Total number of parts
+				TP_SER_PART=$(hextoint $(echo $TP_UDH | cut -b $(($HL-1))-$TP_UDHL)) # This part's number in the sequence
+				
+				if [ $TP_DCS = "00" ]; then
+					TP_UD=$(echo $TP_UDH | tr '[:alnum:]' '0')${PDU} # Zero the header for sms with GSM 7-bit encoding. A zero header will be needed to decode
+				elif [ $TP_DCS = "08" ]; then 
+					TP_UD=${PDU} # Delete the header for sms with UCS2 encoding
+				fi
+				
+				if [ "$TP_OA_TYPE" = "ALPHANUM" ] || [ "$TP_OA_TYPE" = "UNKNOWN" ]; then # Если номер буквенно-цифровой, отдельные части не объединяем
+					TP_REF_NUM=""
+					TP_TOTAL_PART=""
+					TP_SER_PART=""
+				fi
+			
+			;;
+		esac
+
+		echo ${SMSIND}:${TP_OA_NUM}:${TP_DCS}:${TP_SCTS}:${TP_REF_NUM}:${TP_TOTAL_PART}:${TP_SER_PART}:${TP_UD}
+		TP_OA_NUM=""; TP_DCS=""; TP_SCTS=""; TP_REF_NUM=""; TP_TOTAL_NUM=""; TP_SEQ_NUM=""; TP_UD="";
+	done
+}
+
+smsjoin()
+{
+	local string
+		
+	while read string; do
+		/usr/bin/printf '%s\n' "$string"
+	done | 	awk -F: '
+	BEGIN {
+
+	}
+	
+	{
+		if ( ($0 ~ "OK") || ($0 ~ "ERROR")) {
+			print $0
+		}
+		else if ($8 == "") {
+			next
+		}
+		else if ($5 == "") {
+			printf("%s:%s:%s:%s:%s\n", $1, $2, $3, $4, $8)
+			next
+		}
+		else {
+			if (INDEX[$5] == "")
+				INDEX[$5]=$1
+			else
+				INDEX[$5]=INDEX[$5] " " $1
+			NUM[$5]=$2
+			DCS[$5]=$3
+			SCTS[$5]=$4
+			TOTALPART[$5]=$6
+			CURPART[$5]=CURPART[$5] + 1
+			DATA[$5]=DATA[$5]$8
+		}
+	}
+	END {
+		for (var in DATA) {
+			if (TOTALPART[var] == CURPART[var]) {
+				printf("%s:%s:%s:%s:%s\n", INDEX[var], NUM[var], DCS[var], SCTS[var], DATA[var])
+			}
+		}
+	}
+' 
+}
