@@ -1,0 +1,14 @@
+get_pctstamp()
+{
+	# timestamp format "${nanosec}:${min}:${hour}:${day_m}:${day_w}:${month}:${year}"
+	date "+%-N:%-M:%-H:%-d:%-u:%-m:%y"
+}
+
+rangeconv()
+{
+    if echo "$1" | grep -q "-"; then
+        seq -s " " $(echo "$1" | tr - " ")
+    else
+        echo "$1"
+    fi
+}

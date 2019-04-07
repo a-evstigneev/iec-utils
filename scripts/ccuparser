@@ -1,0 +1,6 @@
+#!/bin/sh
+while read string; do
+	if echo $string | grep -q "Keepalive"; then
+		exit 23
+	fi
+read 

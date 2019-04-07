@@ -17,7 +17,7 @@ tmpfile="$archdir/tmpsms"
 [ -f "$tmpfile" ] && rm "$tmpfile" 2>/dev/null 
 
 if [ -f "$SMSPARSER/$model" ]; then 
-	iecvalue=$(/usr/bin/printf '%s\n' "$sms" | $SMSPARSER/$dev "$asduaddr" "$timestamp")
+	iecvalue=$(/usr/bin/printf '%s\n' "$sms" | $MSGPARSER/$dev "$asduaddr" "$timestamp")
 fi
 
 case $? in

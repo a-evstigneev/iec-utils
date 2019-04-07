@@ -1,0 +1,48 @@
+#!/bin/sh
+
+IECDIR=/home/artem/git-repo/iec-utils/scripts
+SHFUNC=$IECDIR/sh_functions
+MSGPARSERS=$IECDIR/msgparsers
+
+. $SHFUNC/log_utils
+. $SHFUNC/service_utils
+. $SHFUNC/db_utils
+
+user="admin1"
+imei="863833024072340"
+pass="12345678"
+url="https://ccu.sh"
+getstate="/data.cgx?cmd=%7B%22Command%22:%22GetStateAndEvents%22%7D"
+events="/events"
+
+# 1. После первого запуска необходимо прочитать все необходимые значения ТС и ТИ
+# 2. После каждого переподключения необходимо прочитать все необходисые ТС и ТИ
+
+while true; do
+#	curl -s -N --connect-timeout 15 --fail-early --keepalive --keepalive-time 15 --user ${user}@${imei}:${pass} ${url}${events} | \
+	cat | \
+	sed -u '/^[[:space:]]*$/d' | sed -u 's/^data:\(.*\)$/\1/g' | \
+	while read string; do 
+		case "$string" in
+		'{"Type":"Keepalive"}') 
+			echo Keepalive 
+			continue 
+		;;
+		'{"Type":"NewEvents"}') 
+			response=$(curl -s -N --connect-timeout 15 --fail-early --keepalive --keepalive-time 15 --user ${user}@${imei}:${pass} ${url}${getstate})
+			case $? in
+				0) echo Code 0, $response ;;  #  iecvalue=$(/usr/bin/printf '%s\n' "$response" | $MSGPARSERS/ccu825http) ;;
+				6) echo Code = 6 ;;
+				7) echo Code = 7 ;;
+			esac
+		;;
+		'{"Type":"Close"}') 
+			echo Close 
+			break 
+		;;
+		*) true ;;
+		esac
+	done
+
+	sleep 5
+done
