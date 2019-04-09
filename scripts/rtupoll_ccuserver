@@ -2,47 +2,53 @@
 
 IECDIR=/home/artem/git-repo/iec-utils/scripts
 SHFUNC=$IECDIR/sh_functions
-MSGPARSERS=$IECDIR/msgparsers
+MSGPARSERS=$IECDIR/msg_parsers
 
 . $SHFUNC/log_utils
 . $SHFUNC/service_utils
 . $SHFUNC/db_utils
 
-user="admin1"
-imei="863833024072340"
-pass="12345678"
+
+user="admin1@863833024072340:12345678"
 url="https://ccu.sh"
+
+asduaddr=180
+#user=$2
+#url=$3
+
 getstate="/data.cgx?cmd=%7B%22Command%22:%22GetStateAndEvents%22%7D"
 events="/events"
-
-# 1. После первого запуска необходимо прочитать все необходимые значения ТС и ТИ
-# 2. После каждого переподключения необходимо прочитать все необходисые ТС и ТИ
+issync=0 # Флаг синхронизации
+# 1. После первого запуска необходима синхронизация значений ТС и ТИ с сервером. Просмотр Events, и занесение в базу активных значений всех Inputs и ТИ 
+# 2. После каждого разрыва канала и переподключения нужно ли делать синхронизацию?
+# 3. Разрыва канала может произойти по следующим причинам: проблемы с сетью, проблемы с устройством (пришло сообщение {"Type":"Close"}) 
 
 while true; do
-#	curl -s -N --connect-timeout 15 --fail-early --keepalive --keepalive-time 15 --user ${user}@${imei}:${pass} ${url}${events} | \
+#	curl -s -N --connect-timeout 15 --fail-early --keepalive --keepalive-time 15 --user "$user" "${url}${events}" | \
 	cat | \
-	sed -u '/^[[:space:]]*$/d' | sed -u 's/^data:\(.*\)$/\1/g' | \
+	sed -u -e '/^[[:space:]]*$/d' -e 's/^data:\(.*\)$/\1/' | \
 	while read string; do 
 		case "$string" in
 		'{"Type":"Keepalive"}') 
-			echo Keepalive 
 			continue 
 		;;
 		'{"Type":"NewEvents"}') 
-			response=$(curl -s -N --connect-timeout 15 --fail-early --keepalive --keepalive-time 15 --user ${user}@${imei}:${pass} ${url}${getstate})
+			response=$(curl -s -N --connect-timeout 15 --fail-early --keepalive --keepalive-time 15 --user "$user" "${url}${getstate}")
 			case $? in
-				0) echo Code 0, $response ;;  #  iecvalue=$(/usr/bin/printf '%s\n' "$response" | $MSGPARSERS/ccu825http) ;;
-				6) echo Code = 6 ;;
-				7) echo Code = 7 ;;
+				0) iecvalue=$(/usr/bin/printf '%s\n' "$response" | $MSGPARSERS/ccu825gprs "$asduaddr" "$(get_pctstamp)") ;;
+				6) logmsgtime "The address of the given server could not be resolved (curl exit code = 6)."; break ;;
+				7) logmsgtime "Failed to connect to host $url (curl exit code = 7)"; break ;;
 			esac
+			echo "$iecvalue"
 		;;
 		'{"Type":"Close"}') 
-			echo Close 
+			logmsgtime "Controller has disconnected. The channel will be closed." 
 			break 
 		;;
-		*) true ;;
+		*) logmsgtime "Undefined data. The channel will be closed."; break ;;
 		esac
 	done
-
+	
 	sleep 5
+	logmsgtime "Reconnect to the server $url"
 done

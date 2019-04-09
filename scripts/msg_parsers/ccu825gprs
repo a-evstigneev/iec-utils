@@ -4,24 +4,29 @@ SHFUNC=/home/artem/git-repo/iec-utils/scripts/sh_functions
 . $SHFUNC/service_utils
 . $SHFUNC/log_utils
 
-#comaddr=$1
-#timestamp=$2
+asduaddr=$1
+ts=$2 # timestamp
 
 # Появилась зависимость от jq, необходимо проверять наличие на целевой машине 
 # Написать свой парсер для json
 # test -x $(which jq)
+m_sp_tb_1=30
+m_me_tf_1=36
 
 while read msg; do
-	echo $msg
 	input_len=$(echo $msg | jq ".Inputs | length")
 	event_len=$(echo $msg | jq ".Events | length")
 	
 	for i in $(rangeconv 0-$(($input_len-1))); do
 		value=$(echo $msg | jq ".Inputs[$i].Active")
-		echo $i $value
-	#	jq -n --argjson data "$msg" '$data.Inputs'
+		objaddr=$(($i+1))
+		printf '%s %s %s %s %s %s\n' "$asduaddr" "$objaddr" "$m_sp_tb_1 $value" "-" "$ts"
 	done
-
-
+		#		echo $i $value
+	#	jq -n --argjson data "$msg" '$data.Inputs'
+#	done
+#
+#
 done 
+
 return $?
