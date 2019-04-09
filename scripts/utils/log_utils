@@ -1,0 +1,16 @@
+logmsg()
+{
+	local _msg 
+	
+	_msg=$1
+	/usr/bin/printf '%s\n' "$_msg" >&2 
+}
+
+logmsgtime()
+{
+	local _msg _pid
+	
+	_msg=$1
+	_pid=$(echo $$)
+	/usr/bin/printf '%s\n' "$(LANG=en date '+%b %d %T') $(hostname) $(basename "$0")[${_pid}]: $_msg" >&2
+}

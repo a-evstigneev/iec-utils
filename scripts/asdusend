@@ -1,7 +1,7 @@
 #!/bin/sh
 
-. $IECDIR/iecenv # $LOGDIR, $VARDIR
-. $IECDIR/io_utils
+. $IECDIR/iecenv # LOGDIR, VARDIR
+. $UTILS/log_utils
 
 SUCCESS="Transfer was successful"
 FAIL="Transfer failed"
@@ -38,21 +38,21 @@ while true; do
 		status=$?
 		
 		case "$status" in
-		0) 
-			/usr/bin/printf '%s\n' "$filename $status $SUCCSESS" 
-			logmsgtime "file $filename was transferred successfully, return code 0" 
-		;;
-		2) 
-			/usr/bin/printf '%s\n' "$filename $status $FAIL" 
-			logmsgtime "connection with CTS lost, return code 2" 
-		;;
-		3) 
-			logmsgtime "all deferred messages have been sent, return code 3"
-		;;
-		*) 
-			/usr/bin/printf '%s\n' "$filename $status $FAIL" 
-			logmsgtime "file $filename was not delivered, return code $status"
-		;;
+			0) 
+				/usr/bin/printf '%s\n' "$filename $status $SUCCSESS" 
+				logmsgtime "file $filename was transferred successfully, return code 0" 
+			;;
+			2) 
+				/usr/bin/printf '%s\n' "$filename $status $FAIL" 
+				logmsgtime "connection with CTS lost, return code 2" 
+			;;
+			3) 
+				logmsgtime "all deferred messages have been sent, return code 3"
+			;;
+			*) 
+				/usr/bin/printf '%s\n' "$filename $status $FAIL" 
+				logmsgtime "file $filename was not delivered, return code $status"
+			;;
 		esac
 	fi
 done

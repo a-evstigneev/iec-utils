@@ -1,9 +1,10 @@
 #!/bin/sh
 
 . $IECDIR/iecenv #RTU, CTS, DB_ARCH, VARDIR, DEVLOCK, SMS_NEXTPOLL
-. $IECDIR/io_utils
-. $IECDIR/sms_utils
-. $IECDIR/db_utils
+. $UTILS/io_utils
+. $UTILS/log_utils
+. $UTILS/sms_utils
+. $UTILS/db_utils
 
 usage() 
 {
@@ -89,7 +90,7 @@ devinit()
 	local dev=$1
 
 	for cmd in 'AT+CSCS="UCS2"' "AT+CSMS=0" 'AT+CMGF=0' 'AT+CSDH=1' 'AT+CPMS="SM","SM","SM"' 'AT+CNMI=2,0,0,0,0'; do
-		if rwdev "$dev" "$cmd" response; then
+		if cmdsend "$dev" "$cmd" response; then
 			logmsg "$cmd"
 			logmsg "$response"
 			sleep 0.5
@@ -107,7 +108,7 @@ devinfo()
 	local dev=$1
 
 	for cmd in "AT#LSCRIPT" "AT+CREG?" "AT+CPIN?" "AT+CSQ" "AT+CREG?" "AT+COPS?"; do
-		if rwdev "$dev" "$cmd" response; then
+		if cmdsend "$dev" "$cmd" response; then
 			logmsg "$cmd"
 			logmsg "$response"
 			sleep 0.5
@@ -173,7 +174,7 @@ if [ $get ]; then
 			flock 9
 			
 			logmsgtime "Get sms list from $gsmdev"
-			if rwdev "$gsmdev" "AT+CMGL=4" response; then
+			if cmdsend "$gsmdev" "AT+CMGL=4" response; then
 				smslistid=$(printf '%s\n' "$response" | smsparse | sort -n -t: -k 7 -k 6 -k 5,5 | smsjoin | sort -t: | smssep)
 
 				case $smslistid in
@@ -191,7 +192,7 @@ if [ $get ]; then
 					*)
 						logmsgtime "List of messages to delete $smslistid"
 						for i in $smslistid; do
-							if  rwdev "$gsmdev" "AT+CMGD=$i" response; then
+							if  cmdsend "$gsmdev" "AT+CMGD=$i" response; then
 								logmsg "Delete sms id $i"
 								logmsg "$response"
 							else

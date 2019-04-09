@@ -1,5 +1,5 @@
 # Env variable $IECDIR is initialized in the file iecd
-SHFUNC="$IECDIR/sh_functions"
+UTILS="$IECDIR/utils"
 
 VARDIR="$IECDIR/var"
 RUNDIR="$IECDIR/var/run"
@@ -17,11 +17,10 @@ DEVLOCK="$IECDIR/device.lock"
 SMS_NEXTPOLL=15
 
 OID="$IECDIR/oid"
-MSGPARSERS="$IECDIR/msgparsers"
+PARSERS="$IECDIR/parsers"
 
 RTUPOLL_SHEDULE="$IECDIR/rtupoll_shedule"
 
 SNMPTRAPCONF="$IECDIR/snmptrapd.conf"
 
 EMAIL="komisyk@mail.ru"
-

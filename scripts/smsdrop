@@ -1,9 +1,9 @@
 #!/bin/sh
 
-. $IECDIR/iecenv #DB_ACT, DB_ARCH, SMSPARSER
-. $IECDIR/io_utils
-. $IECDIR/sms_utils
-. $IECDIR/db_utils
+. $IECDIR/iecenv #DB_ACT, DB_ARCH, PARSERS, UTILS
+. $UTILS/io_utils
+. $UTILS/sms_utils
+. $UTILS/db_utils
 
 model=$1; asduaddr=$2; dcs=$3; scts=$4; sms=$5
 
@@ -16,8 +16,8 @@ archdir="$DB_ARCH/$asduaddr"
 tmpfile="$archdir/tmpsms"
 [ -f "$tmpfile" ] && rm "$tmpfile" 2>/dev/null 
 
-if [ -f "$SMSPARSER/$model" ]; then 
-	iecvalue=$(/usr/bin/printf '%s\n' "$sms" | $MSGPARSER/$dev "$asduaddr" "$timestamp")
+if [ -f "$PARSERS/$model" ]; then 
+	iecvalue=$(/usr/bin/printf '%s\n' "$sms" | $PARSER/$model "$asduaddr" "$timestamp")
 fi
 
 case $? in

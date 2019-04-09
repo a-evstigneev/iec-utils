@@ -1,7 +1,8 @@
 #!/bin/sh
 
-. $IECDIR/io_utils
-. $IECDIR/iecenv #GSMDEV, DEVLOCK
+. $IECDIR/iecenv # GSMDEV, DEVLOCK
+. $UTILS/log_utils
+. $UTILS/io_utils
 
 DURATION_CALL=11
 WAITING_ENDCALL=8
@@ -20,7 +21,7 @@ rtupoll()
 
 	number=8$(echo $number | cut -c 2-11)
 	
-	if ! rwdev "$GSMDEV" "ATD${number};" response; then
+	if ! cmdsend "$GSMDEV" "ATD${number};" response; then
 		logmsgtime "Device $GSMDEV is not available now"	
 		sleep $TIMEWAIT 
 		status=2
@@ -28,7 +29,7 @@ rtupoll()
 		logmsgtime "Result of calling to the number $number is $response"
 		sleep $DURATION_CALL
 		
-		if rwdev "$GSMDEV" "ATH0" response; then
+		if cmdsend "$GSMDEV" "ATH0" response; then
 			logmsgtime "Result of ending call on the number $number is $response"
 			sleep $WAITING_ENDCALL
 			status=0
@@ -52,7 +53,7 @@ done
 shift $(($OPTIND - 1))
 
 if [ -n "$number" ]; then
-	if rwdev "$GSMDEV" "AT+CREG?" response; then
+	if cmdsend "$GSMDEV" "AT+CREG?" response; then
 		echo $response  | grep -q "0,1" && logmsgtime "GSM device $GSMDEV is registered on the network"
 	else
 		logmsgtime "Device $GSMDEV is not available now"
@@ -73,7 +74,7 @@ else
 	exit 0
 fi 
 
-if rwdev "$GSMDEV" "AT+CREG?" response; then
+if cmdsend "$GSMDEV" "AT+CREG?" response; then
 	echo $response  | grep -q "0,1" && logmsgtime "GSM device $GSMDEV is registered on the network"
 else
 	logmsgtime "Device $GSMDEV is not available now"

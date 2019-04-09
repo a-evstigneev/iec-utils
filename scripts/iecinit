@@ -1,7 +1,6 @@
 #!/bin/sh
 
-. $IECDIR/iecenv #VARDIR, RUNDIR, LOGDIR, SMSDROPDIR, CTS, GSMDEV
-. $IECDIR/io_utils
+. $IECDIR/iecenv # VARDIR, RUNDIR, LOGDIR, SMSDROPDIR, CTS, GSMDEV
 
 test -x $IECDIR/smsget || exit 1
 test -x $IECDIR/smsdrop || exit 1
@@ -35,21 +34,21 @@ trap 'sigterm' TERM
 
 #cd $IECDIR
 while read cts_name cts_address cts_port; do
-	mkdir -p $LOGDIR/$cts_name
-	mkdir -p $VARDIR/$cts_name/work/drop
-	mkdir -p $VARDIR/$cts_name/work/fail
-	mkdir -p $VARDIR/$cts_name/work/in
-	mkdir -p $VARDIR/$cts_name/work/act
-	mkdir -p $VARDIR/$cts_name/work/df/0h0m30s
-	mkdir -p $VARDIR/$cts_name/work/df/0h0m45s
-	mkdir -p $VARDIR/$cts_name/work/df/0h0m60s
+	mkdir -p "$LOGDIR/$cts_name"
+	mkdir -p "$VARDIR/$cts_name/work/drop"
+	mkdir -p "$VARDIR/$cts_name/work/fail"
+	mkdir -p "$VARDIR/$cts_name/work/in"
+	mkdir -p "$VARDIR/$cts_name/work/act"
+	mkdir -p "$VARDIR/$cts_name/work/df/0h0m30s"
+	mkdir -p "$VARDIR/$cts_name/work/df/0h0m45s"
+	mkdir -p "$VARDIR/$cts_name/work/df/0h0m60s"
 	
 	quemngr \
-		-n $cts_name \
-		-w $VARDIR/$cts_name/work \
-		-t $VARDIR/$cts_name/work/trigger \
+		-n "$cts_name" \
+		-w "$VARDIR/$cts_name/work" \
+		-t "$VARDIR/$cts_name/work/trigger" \
 		-s asdusend \
-		-d 3 2>$LOGDIR/$cts_name/quemngr.log &
+		-d 3 2>"$LOGDIR/$cts_name/quemngr.log" &
 	
 	sleep 3
 

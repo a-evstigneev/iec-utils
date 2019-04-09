@@ -1,12 +1,11 @@
 #!/bin/sh
 
 IECDIR=/home/artem/git-repo/iec-utils/scripts
-SHFUNC=$IECDIR/sh_functions
-MSGPARSERS=$IECDIR/msg_parsers
 
-. $SHFUNC/log_utils
-. $SHFUNC/service_utils
-. $SHFUNC/db_utils
+. $IECDIR/iecenv
+. $UTILS/log_utils
+. $UTILS/service_utils
+. $UTILS/db_utils
 
 
 user="admin1@863833024072340:12345678"
@@ -18,37 +17,81 @@ asduaddr=180
 
 getstate="/data.cgx?cmd=%7B%22Command%22:%22GetStateAndEvents%22%7D"
 events="/events"
-issync=0 # Флаг синхронизации
-# 1. После первого запуска необходима синхронизация значений ТС и ТИ с сервером. Просмотр Events, и занесение в базу активных значений всех Inputs и ТИ 
-# 2. После каждого разрыва канала и переподключения нужно ли делать синхронизацию?
-# 3. Разрыва канала может произойти по следующим причинам: проблемы с сетью, проблемы с устройством (пришло сообщение {"Type":"Close"}) 
+issync=0 # Флаг синхронизации с сервером ccu
+
+syncvalue()
+{
+	local tmpfile 
+	
+	response=$(curl -s -N --connect-timeout 15 --fail-early --keepalive --keepalive-time 15 --user "$user" "${url}${getstate}")
+	case $? in
+		0) 
+			iecvalue=$(/usr/bin/printf '%s\n' "$response" | $PARSERS/ccu825_gprs "$asduaddr" "$(get_pctstamp)")
+			
+			#Отдельно проверяем строки с префиксом Events
+
+			archdir="$DB_ARCH/$asduaddr"
+			[ -d "$archdir" ] || mkdir -p "$archdir"
+
+			tmpfile="$archdir/tmpccu"
+			[ -f "$tmpfile" ] && rm "$tmpfile" 2>/dev/null
+
+			cat - >> "$tmpfile" <<-EOF
+				$iecvalue
+			EOF
+
+			if sync "$tmpfile" 2>/dev/null; then
+				putqueue  "$tmpfile"
+				putdbact  "$tmpfile"
+				putdbarch "$tmpfile"
+			else
+				rm "$tmpfile" 2>/dev/null
+			fi
+		;;
+		6|7) true ;; # Не удалось подключиться к серверу
+		*) true ;;
+	esac
+	
+	#	Нужно подтвердить события на сервере 
+}
+
+lookevents()
+{
+	curl -s -N --connect-timeout 15 --fail-early --keepalive --keepalive-time 15 --user "$user" "${url}${events}" 
+}
+
 
 while true; do
-#	curl -s -N --connect-timeout 15 --fail-early --keepalive --keepalive-time 15 --user "$user" "${url}${events}" | \
-	cat | \
-	sed -u -e '/^[[:space:]]*$/d' -e 's/^data:\(.*\)$/\1/' | \
-	while read string; do 
-		case "$string" in
-		'{"Type":"Keepalive"}') 
-			continue 
-		;;
-		'{"Type":"NewEvents"}') 
-			response=$(curl -s -N --connect-timeout 15 --fail-early --keepalive --keepalive-time 15 --user "$user" "${url}${getstate}")
-			case $? in
-				0) iecvalue=$(/usr/bin/printf '%s\n' "$response" | $MSGPARSERS/ccu825gprs "$asduaddr" "$(get_pctstamp)") ;;
-				6) logmsgtime "The address of the given server could not be resolved (curl exit code = 6)."; break ;;
-				7) logmsgtime "Failed to connect to host $url (curl exit code = 7)"; break ;;
+	if [ $issync -eq 0 ]; then
+		if syncvalue; then
+			issync=1
+		fi
+	else
+		lookevents | \
+		sed -u -e '/^[[:space:]]*$/d' -e 's/^data:\(.*\)$/\1/' | \
+		while read string; do 
+			case "$string" in
+			'{"Type":"Keepalive"}') 
+				continue 
+			;;
+			'{"Type":"NewEvents"}') 
+				response=$(syncvalue)
+				case $? in
+					0) iecvalue=$(/usr/bin/printf '%s\n' "$response" | $MSGPARSERS/ccu825gprs "$asduaddr" "$(get_pctstamp)") ;;
+					6) logmsgtime "The address of the given server could not be resolved (curl exit code = 6)."; break ;;
+					7) logmsgtime "Failed to connect to host $url (curl exit code = 7)"; break ;;
+				esac
+				echo "$iecvalue"
+			;;
+			'{"Type":"Close"}') 
+				logmsgtime "Controller has disconnected. The channel will be closed." 
+				break 
+			;;
+			*) logmsgtime "Undefined data. The channel will be closed."; break ;;
 			esac
-			echo "$iecvalue"
-		;;
-		'{"Type":"Close"}') 
-			logmsgtime "Controller has disconnected. The channel will be closed." 
-			break 
-		;;
-		*) logmsgtime "Undefined data. The channel will be closed."; break ;;
-		esac
-	done
-	
-	sleep 5
-	logmsgtime "Reconnect to the server $url"
+		done
+		
+		sleep 5
+		logmsgtime "Reconnect to the server $url"
+	fi
 done
