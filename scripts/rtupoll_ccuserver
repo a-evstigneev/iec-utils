@@ -21,38 +21,47 @@ issync=0 # Флаг синхронизации с сервером ccu
 
 syncvalue()
 {
-	local tmpfile 
+	local tmpfile code response iecvalue 
 	
 	response=$(curl -s -N --connect-timeout 15 --fail-early --keepalive --keepalive-time 15 --user "$user" "${url}${getstate}")
-	case $? in
+	code=$?
+	case $code in
 		0) 
 			iecvalue=$(/usr/bin/printf '%s\n' "$response" | $PARSERS/ccu825_gprs "$asduaddr" "$(get_pctstamp)")
-			
-			#Отдельно проверяем строки с префиксом Events
+			case $? in
+				0) 
+					archdir="$DB_ARCH/$asduaddr"
+					[ -d "$archdir" ] || mkdir -p "$archdir"
 
-			archdir="$DB_ARCH/$asduaddr"
-			[ -d "$archdir" ] || mkdir -p "$archdir"
+					tmpfile="$archdir/tmpccu"
+					[ -f "$tmpfile" ] && rm "$tmpfile" 2>/dev/null
 
-			tmpfile="$archdir/tmpccu"
-			[ -f "$tmpfile" ] && rm "$tmpfile" 2>/dev/null
+					cat - >> "$tmpfile" <<-EOF
+						$iecvalue
+					EOF
 
-			cat - >> "$tmpfile" <<-EOF
-				$iecvalue
-			EOF
-
-			if sync "$tmpfile" 2>/dev/null; then
-				putqueue  "$tmpfile"
-				putdbact  "$tmpfile"
-				putdbarch "$tmpfile"
-			else
-				rm "$tmpfile" 2>/dev/null
-			fi
+			#		if sync "$tmpfile" 2>/dev/null; then
+			#			putqueue  "$tmpfile"
+			#			putdbact  "$tmpfile"
+			#			putdbarch "$tmpfile"
+			#		else
+			#			rm "$tmpfile" 2>/dev/null
+			#		fi
+					code=0
+				;;
+				1) 
+					logmsgtime "Received message is not text in json format" 
+					code=1 
+				;;
+			esac
 		;;
-		6|7) true ;; # Не удалось подключиться к серверу
-		*) true ;;
+
+		6) logmsgtime "The address of the given server could not be resolved (curl exit code = 6)."; break ;;
+		7) logmsgtime "Failed to connect to host $url (curl exit code = 7)"; break ;;
+		*) logmsgtime "Exit code $code" ;;
 	esac
 	
-	#	Нужно подтвердить события на сервере 
+	return $code
 }
 
 lookevents()
@@ -60,14 +69,11 @@ lookevents()
 	curl -s -N --connect-timeout 15 --fail-early --keepalive --keepalive-time 15 --user "$user" "${url}${events}" 
 }
 
-
 while true; do
-	if [ $issync -eq 0 ]; then
-		if syncvalue; then
-			issync=1
-		fi
-	else
-		lookevents | \
+	if syncvalue; then
+		logmsgtime "Synchronization with the $url server was successful" ;; 
+
+		curl -s -N --connect-timeout 15 --fail-early --keepalive --keepalive-time 15 --user "$user" "${url}${events}" | \
 		sed -u -e '/^[[:space:]]*$/d' -e 's/^data:\(.*\)$/\1/' | \
 		while read string; do 
 			case "$string" in
@@ -75,13 +81,11 @@ while true; do
 				continue 
 			;;
 			'{"Type":"NewEvents"}') 
-				response=$(syncvalue)
+				syncvalue
 				case $? in
-					0) iecvalue=$(/usr/bin/printf '%s\n' "$response" | $MSGPARSERS/ccu825gprs "$asduaddr" "$(get_pctstamp)") ;;
-					6) logmsgtime "The address of the given server could not be resolved (curl exit code = 6)."; break ;;
-					7) logmsgtime "Failed to connect to host $url (curl exit code = 7)"; break ;;
+					0) logmsgtime "Synchronization with the $url server was successful" ;; 
+					1) logmsgtime "Synchronization with $url server failed"; break ;;
 				esac
-				echo "$iecvalue"
 			;;
 			'{"Type":"Close"}') 
 				logmsgtime "Controller has disconnected. The channel will be closed." 
@@ -90,8 +94,11 @@ while true; do
 			*) logmsgtime "Undefined data. The channel will be closed."; break ;;
 			esac
 		done
-		
-		sleep 5
-		logmsgtime "Reconnect to the server $url"
+		logmsgtime "Connection to the $url server closed"
+	else
+		logmsgtime  "Synchronization with $url server failed"
 	fi
+	sleep 60
+	logmsgtime  "Retry sync with $url server"
+
 done
