@@ -1,0 +1,116 @@
+json_parse()
+{
+	local asduaddr class type json parser
+	asduaddr=$1
+	class="$2"
+	json="$3"
+	parser=$(cat "$RTU" | grep $asduaddr | cut -d " " -f 3)
+
+	archdir="$DB_ARCH/$asduaddr"
+	[ -d "$archdir" ] || mkdir -p "$archdir"
+
+	tmpfile="$archdir/tmpccu"
+	[ -f "$tmpfile" ] && rm "$tmpfile" 2>/dev/null
+	
+	valuelist=$(echo "$json" | $PARSERS/$parser "$asduaddr" "$class")
+	case "$class" in
+	"events" ) 
+		while read id type value; do
+			[ -z "$listid" ] && listid=$id || listid="$listid,$id"
+			case "$type" in
+			'"InputPassive"' | '"InputActive"' )
+				echo "$value" > "$tmpfile"
+					
+				if sync "$tmpfile" 2>/dev/null; then
+					putqueue  "$tmpfile"
+					putdbact  "$tmpfile"
+					putdbarch "$tmpfile"
+					rm "$tmpfile" 2>/dev/null
+				else
+					rm "$tmpfile" 2>/dev/null
+				fi
+			;;
+			* ) true ;;
+			esac
+		done <<-EOF
+			$valuelist
+		EOF
+		echo "$listid"
+	;;
+	"state" )
+		cat - >> "$tmpfile" <<-EOF
+			$valuelist
+		EOF
+		
+		if sync "$tmpfile" 2>/dev/null; then
+			putqueue  "$tmpfile"
+			putdbact  "$tmpfile"
+			putdbarch "$tmpfile"
+			rm "$tmpfile" 2>/dev/null
+		else
+			rm "$tmpfile" 2>/dev/null
+		fi
+	;;
+	esac
+}
+
+get_devinfo()
+{
+	local asduaddr
+	asduaddr=$1
+	user=$(cat "$RTU" | grep $asduaddr | cut -d " " -f 2)
+	p_devinfo="/data.cgx?cmd=%7B%22Command%22%3A%22GetDeviceInfo%22%7D"
+
+	curl -s -N --connect-timeout 15 --fail-early --keepalive --keepalive-time 15 --user "$user" "${CCUSERVER}${p_devinfo}"
+}
+
+listen_events()
+{
+	local asduaddr
+	asduaddr=$1
+	user=$(cat "$RTU" | grep $asduaddr | cut -d " " -f 2)
+	p_events="/events"	
+
+	curl -s -N --connect-timeout 15 --fail-early --keepalive --keepalive-time 15 --user "$user" "${CCUSERVER}${p_events}"
+}
+
+ack_events()
+{
+	local asduaddr listid
+	asduaddr=$1
+	listid=$2
+	user=$(cat "$RTU" | grep $asduaddr | cut -d " " -f 2)
+	p_ack="/data.cgx?cmd=%7B%22Command%22%3A%22AckEvents%22%2C%22IDs%22%3A%5B${listid}%5D%7D"
+
+	curl -s -N --connect-timeout 15 --fail-early --keepalive --keepalive-time 15 --user "$user" "${CCUSERVER}${p_ack}"
+}
+
+get_state()
+{
+	local class string tmpfile code kind response valuelist value idlist 
+	
+	asduaddr=$1	
+	user=$(cat "$RTU" | grep $asduaddr | cut -d " " -f 2)
+	p_state="/data.cgx?cmd=%7B%22Command%22%3A%22GetStateAndEvents%22%7D"
+	
+	response=$(curl -s -N --connect-timeout 15 --fail-early --keepalive --keepalive-time 15 --user "$user" "${CCUSERVER}${p_state}")
+	code=$?
+	case $code in
+	0 )
+		if echo "$response" | jq -e '.' >/dev/null 2>&1;  then
+			# Проверять длину $response
+			# json string response
+			echo "$response"
+		elif echo "$response" | grep -q "DOCTYPE html"; then
+			# html response
+			code=1
+		fi
+	;;
+	6 ) logmsgtime "The address of the given server $CCUSERVER could not be resolved (curl exit code = 6)" ;;
+	7 ) logmsgtime "Failed to connect to host $CCUSERVER (curl exit code = 7)" ;;
+	* ) logmsgtime "Exit code $code" ;;
+	esac
+	
+	return $code
+}
+
