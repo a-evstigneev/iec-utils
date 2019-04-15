@@ -15,7 +15,7 @@ while true; do
 		echo $response | jq '.' # Для отладки
 		logmsgtime "Connection with $CCUSERVER server succeeded"
 		listid=$(json_parse "$asduaddr" "state" "$response")  
-		ack_events "$asduaddr" "$listid"
+		[ -n "$listid" ] && ack_events "$asduaddr" "$listid"
 		
 		listen_events $asduaddr | \
 		sed -u -e '/^[[:space:]]*$/d' -e 's/^data:\(.*\)$/\1/' | \
@@ -29,7 +29,7 @@ while true; do
 					echo $response | jq '.' # Для отладки
 					logmsgtime "Connection with $CCUSERVER server succeeded"
 					listid=$(json_parse "$asduaddr" "state" "$response")  
-					ack_events "$asduaddr" "$listid"
+					[ -n "$listid" ] && ack_events "$asduaddr" "$listid"
 				else
 					logmsgtime "Synchronization with $CCUSERVER server failed"
 				fi

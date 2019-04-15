@@ -16,7 +16,7 @@ json_parse()
 	case "$class" in
 	"events" ) 
 		while read id type value; do
-			[ -z "$listid" ] && listid=$id || listid="$listid,$id"
+			[ -z "$listid" ] && listid=$id || listid="${listid}%2C${id}"
 			case "$type" in
 			'"InputPassive"' | '"InputActive"' )
 				echo "$value" > "$tmpfile"
@@ -113,4 +113,3 @@ get_state()
 	
 	return $code
 }
-

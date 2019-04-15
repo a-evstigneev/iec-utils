@@ -10,6 +10,8 @@ class=$2
 m_sp_tb_1=30
 m_me_tf_1=36
 
+reqvoltage=13 # required external power supply voltage
+
 while read string; do
 	case "$class" in
 	"events" ) 
@@ -20,12 +22,19 @@ while read string; do
 
 			case "$Type" in
 			'"InputActive"' ) 
-				value=1 
-				objaddr=$(echo $string | jq ".Events[$i].Number")
+				value=1 objaddr=$(echo $string | jq ".Events[$i].Number")
 			;;
 			'"InputPassive"' ) 
-				value=0 
-				objaddr=$(echo $string | jq ".Events[$i].Number")
+				value=0 objaddr=$(echo $string | jq ".Events[$i].Number")
+			;;
+			'"PowerRecovery"' )
+				value=0 objaddr=17
+			;;
+			'"PowerFault"' )
+				value=1 objaddr=17
+			;;
+			'"BatteryLow1"' | '"BatteryLow2"' )
+				value=1 objaddr=18
 			;;
 			* )
 				objaddr=0
@@ -54,8 +63,7 @@ while read string; do
 			true
 		;;
 		* )
-			objaddr=1
-			value="$Temp"
+			objaddr=1 value="$Temp"
 			printf '%s %s %s %s %s %s\n' "$asduaddr" "$objaddr" "$m_me_tf_1" "$value" "-" "$ts"
 		;;
 		esac
@@ -64,20 +72,22 @@ while read string; do
 		BatteryState=$(echo $string | jq ".Battery.State")
 		BatteryCharge=$(echo $string | jq ".Battery.Charge")
 		case "$BatteryState" in
-		'"OK"' | '"Low1"' | '"Low2"' )
-			objaddr=18
-			value=0
+		'"OK"' )
+			objaddr=18 value=0
 			printf '%s %s %s %s %s %s\n' "$asduaddr" "$objaddr" "$m_sp_tb_1" "$value" "-" "$ts"
-			objaddr=2
-			value="$BatteryCharge"
+			objaddr=2 value="$BatteryCharge"
+			printf '%s %s %s %s %s %s\n' "$asduaddr" "$objaddr" "$m_me_tf_1" "$value" "-" "$ts"
+		;;
+		'"Low1"' | '"Low2"' )
+			objaddr=18 value=1
+			printf '%s %s %s %s %s %s\n' "$asduaddr" "$objaddr" "$m_sp_tb_1" "$value" "-" "$ts"
+			objaddr=2 value="$BatteryCharge"
 			printf '%s %s %s %s %s %s\n' "$asduaddr" "$objaddr" "$m_me_tf_1" "$value" "-" "$ts"
 		;;
 		'"NotUsed"' | '"Disconnected"' )
-			objaddr=18
-			value=1
+			objaddr=18 value=1
 			printf '%s %s %s %s %s %s\n' "$asduaddr" "$objaddr" "$m_sp_tb_1" "$value" "-" "$ts"
-			objaddr=2
-			value=0
+			objaddr=2 value=0
 			printf '%s %s %s %s %s %s\n' "$asduaddr" "$objaddr" "$m_me_tf_1" "$value" "-" "$ts"
 		;;
 		esac 
@@ -86,17 +96,24 @@ while read string; do
 		Power=$(echo $string | jq ".Power" )
 		case "$Power" in
 		'"Off"' )
-			objaddr=17
-			value=1
+			objaddr=17 value=1
 			printf '%s %s %s %s %s %s\n' "$asduaddr" "$objaddr" "$m_sp_tb_1" "$value" "-" "$ts"
 		;;
 		* )
-			objaddr=17
-			value=0
-			printf '%s %s %s %s %s %s\n' "$asduaddr" "$objaddr" "$m_sp_tb_1" "$value" "-" "$ts"
-			objaddr=3
-			value="$Power"
-			printf '%s %s %s %s %s %s\n' "$asduaddr" "$objaddr" "$m_me_tf_1" "$value" "-" "$ts"
+			case $(echo "$reqvoltage < $Power" | bc) in
+			"1" ) 
+				objaddr=17 value=0
+				printf '%s %s %s %s %s %s\n' "$asduaddr" "$objaddr" "$m_sp_tb_1" "$value" "-" "$ts"
+				objaddr=3 value="$Power"
+				printf '%s %s %s %s %s %s\n' "$asduaddr" "$objaddr" "$m_me_tf_1" "$value" "-" "$ts"
+			;;
+			"0" )
+				objaddr=17 value=1
+				printf '%s %s %s %s %s %s\n' "$asduaddr" "$objaddr" "$m_sp_tb_1" "$value" "-" "$ts"
+				objaddr=3 value="$Power"
+				printf '%s %s %s %s %s %s\n' "$asduaddr" "$objaddr" "$m_me_tf_1" "$value" "-" "$ts"
+			;;
+			esac
 		;;
 		esac
 
