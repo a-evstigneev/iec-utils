@@ -77,4 +77,10 @@ if [ -x "$IECDIR/trapget" ]; then
 	trapget 2>>$LOGDIR/trapget.log &
 fi
 
+# rtupoll_http
+if [ -x "$IECDIR/poll_httpinit" ]; then
+	mkdir -p $LOGDIR/poll_http
+	poll_httpinit &
+fi
+
 wait

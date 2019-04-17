@@ -12,3 +12,30 @@ rangeconv()
         echo "$1"
     fi
 }
+
+tm_send()
+{
+	local asduaddr objaddr type value ts
+    asduaddr=$1
+	objaddr=$2
+	type=$3
+	value=$4
+    ts=$(get_pctstamp)
+
+    archdir="$DB_ARCH/$asduaddr"
+    [ -d "$archdir" ] || mkdir -p "$archdir"
+
+    tmpfile="$archdir/tmptm"
+    [ -f "$tmpfile" ] && rm "$tmpfile" 2>/dev/null
+
+    printf '%s %s %s %s %s %s\n' "$asduaddr" "$objaddr" "$type" "$value" "-" "$ts" > "$tmpfile"
+
+	if sync "$tmpfile" 2>/dev/null; then
+		putqueue  "$tmpfile"
+		putdbact  "$tmpfile"
+		putdbarch "$tmpfile"
+		rm "$tmpfile" 2>/dev/null
+	else
+		rm "$tmpfile" 2>/dev/null
+	fi
+}
