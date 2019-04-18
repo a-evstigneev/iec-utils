@@ -125,7 +125,7 @@ transform_asdu()
 		cmd="/usr/bin/printf %a " val
 		cmd | getline tempstr
 		close(cmd)	
-		
+	
 		if (substr(tempstr, 1, 1) == "-")
 			signbit = 2^31
 		else
@@ -145,7 +145,10 @@ transform_asdu()
 				--j
 			}
 			significand = sum - 2^23        
-			return int2hex(signbit + exponent + significand, 4)     
+			if (tempstr ==  "0x0p+0")
+				return int2hex(0, 4) # Разобраться со случаем 0. Выводит значение как для 4     
+			else
+				return int2hex(signbit + exponent + significand, 4)     
 		}
 		else if (FLOATFUNC == 2) {
 			#exponent = (substr(tempstr, index(tempstr, "p") + 1) + 127) * 2^23 
