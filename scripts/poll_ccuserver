@@ -9,15 +9,17 @@ IECDIR=/opt/iecd
 
 asduaddr=$1
 sleeptime=60
-ts_link=1000
-linkup=0
-linkdown=1
+
+link_ts=1000
+link_status=-1
+link_up=1
+link_down=0
 
 while true; do
 	if response=$(get_state $asduaddr); then
 		echo $response | jq '.' # Для отладки
 		logmsgtime "Connection with $CCUSERVER server succeeded"
-		tm_send "$asduaddr" "$ts_link" 30 "$linkup"
+		link_status=$link_up && tm_send "$asduaddr" "$ts_link" 30 "$link_status"
 		
 		listid=$(json_parse "$asduaddr" "state" "$response")  
 		[ -n "$listid" ] && ack_events "$asduaddr" "$listid"
@@ -52,9 +54,11 @@ while true; do
 		logmsgtime "Connection to the $CCUSERVER server closed"
 	else
 		logmsgtime  "Synchronization with $CCUSERVER server failed"
-		tm_send "$asduaddr" "$ts_link" 30 "$linkdown"
 	fi
 
+	if [ "$link_status" -ne "$link_down" ]; then
+		link_status=$link_down && tm_send "$asduaddr" "$ts_link" 30 "$link_status"
+	fi
 	logmsgtime  "Retry sync with $CCUSERVER server after $sleeptime sec"
 	sleep $sleeptime 
 done
