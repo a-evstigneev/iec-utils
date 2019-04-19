@@ -19,7 +19,7 @@ while true; do
 	if response=$(get_state $asduaddr); then
 		echo $response | jq '.' # Для отладки
 		logmsgtime "Connection with $CCUSERVER server succeeded"
-		link_status=$link_up && tm_send "$asduaddr" "$ts_link" 30 "$link_status"
+		link_status=$link_up && tm_send "$asduaddr" "$link_ts" 30 "$link_status"
 		
 		listid=$(json_parse "$asduaddr" "state" "$response")  
 		[ -n "$listid" ] && ack_events "$asduaddr" "$listid"
@@ -57,7 +57,7 @@ while true; do
 	fi
 
 	if [ "$link_status" -ne "$link_down" ]; then
-		link_status=$link_down && tm_send "$asduaddr" "$ts_link" 30 "$link_status"
+		link_status=$link_down && tm_send "$asduaddr" "$link_ts" 30 "$link_status"
 	fi
 	logmsgtime  "Retry sync with $CCUSERVER server after $sleeptime sec"
 	sleep $sleeptime 
