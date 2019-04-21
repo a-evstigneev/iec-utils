@@ -1,6 +1,5 @@
 #!/bin/sh
 
-IECDIR=/opt/iecd
 . $IECDIR/iecenv
 . $UTILS/log_utils
 . $UTILS/service_utils
@@ -34,7 +33,7 @@ while true; do
 			'{"Type":"NewEvents"}') 
 				if response=$(get_state $asduaddr); then
 					echo $response | jq '.' # Для отладки
-					logmsgtime "Connection with $CCUSERVER server succeeded"
+					logmsgtime "Event from $CCUSERVER Received"
 					listid=$(json_parse "$asduaddr" "state" "$response")  
 					[ -n "$listid" ] && ack_events "$asduaddr" "$listid"
 				else
@@ -49,7 +48,7 @@ while true; do
 				logmsgtime "Undefined data. The channel will be closed."
 				break 
 			;;
-		esac
+			esac
 		done
 		logmsgtime "Connection to the $CCUSERVER server closed"
 	else
@@ -59,6 +58,6 @@ while true; do
 	if [ "$link_status" -ne "$link_down" ]; then
 		link_status=$link_down && tm_send "$asduaddr" "$link_ts" 30 "$link_status"
 	fi
-	logmsgtime  "Retry sync with $CCUSERVER server after $sleeptime sec"
-	sleep $sleeptime 
+
+	sleep "$sleeptime" 
 done

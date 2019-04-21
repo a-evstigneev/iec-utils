@@ -1,0 +1,33 @@
+#!/bin/sh
+
+. $IECDIR/iecenv
+
+tmpfile=$(mktemp -p $RUNDIR http_childpids.XXXXXX)
+
+sigterm()
+{
+	local pid
+	trap '' TERM CHLD
+
+	jobs -p >"$tmpfile"
+	while read pid; do
+		kill -TERM $pid >/dev/null 2>&1
+	done <<-EOF
+		$(cat "$tmpfile")
+	EOF
+
+	trap '-' TERM
+}
+
+trap 'sigterm' TERM
+
+logdir=$LOGDIR/httplog
+mkdir -p $logdir
+
+while read asduaddr credentials dev description; do
+	poll_ccuserver "$asduaddr" 2>>"$logdir/rtu_${asduaddr}" &
+done <<-EOF
+	$(cat "$RTU" | grep ccu825_gprs)
+EOF
+
+wait

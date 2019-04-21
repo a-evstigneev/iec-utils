@@ -29,7 +29,13 @@ sigterm()
 	trap '-' TERM
 }
 
-trap 'rm -rf $RUNDIR/*; exit 0' EXIT
+cleandir()
+{
+	rm -rf "$RUNDIR/*"
+	exit 0
+}
+
+trap 'cleandir' EXIT
 trap 'sigterm' TERM
 
 #cd $IECDIR
@@ -65,22 +71,21 @@ done <<-EOF
 	$(cat $CTS | grep -v '^#' | sed '/^$/d')
 EOF
 
-# smsget start
+# sms get 
 if [ -c $GSMDEV ]; then
 	stty raw -echo -F $GSMDEV
 	smsget -d -F $GSMDEV 2>>$LOGDIR/smsget.log
 	smsget -t 10 -g -F $GSMDEV 2>>$LOGDIR/smsget.log & 
 fi
 
-# trapget start
-if [ -x "$IECDIR/trapget" ]; then
-	trapget 2>>$LOGDIR/trapget.log &
-fi
+# snmp trap get 
+#if [ -x "$IECDIR/trapget" ]; then
+#	trapget 2>>$LOGDIR/trapget.log &
+#fi
 
-# rtupoll_http
-if [ -x "$IECDIR/poll_httpinit" ]; then
-	mkdir -p $LOGDIR/poll_http
-	poll_httpinit &
+# http event get
+if [ -x "$IECDIR/httpget" ]; then
+	httpget &
 fi
 
 wait

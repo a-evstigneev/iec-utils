@@ -12,7 +12,7 @@ DB_ARCH="$IECDIR/db_archive"
 RTU="$IECDIR/rtu.conf"
 CTS="$IECDIR/cts.conf"
 
-GSMDEV="/dev/ttyUSB1"
+GSMDEV="/dev/ttyUSB0"
 DEVLOCK="$IECDIR/device.lock"
 SMS_NEXTPOLL=15
 
