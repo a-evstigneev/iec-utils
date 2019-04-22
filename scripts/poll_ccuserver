@@ -57,6 +57,7 @@ while true; do
 
 	if [ "$link_status" -ne "$link_down" ]; then
 		link_status=$link_down && tm_send "$asduaddr" "$link_ts" 30 "$link_status"
+		setdbact_qds "$asduaddr" "NT"
 	fi
 
 	sleep "$sleeptime" 

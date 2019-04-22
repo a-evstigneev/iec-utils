@@ -60,3 +60,18 @@ putdbact()
 
 	logmsgtime "Copying file $file to dir $DB_ACT was done"
 }
+
+setdbact_qds()
+{
+	local asduaddr flags path
+	asduaddr=$1
+	flags=$2
+
+	if ! [ -z "$(ls ${DB_ACT}/${asduaddr})" ]; then
+		while read filename; do
+			sed -i "s/-/${flags}/g" "$DB_ACT/$asduaddr/$filename" 	
+		done <<-EOF
+			$(find "$DB_ACT/$asduaddr" -type f -printf "%P\n")
+		EOF
+	fi
+}
