@@ -98,6 +98,8 @@ while read string; do
 		'"Off"' )
 			objaddr=17 value=1
 			printf '%s %s %s %s %s %s\n' "$asduaddr" "$objaddr" "$m_sp_tb_1" "$value" "-" "$ts"
+			objaddr=3 value=0
+			printf '%s %s %s %s %s %s\n' "$asduaddr" "$objaddr" "$m_me_tf_1" "$value" "-" "$ts"
 		;;
 		* )
 			case $(echo "$reqvoltage < $Power" | bc) in

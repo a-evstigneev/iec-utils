@@ -85,7 +85,7 @@ fi
 
 # http event get
 if [ -x "$IECDIR/httpget" ]; then
-	httpget &
+	setsid httpget &
 fi
 
 wait

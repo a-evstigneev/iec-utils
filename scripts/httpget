@@ -9,12 +9,7 @@ sigterm()
 	local pid
 	trap '' TERM CHLD
 
-	jobs -p >"$tmpfile"
-	while read pid; do
-		kill -TERM $pid >/dev/null 2>&1
-	done <<-EOF
-		$(cat "$tmpfile")
-	EOF
+	kill -TERM "-$$" >/dev/null 2>&1
 
 	trap '-' TERM
 }
