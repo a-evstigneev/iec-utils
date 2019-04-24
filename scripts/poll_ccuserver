@@ -24,8 +24,10 @@ ginterrog()
 		sleep $time
 		(
 			flock 9
-			response=$(get_state $asduaddr)
-			json_parse "$asduaddr" "state" "$response"	
+			if response=$(get_state $asduaddr); then
+				json_parse "$asduaddr" "state" "$response"	
+				logmsgtime "The general interrogation $CCUSERVER server was successful"
+			fi
 		) 9>$filelock
 	done
 }
