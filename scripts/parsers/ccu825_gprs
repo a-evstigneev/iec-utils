@@ -37,6 +37,7 @@ while read string; do
 				value=1 objaddr=18
 			;;
 			* )
+				Type='"Event"'
 				objaddr=0
 				value=0
 			;;

@@ -20,6 +20,7 @@ logdir=$LOGDIR/httplog
 mkdir -p $logdir
 
 while read asduaddr credentials dev description; do
+	[ -d "$DB_ACT/$asduaddr" ] || mkdir -p "$DB_ACT/$asduaddr"
 	poll_ccuserver "$asduaddr" 2>>"$logdir/rtu_${asduaddr}" &
 done <<-EOF
 	$(cat "$RTU" | grep ccu825_gprs)

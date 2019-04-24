@@ -7,7 +7,28 @@
 . $UTILS/http_utils
 
 asduaddr=$1
-sleeptime=60
+sleepsec=60
+
+pollsec=1800
+gipid=""
+
+filelock="$DB_ACT/$asduaddr/${asduaddr}.lock"
+
+ginterrog() 
+{
+	local time asduaddr
+	asduaddr=$1
+	time=$2
+	
+	while true; do
+		sleep $time
+		(
+			flock 9
+			response=$(get_state $asduaddr)
+			json_parse "$asduaddr" "state" "$response"	
+		) 9>$filelock
+	done
+}
 
 link_ts=1000
 link_status=-1
@@ -16,12 +37,12 @@ link_down=0
 
 while true; do
 	if response=$(get_state $asduaddr); then
-		echo $response | jq '.' # Для отладки
 		logmsgtime "Connection with $CCUSERVER server succeeded"
 		link_status=$link_up && tm_send "$asduaddr" "$link_ts" 30 "$link_status"
+		json_parse "$asduaddr" "state" "$response"  
 		
-		listid=$(json_parse "$asduaddr" "state" "$response")  
-		[ -n "$listid" ] && ack_events "$asduaddr" "$listid"
+		ginterrog $asduaddr $pollsec &
+		childpid=$!
 		
 		listen_events $asduaddr | \
 		sed -u -e '/^[[:space:]]*$/d' -e 's/^data:\(.*\)$/\1/' | \
@@ -32,9 +53,11 @@ while true; do
 			;;
 			'{"Type":"NewEvents"}') 
 				if response=$(get_state $asduaddr); then
-					echo $response | jq '.' # Для отладки
 					logmsgtime "Event from $CCUSERVER Received"
-					listid=$(json_parse "$asduaddr" "state" "$response")  
+					(
+						flock 9
+						listid=$(json_parse "$asduaddr" "events" "$response")  
+					) 9>$filelock
 					[ -n "$listid" ] && ack_events "$asduaddr" "$listid"
 				else
 					logmsgtime "Synchronization with $CCUSERVER server failed"
@@ -50,7 +73,6 @@ while true; do
 			;;
 			esac
 		done
-		logmsgtime "Connection to the $CCUSERVER server closed"
 	else
 		logmsgtime  "Synchronization with $CCUSERVER server failed"
 	fi
@@ -58,7 +80,8 @@ while true; do
 	if [ "$link_status" -ne "$link_down" ]; then
 		link_status=$link_down && tm_send "$asduaddr" "$link_ts" 30 "$link_status"
 		setdbact_qds "$asduaddr" "NT"
+		[ -n "$childpid" ] && kill -TERM $childpid >/dev/null 2>&1 && childpid=""
 	fi
 
-	sleep "$sleeptime" 
+	sleep "$sleepsec" 
 done

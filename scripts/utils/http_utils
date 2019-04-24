@@ -18,7 +18,8 @@ json_parse()
 		while read id type value; do
 			[ -z "$listid" ] && listid=$id || listid="${listid}%2C${id}"
 			case "$type" in
-			'"InputPassive"' | '"InputActive"' )
+			'"Event"' ) true ;;
+			* )
 				echo "$value" > "$tmpfile"
 					
 				if sync "$tmpfile" 2>/dev/null; then
@@ -30,7 +31,6 @@ json_parse()
 					rm "$tmpfile" 2>/dev/null
 				fi
 			;;
-			* ) true ;;
 			esac
 		done <<-EOF
 			$valuelist

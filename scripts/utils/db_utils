@@ -71,7 +71,7 @@ setdbact_qds()
 		while read filename; do
 			sed -i "s/-/${flags}/g" "$DB_ACT/$asduaddr/$filename" 	
 		done <<-EOF
-			$(find "$DB_ACT/$asduaddr" -type f -printf "%P\n")
+			$(find "$DB_ACT/$asduaddr" -type f -printf "%P\n" | grep -v "1000")
 		EOF
 	fi
 }
