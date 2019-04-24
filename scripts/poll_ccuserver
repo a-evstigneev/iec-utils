@@ -12,8 +12,6 @@ sleepsec=60
 pollsec=1800
 gipid=""
 
-filelock="$DB_ACT/$asduaddr/${asduaddr}.lock"
-
 ginterrog() 
 {
 	local time asduaddr
@@ -22,13 +20,10 @@ ginterrog()
 	
 	while true; do
 		sleep $time
-		(
-			flock 9
-			if response=$(get_state $asduaddr); then
-				json_parse "$asduaddr" "state" "$response"	
-				logmsgtime "The general interrogation $CCUSERVER server was successful"
-			fi
-		) 9>$filelock
+		if response=$(get_state $asduaddr); then
+			json_parse "$asduaddr" "state" "$response"	
+			logmsgtime "The general interrogation $CCUSERVER server was successful"
+		fi
 	done
 }
 
@@ -44,7 +39,7 @@ while true; do
 		json_parse "$asduaddr" "state" "$response"  
 		
 		ginterrog $asduaddr $pollsec &
-		childpid=$!
+		gipid=$!
 		
 		listen_events $asduaddr | \
 		sed -u -e '/^[[:space:]]*$/d' -e 's/^data:\(.*\)$/\1/' | \
@@ -56,10 +51,7 @@ while true; do
 			'{"Type":"NewEvents"}') 
 				if response=$(get_state $asduaddr); then
 					logmsgtime "Event from $CCUSERVER Received"
-					(
-						flock 9
-						listid=$(json_parse "$asduaddr" "events" "$response")  
-					) 9>$filelock
+					listid=$(json_parse "$asduaddr" "events" "$response")  
 					[ -n "$listid" ] && ack_events "$asduaddr" "$listid"
 				else
 					logmsgtime "Synchronization with $CCUSERVER server failed"
@@ -82,7 +74,7 @@ while true; do
 	if [ "$link_status" -ne "$link_down" ]; then
 		link_status=$link_down && tm_send "$asduaddr" "$link_ts" 30 "$link_status"
 		setdbact_qds "$asduaddr" "NT"
-		[ -n "$childpid" ] && kill -TERM $childpid >/dev/null 2>&1 && childpid=""
+		[ -n "$gipid" ] && kill -TERM $gipid >/dev/null 2>&1 && gipid=""
 	fi
 
 	sleep "$sleepsec" 
