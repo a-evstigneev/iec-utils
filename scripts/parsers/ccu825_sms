@@ -9,40 +9,59 @@ sed 's/\r$//' | awk -v comaddr=$1 -v timestamp=$2 '
 	}
 	
 	{ 
-		objaddr = 0
-		value = 0
+		ts_objaddr = 0
+		ts_value = 0
 		
 		gsub(/,/, ".", $0)
 
 		if ( $0 ~ "^TC" ) { #TC1-TC16
-			objaddr = substr($1, 3)
-			value = $2
-			type = TYPE["M_SP_TB_1"]
+			ts_objaddr = substr($1, 3)
+			ts_value = $2
+			ts_type = TYPE["M_SP_TB_1"]
 		}
-		else if ( $0 ~ "POWER" ) { #TC17
-			objaddr = 17
-			if ($2 == "OK")
-				value = 0
-			else if ( $2 == "FAULT" )
-				value = 1
-			type = TYPE["M_SP_TB_1"]
+		else if ( $0 ~ "POWER" ) { # TC17 and TI3 
+			if ($2 == "OK") {
+				ts_value = 0
+				ti_value = substr($3, 2, length($3)-2)
+			}
+			else if ( $2 == "FAULT" ) {
+				ts_value = 1
+				ti_value = 0
+			}
+			ts_objaddr = 17
+			ts_type = TYPE["M_SP_TB_1"]
+		
+			ti_objaddr = 3
+			ti_type = TYPE["M_ME_TF_1"]
+			printf("%s %s %s %s %s %s\n", COMADDR, ti_objaddr, ti_type, ti_value, "-", TIMESTAMP)
 		}
 		else if ( $0 ~ "TEMPERAT" ) { # TI1
-			objaddr = 1
-			value = substr($2, 1, length($2)-1)
-			type = TYPE["M_ME_TF_1"]
+			ti_objaddr = 1
+			ti_value = substr($2, 1, length($2)-1)
+			ti_type = TYPE["M_ME_TF_1"]
+			printf("%s %s %s %s %s %s\n", COMADDR, ti_objaddr, ti_type, ti_value, "-", TIMESTAMP)
+			next
 		}
-		else if ( $0 ~ "BATTERY" ) { # TI1
-			objaddr = 2
-			value = substr($2, 1, length($2)-1)
-			type = TYPE["M_ME_TF_1"]
+		else if ( $0 ~ "BATTERY" ) { # TC18 and TI2
+			ti_objaddr = 2
+			ti_value = substr($2, 1, length($2)-1)
+			ti_type = TYPE["M_ME_TF_1"]
+			printf("%s %s %s %s %s %s\n", COMADDR, ti_objaddr, ti_type, ti_value, "-", TIMESTAMP)
+
+			if ( ti_value == 100 )
+				ts_value = 0
+			else 	
+				ts_value = 1
+
+			ts_objaddr = 18
+			ts_type = TYPE["M_SP_TB_1"]
 		}
 
 		# Empty_data
-		if ( objaddr == 0 )
+		if ( ts_objaddr == 0 )
 			next
 		
-		printf("%s %s %s %s %s %s\n", COMADDR, objaddr, type, value, "-", TIMESTAMP)
+		printf("%s %s %s %s %s %s\n", COMADDR, ts_objaddr, ts_type, ts_value, "-", TIMESTAMP)
 		count += 1
 	}
 	

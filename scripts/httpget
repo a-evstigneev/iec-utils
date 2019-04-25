@@ -16,8 +16,8 @@ sigterm()
 
 trap 'sigterm' TERM
 
-logdir=$LOGDIR/httplog
-mkdir -p $logdir
+logdir="$LOGDIR/httplog"
+mkdir -p "$logdir"
 
 while read asduaddr credentials dev description; do
 	[ -d "$DB_ACT/$asduaddr" ] || mkdir -p "$DB_ACT/$asduaddr"

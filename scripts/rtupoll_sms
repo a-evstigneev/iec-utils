@@ -5,8 +5,6 @@
 . $UTILS/io_utils
 . $UTILS/sms_utils
 
-DURATION_CALL=11
-WAITING_ENDCALL=8
 TIMEWAIT=6
 
 usage() 
@@ -95,13 +93,13 @@ if [ -n "$number" ]; then
 	sleep 1
 
 	case "$mode" in
-	"text")
+	"text" )
 		(
 			flock 9
 			/usr/bin/printf '%s\n' "$smstext" | send_smstext "$number" "$file"
 		) 9>$DEVLOCK
 	;;
-	"pdu")
+	"pdu" )
 		(
 			flock 9
 			/usr/bin/printf '%s\n' "$smstext" | send_smspdu "$number" "$file"
@@ -131,21 +129,21 @@ while read rtu number type; do
 	[ -n "$mode" ] || mode="pdu"
 
 	case "$type" in
-		"granit") smstext="" ;;
-		"ccu825") smstext="test" ;;
-		"verset") smstext="" ;;	
-		*) smstext="" ;;
+		"granit" ) smstext="" ;;
+		"ccu825_sms" ) smstext="/12345678 test ins" ;;
+		"verset" ) smstext="" ;;	
+		* ) smstext="" ;;
 	esac
 
 	if [ -n "$smstext" ]; then
 		case "$mode" in
-		"text")
+		"text" )
 			(
 				flock 9
 				/usr/bin/printf '%s\n' "$smstext" | send_smstext "$number" "$GSMDEV"
 			) 9>$DEVLOCK
 		;;
-		"pdu")
+		"pdu" )
 			(
 				flock 9
 				/usr/bin/printf '%s\n' "$smstext" | send_smspdu "$number" "$GSMDEV"
