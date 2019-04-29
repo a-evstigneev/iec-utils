@@ -1,0 +1,30 @@
+#!/bin/sh
+
+IECDIR="/opt/iecd"
+. $IECDIR/iecenv
+. $UTILS/service_utils
+. $UTILS/log_utils
+. $UTILS/db_utils
+
+control_time=$((2*24*3600))
+
+while read asduaddr info model identity; do
+	case "$model" in 
+		ccu825_sms ) 
+			while read fn; do 
+				if [ $(( $(date +%s) - $(stat --printf %Z "$DB_ACT/$asduaddr/$fn") )) -gt $control_time ]; then
+					echo $(( $(date +%s) - $(stat --printf %Z "$DB_ACT/$asduaddr/$fn") ))
+					tm_send "$asduaddr" 1000 30 1
+					break
+				fi
+			done <<-EOF
+				$(find "$DB_ACT/$asduaddr" -type f -printf "%P\n")
+			EOF
+		;;
+		* )
+			true
+		;;
+	esac
+done <<-EOF	
+	$(cat $RTU)
+EOF

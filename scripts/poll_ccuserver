@@ -7,9 +7,9 @@
 . $UTILS/http_utils
 
 asduaddr=$1
-sleepsec=60
+sleeptime=60
 
-pollsec=1800
+polltime=1800
 gipid=""
 
 ginterrog() 
@@ -38,7 +38,7 @@ while true; do
 		link_status=$link_up && tm_send "$asduaddr" "$link_ts" 30 "$link_status"
 		json_parse "$asduaddr" "state" "$response"  
 		
-		ginterrog $asduaddr $pollsec &
+		ginterrog $asduaddr $polltime &
 		gipid=$!
 		
 		listen_events $asduaddr | \
@@ -77,5 +77,5 @@ while true; do
 		[ -n "$gipid" ] && kill -TERM $gipid >/dev/null 2>&1 && gipid=""
 	fi
 
-	sleep "$sleepsec" 
+	sleep "$sleeptime" 
 done

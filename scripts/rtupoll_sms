@@ -44,7 +44,7 @@ send_smspdu()
     /usr/bin/printf '%b' "AT+CMGS=$TPDU_LEN\r" >$file
     sleep 2
     /usr/bin/printf '%b' "$PDU\x1A" >$file
-    sleep 15
+    sleep 60
 
     response=""
     exec 3<$file
