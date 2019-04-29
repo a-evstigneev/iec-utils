@@ -22,7 +22,7 @@ sed 's/\r$//' | awk -v comaddr=$1 -v timestamp=$2 '
 		else if ( $0 ~ "POWER" ) { # TC17 and TI3 
 			if ($2 == "OK") {
 				ts_value = 0
-				ti_value = substr($3, 2, length($3)-2)
+				ti_value = substr($3, 2, length($3)-3)
 			}
 			else if ( $2 == "FAULT" ) {
 				ts_value = 1
