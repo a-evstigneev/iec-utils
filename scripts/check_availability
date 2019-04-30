@@ -14,7 +14,7 @@ while read asduaddr info model identity; do
 			while read fn; do 
 				if [ $(( $(date +%s) - $(stat --printf %Z "$DB_ACT/$asduaddr/$fn") )) -gt $control_time ]; then
 					echo $(( $(date +%s) - $(stat --printf %Z "$DB_ACT/$asduaddr/$fn") ))
-					tm_send "$asduaddr" 1000 30 1
+					tm_send "$asduaddr" 1000 30 0
 					break
 				fi
 			done <<-EOF
