@@ -67,7 +67,7 @@ setdbact_qds()
 	asduaddr=$1
 	flags=$2
 
-	if ! [ -z "$(ls ${DB_ACT}/${asduaddr})" ]; then
+	if ! [ -z "$(find "$DB_ACT/$asduaddr" -type f -printf "%P\n" | grep -v "1000")" ]; then
 		while read filename; do
 			sed -i "s/-/${flags}/g" "$DB_ACT/$asduaddr/$filename" 	
 		done <<-EOF
