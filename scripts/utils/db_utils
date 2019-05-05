@@ -76,7 +76,7 @@ setdbact_qds()
 	fi
 }
 
-tm_send()
+tmsig_send()
 {
 	local asduaddr objaddr type value ts
     asduaddr=$1
@@ -88,7 +88,7 @@ tm_send()
     archdir="$DB_ARCH/$asduaddr"
     [ -d "$archdir" ] || mkdir -p "$archdir"
 
-    tmpfile="$archdir/tmptm"
+	tmpfile=$(mktemp -u -p $archdir tmptm.XXXXXX)
     [ -f "$tmpfile" ] && rm "$tmpfile" 2>/dev/null
 
     printf '%s %s %s %s %s %s\n' "$asduaddr" "$objaddr" "$type" "$value" "-" "$ts" > "$tmpfile"

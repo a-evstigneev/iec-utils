@@ -7,18 +7,18 @@ IECDIR="/opt/iecd"
 . $UTILS/db_utils
 
 control_time=$((2*24*3600))
+objaddr_ex=1000
 
 while read asduaddr info model identity; do
 	case "$model" in 
 		ccu825_sms ) 
 			while read fn; do 
-				if [ $(( $(date +%s) - $(stat --printf %Z "$DB_ACT/$asduaddr/$fn") )) -gt $control_time ]; then
-					echo $(( $(date +%s) - $(stat --printf %Z "$DB_ACT/$asduaddr/$fn") ))
-					tm_send "$asduaddr" 1000 30 0
+				if [ -f "$DB_ACT/$asduaddr/$fn" ] && [ $(( $(date +%s) - $(stat --printf %Y "$DB_ACT/$asduaddr/$fn") )) -gt $control_time ]; then
+					tmsig_send "$asduaddr" "$objaddr_ex" 30 0
 					break
 				fi
 			done <<-EOF
-				$(find "$DB_ACT/$asduaddr" -type f -printf "%P\n")
+				$(find "$DB_ACT/$asduaddr" -type f -printf "%P\n" 2>/dev/null | grep -v "$objaddr_ex")
 			EOF
 		;;
 		* )

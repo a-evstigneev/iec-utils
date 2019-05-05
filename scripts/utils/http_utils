@@ -9,7 +9,7 @@ json_parse()
 	archdir="$DB_ARCH/$asduaddr"
 	[ -d "$archdir" ] || mkdir -p "$archdir"
 
-	tmpfile="$archdir/tmpccu"
+	tmpfile=$(mktemp -u -p $archdir tmpccu.XXXXXX)
 	[ -f "$tmpfile" ] && rm "$tmpfile" 2>/dev/null
 	
 	valuelist=$(echo "$json" | $PARSERS/$parser "$asduaddr" "$class")
