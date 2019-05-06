@@ -4,7 +4,7 @@ json_parse()
 	asduaddr=$1
 	class="$2"
 	json="$3"
-	parser=$(cat "$RTU" | grep $asduaddr | cut -d " " -f 3)
+	parser=$(cat "$RTU" | awk -v comaddr=$asduaddr '{ if ( $1 == comaddr) print $0 }' | cut -d " " -f 3)
 
 	archdir="$DB_ARCH/$asduaddr"
 	[ -d "$archdir" ] || mkdir -p "$archdir"
@@ -58,7 +58,7 @@ get_devinfo()
 {
 	local asduaddr
 	asduaddr=$1
-	user=$(cat "$RTU" | grep $asduaddr | cut -d " " -f 2)
+	user=$(cat "$RTU" | awk -v comaddr=$asduaddr '{ if ( $1 == comaddr) print $0 }' | cut -d " " -f 2)
 	p_devinfo="/data.cgx?cmd=%7B%22Command%22%3A%22GetDeviceInfo%22%7D"
 
 	curl -s -N --connect-timeout 15 --fail-early --keepalive --keepalive-time 15 --user "$user" "${CCUSERVER}${p_devinfo}"
@@ -68,7 +68,7 @@ listen_events()
 {
 	local asduaddr
 	asduaddr=$1
-	user=$(cat "$RTU" | grep $asduaddr | cut -d " " -f 2)
+	user=$(cat "$RTU" | awk -v comaddr=$asduaddr '{ if ( $1 == comaddr) print $0 }' | cut -d " " -f 2)
 	p_events="/events"	
 
 	curl -s -N --connect-timeout 15 --fail-early --keepalive --keepalive-time 15 --user "$user" "${CCUSERVER}${p_events}"
@@ -79,7 +79,7 @@ ack_events()
 	local asduaddr listid
 	asduaddr=$1
 	listid=$2
-	user=$(cat "$RTU" | grep $asduaddr | cut -d " " -f 2)
+	user=$(cat "$RTU" | awk -v comaddr=$asduaddr '{ if ( $1 == comaddr) print $0 }' | cut -d " " -f 2)
 	p_ack="/data.cgx?cmd=%7B%22Command%22%3A%22AckEvents%22%2C%22IDs%22%3A%5B${listid}%5D%7D"
 
 	curl -s -N --connect-timeout 15 --fail-early --keepalive --keepalive-time 15 --user "$user" "${CCUSERVER}${p_ack}"
@@ -90,7 +90,7 @@ get_state()
 	local class string tmpfile code kind response valuelist value idlist 
 	
 	asduaddr=$1	
-	user=$(cat "$RTU" | grep $asduaddr | cut -d " " -f 2)
+	user=$(cat "$RTU" | awk -v comaddr=$asduaddr '{ if ( $1 == comaddr) print $0 }' | cut -d " " -f 2)
 	p_state="/data.cgx?cmd=%7B%22Command%22%3A%22GetStateAndEvents%22%7D"
 	
 	response=$(curl -s -N --connect-timeout 15 --fail-early --keepalive --keepalive-time 15 --user "$user" "${CCUSERVER}${p_state}")

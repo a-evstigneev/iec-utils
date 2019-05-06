@@ -11,7 +11,7 @@ objaddr_ex=1000
 
 while read asduaddr info model identity; do
 	case "$model" in 
-		ccu825_sms ) 
+		ccu825_sms | granit ) 
 			while read fn; do 
 				if [ -f "$DB_ACT/$asduaddr/$fn" ] && [ $(( $(date +%s) - $(stat --printf %Y "$DB_ACT/$asduaddr/$fn") )) -gt $control_time ]; then
 					tmsig_send "$asduaddr" "$objaddr_ex" 30 0
