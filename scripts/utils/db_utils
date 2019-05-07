@@ -4,7 +4,8 @@ putqueue()
 	local cts rest dropmsg inode
 
 	while read cts rest; do
-		dropmsg="$VARDIR/$cts/work/drop/dropmsg"
+		dropmsg=$(mktemp -u -p $VARDIR/$cts/work/drop dropmsg.XXXXXX)
+		# dropmsg="$VARDIR/$cts/work/drop/dropmsg"
 
 		if cp "$file" "$dropmsg" 2>/dev/null && sync "$dropmsg" 2>/dev/null; then
 			inode="$VARDIR/$cts/work/drop/$(stat -c %i $dropmsg)"
