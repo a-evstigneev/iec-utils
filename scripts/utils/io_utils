@@ -9,10 +9,13 @@ at_write()
 
 at_readreply()
 {
-	local _fd _reply _childpid
-	export WAIT_REPLY=6
+	local _fd _reply _childpid WAIT_REPLY
+	WAIT_REPLY=6
 	_fd=$1
+	
+	[ -n "$2" ] && WAIT_REPLY=$2
 
+	export WAIT_REPLY
 	
 	trap ' ' ALRM
 	

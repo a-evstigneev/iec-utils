@@ -42,14 +42,15 @@ send_smspdu()
     TPDU_LEN=$(((${#PDU} - 2)/2))
 
     /usr/bin/printf '%b' "AT+CMGS=$TPDU_LEN\r" >$file
-    sleep 2
+    sleep 1
     /usr/bin/printf '%b' "$PDU\x1A" >$file
-    sleep 60
+    sleep 1
 
     response=""
     exec 3<$file
-    response=$(at_readreply 3)
-    if ! [ -z "$response" ]; then
+    response=$(at_readreply 3 60)
+    
+	if ! [ -z "$response" ]; then
         echo $response | grep -q "+CMGS" && logmsgtime "Sms was sent successfully"
     else
         logmsgtime "Sending the sms failed"
