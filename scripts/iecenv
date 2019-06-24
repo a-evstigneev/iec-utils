@@ -26,3 +26,4 @@ SNMPTRAPCONF="$IECDIR/snmptrapd.conf"
 EMAIL="komisyk@mail.ru"
 
 CCUSERVER="https://ccu.sh"
+CCUPROXY="https://192.168.70.10:8443"

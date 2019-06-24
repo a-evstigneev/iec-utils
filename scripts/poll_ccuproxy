@@ -1,0 +1,29 @@
+#!/bin/sh
+
+. $IECDIR/iecenv
+. $UTILS/log_utils
+. $UTILS/service_utils
+. $UTILS/db_utils
+. $UTILS/http_ccuproxy_utils
+
+asduaddr=$1
+
+link_ts=1000
+link_status=-1
+link_up=1
+link_down=0
+
+if json_inputs=$(get_inputs "$asduaddr" | sed 's/,/},{/g; s/false/0/g; s/true/1/g; s/:/_/g; s/\"\([0-9]\{0,2\}\)\"/\x22id\x22:\1,/g; s/_/\x22state\x22:/g'); then
+	if json_sysinfo=$(get_sysinfo "$asduaddr" | tail -c +2); then
+		response="{\"Inputs\":[${json_inputs}],${json_sysinfo}"
+	fi
+else
+#	link_status=$link_down 
+#	tmsig_send "$asduaddr" "$link_ts" 30 "$link_status"
+#	setdbact_qds "$asduaddr" "NT"
+	exit 2
+fi
+#echo $json_inputs
+echo $response
+echo
+json_parse "$asduaddr" "info" "$response" 

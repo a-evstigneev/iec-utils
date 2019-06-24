@@ -1,0 +1,125 @@
+#!/bin/sh
+
+IECDIR=/opt/iecd 
+. $IECDIR/iecenv
+. $UTILS/service_utils
+
+asduaddr=$1
+class=$2
+
+m_sp_tb_1=30
+m_me_tf_1=36
+
+reqvoltage=13 # required external power supply voltage
+
+while read string; do
+	case "$class" in
+	"events" ) 
+		event_len=$(echo $string | jq ".Events | length")
+		for i in $(rangeconv 0-$(($event_len-1))); do
+			ID=$(echo $string | jq ".Events[$i].ID")
+			Type=$(echo $string | jq ".Events[$i].Type")
+
+			case "$Type" in
+			'"InputActive"' ) 
+				value=1 objaddr=$(echo $string | jq ".Events[$i].Number")
+			;;
+			'"InputPassive"' ) 
+				value=0 objaddr=$(echo $string | jq ".Events[$i].Number")
+			;;
+			'"PowerRecovery"' )
+				value=0 objaddr=17
+			;;
+			'"PowerFault"' )
+				value=1 objaddr=17
+			;;
+			'"BatteryLow1"' | '"BatteryLow2"' )
+				value=1 objaddr=18
+			;;
+			* )
+				Type='"Event"'
+				objaddr=0
+				value=0
+			;;
+			esac
+
+			ts=$(get_pctstamp)
+			printf '%s %s %s %s %s %s %s %s\n' "$ID" "$Type" "$asduaddr" "$objaddr" "$m_sp_tb_1" "$value" "-" "$ts"
+		done
+	;;
+	"info" ) 
+		input_len=$(echo $string | jq ".Inputs | length")
+		ts=$(get_pctstamp)
+
+		for i in $(rangeconv 0-$(($input_len-1))); do
+			value=$(echo $string | jq ".Inputs[$i].state")
+			objaddr=$(echo $string | jq ".Inputs[$i].id")
+			printf '%s %s %s %s %s %s\n' "$asduaddr" "$objaddr" "$m_sp_tb_1" "$value" "-" "$ts"
+		done
+		
+####	# Temperature status
+####	Temp=$(echo $string | jq ".Temp")
+####	case "$Temp" in
+####	'"NotValid"' )
+####		true
+####	;;
+####	* )
+####		objaddr=1 value="$Temp"
+####		printf '%s %s %s %s %s %s\n' "$asduaddr" "$objaddr" "$m_me_tf_1" "$value" "-" "$ts"
+####	;;
+####	esac
+
+####	# Battery status
+####	BatteryState=$(echo $string | jq ".Battery.State")
+####	BatteryCharge=$(echo $string | jq ".Battery.Charge")
+####	case "$BatteryState" in
+####	'"OK"' )
+####		objaddr=18 value=0
+####		printf '%s %s %s %s %s %s\n' "$asduaddr" "$objaddr" "$m_sp_tb_1" "$value" "-" "$ts"
+####		objaddr=2 value="$BatteryCharge"
+####		printf '%s %s %s %s %s %s\n' "$asduaddr" "$objaddr" "$m_me_tf_1" "$value" "-" "$ts"
+####	;;
+####	'"Low1"' | '"Low2"' )
+####		objaddr=18 value=1
+####		printf '%s %s %s %s %s %s\n' "$asduaddr" "$objaddr" "$m_sp_tb_1" "$value" "-" "$ts"
+####		objaddr=2 value="$BatteryCharge"
+####		printf '%s %s %s %s %s %s\n' "$asduaddr" "$objaddr" "$m_me_tf_1" "$value" "-" "$ts"
+####	;;
+####	'"NotUsed"' | '"Disconnected"' )
+####		objaddr=18 value=1
+####		printf '%s %s %s %s %s %s\n' "$asduaddr" "$objaddr" "$m_sp_tb_1" "$value" "-" "$ts"
+####		objaddr=2 value=0
+####		printf '%s %s %s %s %s %s\n' "$asduaddr" "$objaddr" "$m_me_tf_1" "$value" "-" "$ts"
+####	;;
+####	esac 
+####	
+####	# Power status
+####	Power=$(echo $string | jq ".Power" )
+####	case "$Power" in
+####	'"Off"' )
+####		objaddr=17 value=1
+####		printf '%s %s %s %s %s %s\n' "$asduaddr" "$objaddr" "$m_sp_tb_1" "$value" "-" "$ts"
+####		objaddr=3 value=0
+####		printf '%s %s %s %s %s %s\n' "$asduaddr" "$objaddr" "$m_me_tf_1" "$value" "-" "$ts"
+####	;;
+####	* )
+####		case $(echo "$reqvoltage < $Power" | bc) in
+####		"1" ) 
+####			objaddr=17 value=0
+####			printf '%s %s %s %s %s %s\n' "$asduaddr" "$objaddr" "$m_sp_tb_1" "$value" "-" "$ts"
+####			objaddr=3 value="$Power"
+####			printf '%s %s %s %s %s %s\n' "$asduaddr" "$objaddr" "$m_me_tf_1" "$value" "-" "$ts"
+####		;;
+####		"0" )
+####			objaddr=17 value=1
+####			printf '%s %s %s %s %s %s\n' "$asduaddr" "$objaddr" "$m_sp_tb_1" "$value" "-" "$ts"
+####			objaddr=3 value="$Power"
+####			printf '%s %s %s %s %s %s\n' "$asduaddr" "$objaddr" "$m_me_tf_1" "$value" "-" "$ts"
+####		;;
+####		esac
+####	;;
+####	esac
+
+	;;
+	esac
+done 
