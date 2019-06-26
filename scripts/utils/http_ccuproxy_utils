@@ -6,11 +6,11 @@ json_parse()
 	json="$3"
 	parser=$(cat "$RTU" | awk -v comaddr=$asduaddr '{ if ( $1 == comaddr) print $0 }' | cut -d " " -f 3)
 
-#	archdir="$DB_ARCH/$asduaddr"
-#	[ -d "$archdir" ] || mkdir -p "$archdir"
+	archdir="$DB_ARCH/$asduaddr"
+	[ -d "$archdir" ] || mkdir -p "$archdir"
 
-#	tmpfile=$(mktemp -u -p $archdir tmpccu.XXXXXX)
-#	[ -f "$tmpfile" ] && rm "$tmpfile" 2>/dev/null
+	tmpfile=$(mktemp -u -p $archdir tmpccu.XXXXXX)
+	[ -f "$tmpfile" ] && rm "$tmpfile" 2>/dev/null
 	
 	valuelist=$(echo "$json" | $PARSERS/$parser "$asduaddr" "$class")
 	case "$class" in
@@ -38,40 +38,53 @@ json_parse()
 		echo "$listid"
 	;;
 	"info" )
-		echo $valuelist
-
-#		cat - >> "$tmpfile" <<-EOF
-#			$valuelist
-#		EOF
-#		
-#		if sync "$tmpfile" 2>/dev/null; then
-#			putqueue  "$tmpfile"
-#			putdbact  "$tmpfile"
-#			putdbarch "$tmpfile"
-#			rm "$tmpfile" 2>/dev/null
-#		else
-#			rm "$tmpfile" 2>/dev/null
-#		fi
+		cat - >> "$tmpfile" <<-EOF
+			$valuelist
+		EOF
+		
+		if sync "$tmpfile" 2>/dev/null; then
+			putqueue  "$tmpfile"
+			putdbact  "$tmpfile"
+			putdbarch "$tmpfile"
+			rm "$tmpfile" 2>/dev/null
+		else
+			rm "$tmpfile" 2>/dev/null
+		fi
 	;;
 	esac
 }
 
+get_status()
+{
+	local code imei list_imei
+	imei=$1
+	
+	list_imei=$(curl -s -k -N --connect-timeout 15 --fail-early -H 'Authorization: Bearer nokey' "${CCUPROXY}/api/ccu/online")
+	code=$?	
+	case $code in
+		0 ) 
+			if ! echo "$list_imei" | grep -q "$imei"; then 
+				code=20 # Because code=20 not used by curl
+			fi
+		;;
+		* ) true ;;
+	esac
+
+	return $code	
+}
+
 get_inputs()
 {
-	local asduaddr
-	asduaddr=$1
-	imei=$(cat "$RTU" | awk -v comaddr=$asduaddr '{ if ( $1 == comaddr) print $0 }' | cut -d " " -f 2)
-
-	curl -s -k -N --connect-timeout 15 --fail-early --keepalive --keepalive-time 15 \
-		-H 'Authorization: Bearer nokey' "${CCUPROXY}/api/ccu/${imei}/inputs"
+	local imei
+	imei=$1
+	
+	curl -s -k -N --connect-timeout 15 --fail-early -H 'Authorization: Bearer nokey' "${CCUPROXY}/api/ccu/${imei}/inputs"
 }
 
 get_sysinfo()
 {
-	local asduaddr
-	asduaddr=$1
-	imei=$(cat "$RTU" | awk -v comaddr=$asduaddr '{ if ( $1 == comaddr) print $0 }' | cut -d " " -f 2)
+	local imei
+	imei=$1
 
-	curl -s -k -N --connect-timeout 15 --fail-early --keepalive --keepalive-time 15 \
-		-H 'Authorization: Bearer nokey' "${CCUPROXY}/api/ccu/${imei}/sysinfo"
+	curl -s -k -N --connect-timeout 15 --fail-early -H 'Authorization: Bearer nokey' "${CCUPROXY}/api/ccu/${imei}/sysinfo"
 }

@@ -7,23 +7,47 @@
 . $UTILS/http_ccuproxy_utils
 
 asduaddr=$1
-
+code=0
 link_ts=1000
-link_status=-1
-link_up=1
-link_down=0
+link_status=0
 
-if json_inputs=$(get_inputs "$asduaddr" | sed 's/,/},{/g; s/false/0/g; s/true/1/g; s/:/_/g; s/\"\([0-9]\{0,2\}\)\"/\x22id\x22:\1,/g; s/_/\x22state\x22:/g'); then
-	if json_sysinfo=$(get_sysinfo "$asduaddr" | tail -c +2); then
+imei=$(cat "$RTU" | awk -v comaddr=$asduaddr '{ if ( $1 == comaddr) print $0 }' | cut -d " " -f 2)
+
+if ! echo "$imei" | grep -q -E "^[[:digit:]]{15}$"; then
+	logmsgtime "Format imei \"rtu $asduaddr\" is incorrect"
+	code=2
+elif get_status "$imei"; then 
+	if ! json_inputs=$(get_inputs "$imei"); then
+		logmsgtime "Information about inputs \"rtu $asduaddr\" from proxy $CCUPROXY could not be obtained"	
+		code=24
+	elif ! json_sysinfo=$(get_sysinfo "$imei"); then
+		logmsgtime "System information about \"rtu $asduaddr\" from ccu_proxy $CCUPROXY could not be obtained"	
+		code=24
+	elif ! [ -n "$json_inputs" ] && [ -n "$json_sysinfo" ]; then
+		logmsgtime "Received data from ccu_proxy $CCUPROXY is not correct"	
+		code=24
+	else
+		json_inputs=$(echo "$json_inputs" | sed 's/,/},{/g; s/false/0/g; s/true/1/g; s/:/_/g; s/\"\([0-9]\{0,2\}\)\"/\x22id\x22:\1,/g; s/_/\x22state\x22:/g')
+		json_sysinfo=$(echo "$json_sysinfo" | tail -c +2)
 		response="{\"Inputs\":[${json_inputs}],${json_sysinfo}"
 	fi
 else
-#	link_status=$link_down 
-#	tmsig_send "$asduaddr" "$link_ts" 30 "$link_status"
-#	setdbact_qds "$asduaddr" "NT"
-	exit 2
+	code=$?
+	case "$code" in
+		6 ) logmsgtime "The address of the given proxy $CCUPROXY could not be resolved" ;;
+		7 ) logmsgtime "Failed connect to proxy $CCUPROXY" ;;
+		20 ) logmsgtime "Device \"rtu $asduaddr\" not connected to proxy $CCUPROXY" ;;
+		* ) logmsgtime "Curl exit code = $code"  ;;
+	esac
 fi
-#echo $json_inputs
-echo $response
-echo
-json_parse "$asduaddr" "info" "$response" 
+
+case "$code" in
+	0 ) json_parse "$asduaddr" "info" "$response" ;;
+	20 | 24 ) 
+		tmsig_send "$asduaddr" "$link_ts" 30 "$link_status"
+		setdbact_qds "$asduaddr" "NT"
+	;;
+	* ) true ;;
+esac
+
+exit $code

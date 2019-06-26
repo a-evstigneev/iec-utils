@@ -48,77 +48,78 @@ while read string; do
 		done
 	;;
 	"info" ) 
-		input_len=$(echo $string | jq ".Inputs | length")
+		input_len=$(echo "$string" | jq ".Inputs | length")
 		ts=$(get_pctstamp)
 
 		for i in $(rangeconv 0-$(($input_len-1))); do
-			value=$(echo $string | jq ".Inputs[$i].state")
-			objaddr=$(echo $string | jq ".Inputs[$i].id")
+			value=$(echo "$string" | jq ".Inputs[$i].state")
+			objaddr=$(echo "$string" | jq ".Inputs[$i].id")
 			printf '%s %s %s %s %s %s\n' "$asduaddr" "$objaddr" "$m_sp_tb_1" "$value" "-" "$ts"
 		done
 		
-####	# Temperature status
-####	Temp=$(echo $string | jq ".Temp")
-####	case "$Temp" in
-####	'"NotValid"' )
-####		true
-####	;;
-####	* )
-####		objaddr=1 value="$Temp"
-####		printf '%s %s %s %s %s %s\n' "$asduaddr" "$objaddr" "$m_me_tf_1" "$value" "-" "$ts"
-####	;;
-####	esac
+		# Temperature status
+		Temp=$(echo "$string" | jq ".sysinfo.sysinfo_temp")
+		case "$Temp" in
+		'null' )
+			true
+		;;
+		* )
+			objaddr=1 value="$Temp"
+			printf '%s %s %s %s %s %s\n' "$asduaddr" "$objaddr" "$m_me_tf_1" "$value" "-" "$ts"
+		;;
+		esac
 
-####	# Battery status
-####	BatteryState=$(echo $string | jq ".Battery.State")
-####	BatteryCharge=$(echo $string | jq ".Battery.Charge")
-####	case "$BatteryState" in
-####	'"OK"' )
-####		objaddr=18 value=0
-####		printf '%s %s %s %s %s %s\n' "$asduaddr" "$objaddr" "$m_sp_tb_1" "$value" "-" "$ts"
-####		objaddr=2 value="$BatteryCharge"
-####		printf '%s %s %s %s %s %s\n' "$asduaddr" "$objaddr" "$m_me_tf_1" "$value" "-" "$ts"
-####	;;
-####	'"Low1"' | '"Low2"' )
-####		objaddr=18 value=1
-####		printf '%s %s %s %s %s %s\n' "$asduaddr" "$objaddr" "$m_sp_tb_1" "$value" "-" "$ts"
-####		objaddr=2 value="$BatteryCharge"
-####		printf '%s %s %s %s %s %s\n' "$asduaddr" "$objaddr" "$m_me_tf_1" "$value" "-" "$ts"
-####	;;
-####	'"NotUsed"' | '"Disconnected"' )
-####		objaddr=18 value=1
-####		printf '%s %s %s %s %s %s\n' "$asduaddr" "$objaddr" "$m_sp_tb_1" "$value" "-" "$ts"
-####		objaddr=2 value=0
-####		printf '%s %s %s %s %s %s\n' "$asduaddr" "$objaddr" "$m_me_tf_1" "$value" "-" "$ts"
-####	;;
-####	esac 
-####	
-####	# Power status
-####	Power=$(echo $string | jq ".Power" )
-####	case "$Power" in
-####	'"Off"' )
-####		objaddr=17 value=1
-####		printf '%s %s %s %s %s %s\n' "$asduaddr" "$objaddr" "$m_sp_tb_1" "$value" "-" "$ts"
-####		objaddr=3 value=0
-####		printf '%s %s %s %s %s %s\n' "$asduaddr" "$objaddr" "$m_me_tf_1" "$value" "-" "$ts"
-####	;;
-####	* )
-####		case $(echo "$reqvoltage < $Power" | bc) in
-####		"1" ) 
-####			objaddr=17 value=0
-####			printf '%s %s %s %s %s %s\n' "$asduaddr" "$objaddr" "$m_sp_tb_1" "$value" "-" "$ts"
-####			objaddr=3 value="$Power"
-####			printf '%s %s %s %s %s %s\n' "$asduaddr" "$objaddr" "$m_me_tf_1" "$value" "-" "$ts"
-####		;;
-####		"0" )
-####			objaddr=17 value=1
-####			printf '%s %s %s %s %s %s\n' "$asduaddr" "$objaddr" "$m_sp_tb_1" "$value" "-" "$ts"
-####			objaddr=3 value="$Power"
-####			printf '%s %s %s %s %s %s\n' "$asduaddr" "$objaddr" "$m_me_tf_1" "$value" "-" "$ts"
-####		;;
-####		esac
-####	;;
-####	esac
+		# Battery status
+		BatteryState=$(echo "$string" | jq ".sysinfo.sysinfo_bat[0]")
+		BatteryCharge=$(echo "$string" | jq ".sysinfo.sysinfo_bat[1]")
+		case "$BatteryState" in
+		'"bat_ok"' )
+			objaddr=18 value=0
+			printf '%s %s %s %s %s %s\n' "$asduaddr" "$objaddr" "$m_sp_tb_1" "$value" "-" "$ts"
+			objaddr=2 value="$BatteryCharge"
+			printf '%s %s %s %s %s %s\n' "$asduaddr" "$objaddr" "$m_me_tf_1" "$value" "-" "$ts"
+		;;
+		'"bat_discharge_level1"' | '"bat_discharge_level2"' )
+			objaddr=18 value=1
+			printf '%s %s %s %s %s %s\n' "$asduaddr" "$objaddr" "$m_sp_tb_1" "$value" "-" "$ts"
+			objaddr=2 value="$BatteryCharge"
+			printf '%s %s %s %s %s %s\n' "$asduaddr" "$objaddr" "$m_me_tf_1" "$value" "-" "$ts"
+		;;
+		'"bat_not_used"' | '"bat_disconnected"' )
+			objaddr=18 value=1
+			printf '%s %s %s %s %s %s\n' "$asduaddr" "$objaddr" "$m_sp_tb_1" "$value" "-" "$ts"
+			objaddr=2 value=0
+			printf '%s %s %s %s %s %s\n' "$asduaddr" "$objaddr" "$m_me_tf_1" "$value" "-" "$ts"
+		;;
+		esac 
+	
+		# Power status
+		Power=$(echo "$string" | jq ".sysinfo.sysinfo_ext_pwr" )
+		case "$Power" in
+		'null' )
+			objaddr=17 value=1
+			printf '%s %s %s %s %s %s\n' "$asduaddr" "$objaddr" "$m_sp_tb_1" "$value" "-" "$ts"
+			objaddr=3 value=0
+			printf '%s %s %s %s %s %s\n' "$asduaddr" "$objaddr" "$m_me_tf_1" "$value" "-" "$ts"
+		;;
+		* )
+			Power=$(echo "scale=2; ${Power}/1" | bc)
+			case $(echo "$reqvoltage < $Power" | bc) in
+			"1" ) 
+				objaddr=17 value=0
+				printf '%s %s %s %s %s %s\n' "$asduaddr" "$objaddr" "$m_sp_tb_1" "$value" "-" "$ts"
+				objaddr=3 value="$Power"
+				printf '%s %s %s %s %s %s\n' "$asduaddr" "$objaddr" "$m_me_tf_1" "$value" "-" "$ts"
+			;;
+			"0" )
+				objaddr=17 value=1
+				printf '%s %s %s %s %s %s\n' "$asduaddr" "$objaddr" "$m_sp_tb_1" "$value" "-" "$ts"
+				objaddr=3 value="$Power"
+				printf '%s %s %s %s %s %s\n' "$asduaddr" "$objaddr" "$m_me_tf_1" "$value" "-" "$ts"
+			;;
+			esac
+		;;
+		esac
 
 	;;
 	esac
