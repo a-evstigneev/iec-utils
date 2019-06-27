@@ -88,3 +88,20 @@ get_sysinfo()
 
 	curl -s -k -N --connect-timeout 15 --fail-early -H 'Authorization: Bearer nokey' "${CCUPROXY}/api/ccu/${imei}/sysinfo"
 }
+
+listen_events()
+{
+    curl -s -k -N --connect-timeout 15 --fail-early --keepalive --keepalive-time 15 -H 'Authorization: Bearer nokey' "${CCUPROXY}/api/ccu/events"
+}
+
+ack_events()
+{
+    local imei listid
+    imei=$1
+	listid=$2
+    
+    curl -s -k -N --connect-timeout 15 --fail-early --keepalive --keepalive-time 15 -X POST -d "$listid" \
+		-H 'Authorization: Bearer nokey' \
+		-H 'Content-Type: application/json'
+		"${CCUPROXY}/api/ccu/${imei}/ack"
+}

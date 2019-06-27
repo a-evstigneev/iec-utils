@@ -1,0 +1,38 @@
+#!/bin/sh
+
+. $IECDIR/iecenv
+. $UTILS/log_utils
+. $UTILS/service_utils
+. $UTILS/db_utils
+. $UTILS/http_ccuproxy_utils
+
+sleeptime=60
+
+while true; do
+	listen_events | sed -u -e '/^[[:space:]]*$/d' -e 's/^data:\(.*\)$/\1/' | \
+		while read string; do
+			event_type=$(echo "$string" | jq '.event' | jq 'if type=="array" then "array" else "string" end')
+			case "$event_type" in
+				'"string"' )
+					event=$(echo "$string" | jq '.event')
+					case "$event" in
+						'"keepalive"' ) echo "Соединение в порядке" ;;
+						'"online"' ) echo "Контроллер imei: $(echo $string | jq '.imei') подключился" ;;
+						'"offline"' ) echo "Контроллер imei: $(echo $string | jq '.imei') отключился" ;;
+						'"event_power_on"' ) echo "Внешнее питание контроллера imei: $(echo $string | jq '.imei') включено" ;;
+						'"event_power_off"' ) echo "Внешнее питание контроллера imei: $(echo $string | jq '.imei') отключено" ;;
+						'"event_case_open"' ) echo "Корпус контроллера imei: $(echo $string | jq '.imei') открыт" ;;
+					esac
+				;;	
+				'"array"' ) 
+					event=$(echo $event | jq '.event[0]') 
+					case "$event" in
+						'"event_input"' ) echo "$event" ;;
+					esac
+				;;
+			esac
+			true
+		done
+
+	sleep "$sleeptime" 
+done
