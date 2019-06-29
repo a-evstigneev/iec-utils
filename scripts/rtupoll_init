@@ -1,6 +1,6 @@
 #!/bin/sh
 
-. $IECDIR/iecenv #LOGDIR, RUNDIR, RTU, GSMDEV, RTUPOLL_SHEDULE
+. $IECDIR/config/iecenv #LOGDIR, RUNDIR, RTU, GSMDEV, RTUPOLL_SHEDULE
 
 test -x $IECDIR/rtupoll_ring || exit 1
 test -x $IECDIR/rtupoll_sms || exit 1

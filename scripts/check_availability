@@ -1,7 +1,7 @@
 #!/bin/sh
 
 IECDIR="/opt/iecd"
-. $IECDIR/iecenv
+. $IECDIR/config/iecenv
 . $UTILS/service_utils
 . $UTILS/log_utils
 . $UTILS/db_utils

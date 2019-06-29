@@ -1,6 +1,6 @@
 #!/bin/sh
 
-. $IECDIR/iecenv
+. $IECDIR/config/iecenv
 
 tmpfile=$(mktemp -p $RUNDIR childpids.XXXXXX)
 
@@ -22,7 +22,7 @@ tmpfile=$(mktemp -p $RUNDIR childpids.XXXXXX)
 ####trap 'sigterm' TERM
 
 while read asduaddr credentials dev description; do
-	poll_ccuserver "$asduaddr" 2>>"$LOGDIR/poll_http/rtu_$asduaddr" &
+	ccuserver_poll "$asduaddr" 2>>"$LOGDIR/poll_http/rtu_$asduaddr" &
 done <<-EOF
 	$(cat "$RTU" | grep ccu825_gprs)
 EOF

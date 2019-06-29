@@ -1,6 +1,6 @@
 #!/bin/sh
 
-. $IECDIR/iecenv # DB_ARCH, DB_ACT, RTU, CTS, VARDIR, OID
+. $IECDIR/config/iecenv # DB_ARCH, DB_ACT, RTU, CTS, VARDIR, OID
 . $IECDIR/io_utils # get_pctstamp(), rangeconv()
 . $IECDIR/db_utils # putdbact(), putqueue(), putdbarch()
 . $IECDIR/snmp_utils # rangeconv(), getvboid(), getvbval()

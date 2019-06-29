@@ -1,6 +1,6 @@
 #!/bin/sh
 
-. $IECDIR/iecenv # GSMDEV, DEVLOCK
+. $IECDIR/config/iecenv # GSMDEV, DEVLOCK
 . $UTILS/log_utils
 . $UTILS/io_utils
 

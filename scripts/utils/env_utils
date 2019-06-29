@@ -1,7 +1,7 @@
 # set_env $var1 $var2 ...
 set_env()
 {
-	local _envfile=${IECDIR}/iecenv
+	local _envfile=${IECDIR}/config/iecenv
 	
 	if [ -r "$_envfile" -a -s "$_envfile" ]; then
 		for var in $*; do

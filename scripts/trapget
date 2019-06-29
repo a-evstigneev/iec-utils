@@ -2,7 +2,7 @@
 
 # Before first start do "sudo setcap CAP_NET_BIND_SERVICE=+eip /usr/sbin/snmptrapd"
 
-. $IECDIR/iecenv # DB_ARCH, RTU, OID, TRAPCONF
+. $IECDIR/config/iecenv # DB_ARCH, RTU, OID, TRAPCONF
 . $UTILS/service_utils # get_pctstamp(), rangeconv()
 . $UTILS/db_utils # putdbact(), putqueue(), putdbarch()
 . $UTILS/snmp_utils # getvboid(), getvbval()

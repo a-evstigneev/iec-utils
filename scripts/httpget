@@ -1,6 +1,6 @@
 #!/bin/sh
 
-. $IECDIR/iecenv
+. $IECDIR/config/iecenv
 
 tmpfile=$(mktemp -p $RUNDIR http_childpids.XXXXXX)
 
@@ -21,7 +21,7 @@ mkdir -p "$logdir"
 
 while read asduaddr credentials dev description; do
 	[ -d "$DB_ACT/$asduaddr" ] || mkdir -p "$DB_ACT/$asduaddr"
-	poll_ccuserver "$asduaddr" 2>>"$logdir/rtu_${asduaddr}" &
+	ccuserver_poll "$asduaddr" 2>>"$logdir/rtu_${asduaddr}" &
 done <<-EOF
 	$(cat "$RTU" | grep ccu825_gprs)
 EOF

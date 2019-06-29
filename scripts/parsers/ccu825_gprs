@@ -1,7 +1,6 @@
 #!/bin/sh
 
-IECDIR=/opt/iecd 
-. $IECDIR/iecenv
+. $IECDIR/config/iecenv
 . $UTILS/service_utils
 
 asduaddr=$1

@@ -1,6 +1,6 @@
 #!/bin/sh
 
-. $IECDIR/iecenv #RTU, CTS, DB_ARCH, VARDIR, DEVLOCK, SMS_NEXTPOLL
+. $IECDIR/config/iecenv #RTU, CTS, DB_ARCH, VARDIR, DEVLOCK, SMS_NEXTPOLL
 . $UTILS/io_utils
 . $UTILS/log_utils
 . $UTILS/sms_utils

@@ -1,3 +1,0 @@
-rtupoll_snmp 40 * * * * 
-rtupoll_ring 45 * * * * 
-rtupoll_sms 50 * * * * 

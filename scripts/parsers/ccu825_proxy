@@ -1,6 +1,6 @@
 #!/bin/sh
 
-. $IECDIR/iecenv
+. $IECDIR/config/iecenv
 . $UTILS/service_utils
 
 asduaddr=$1

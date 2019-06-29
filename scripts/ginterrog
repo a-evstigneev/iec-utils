@@ -1,6 +1,6 @@
 #!/bin/sh
 
-. $IECDIR/iecenv # $DB_ACT
+. $IECDIR/config/iecenv # $DB_ACT
 
 if ! [ -z "$(ls $DB_ACT)" ]; then 
 	find $DB_ACT -type f -printf "%P\n" | \
