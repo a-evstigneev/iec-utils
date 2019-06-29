@@ -1,64 +1,65 @@
 #!/bin/sh
 
-IECDIR=/opt/iecd 
 . $IECDIR/iecenv
 . $UTILS/service_utils
 
 asduaddr=$1
-class=$2
+type=$2
 
 m_sp_tb_1=30
 m_me_tf_1=36
 
 reqvoltage=13 # required external power supply voltage
 
-while read string; do
-	case "$class" in
-	"events" ) 
-		event_len=$(echo $string | jq ".Events | length")
-		for i in $(rangeconv 0-$(($event_len-1))); do
-			ID=$(echo $string | jq ".Events[$i].ID")
-			Type=$(echo $string | jq ".Events[$i].Type")
+while read json; do
+	case "$type" in
+	"event" ) 
+		event_type=$(echo "$json" | jq '.event' | jq 'if type=="array" then "array" else "string" end')
+		[ "$event_type" = '"array"' ] && event=$(echo "$json" | jq '.event[0]')  || event=$(echo "$json" | jq '.event')
+		case "$event" in
+			'"event_power_on"' ) 
+				objaddr=17 
+				value=0 
+				asdu_type=$m_sp_tb_1
+			;;
+			'"event_power_off"' ) 
+				objaddr=17 
+				value=1 
+				asdu_type=$m_sp_tb_1
+			;;
+			'"event_input"' )
+				objaddr=$(echo "$json" | jq '.event[1]')
+				value=$(echo "$json" | jq '.event[2]' | awk '/false/ { $0 = 0; print }; /true/ { $0 = 1; print }')
+				asdu_type=$m_sp_tb_1
+			;;
+			'"event_battery_low"' )
+				objaddr=2
+				value=$(echo "$json" | jq '.event[1]')
+				asdu_type=$m_me_tf_1
+				# Определить уровни battery_low
+			;;
+			'"event_temp_low"' | '"event_temp_normal"' | '"event_temp_high"' )
+				objaddr=1
+				value=$(echo "$json" | jq '.event[1]')
+				asdu_type=$m_me_tf_1
+			;;
+		esac
 
-			case "$Type" in
-			'"InputActive"' ) 
-				value=1 objaddr=$(echo $string | jq ".Events[$i].Number")
-			;;
-			'"InputPassive"' ) 
-				value=0 objaddr=$(echo $string | jq ".Events[$i].Number")
-			;;
-			'"PowerRecovery"' )
-				value=0 objaddr=17
-			;;
-			'"PowerFault"' )
-				value=1 objaddr=17
-			;;
-			'"BatteryLow1"' | '"BatteryLow2"' )
-				value=1 objaddr=18
-			;;
-			* )
-				Type='"Event"'
-				objaddr=0
-				value=0
-			;;
-			esac
-
-			ts=$(get_pctstamp)
-			printf '%s %s %s %s %s %s %s %s\n' "$ID" "$Type" "$asduaddr" "$objaddr" "$m_sp_tb_1" "$value" "-" "$ts"
-		done
+		ts=$(get_pctstamp)
+		printf '%s %s %s %s %s %s\n' "$asduaddr" "$objaddr" "$asdu_type" "$value" "-" "$ts"
 	;;
 	"info" ) 
-		input_len=$(echo "$string" | jq ".Inputs | length")
+		input_len=$(echo "$json" | jq ".Inputs | length")
 		ts=$(get_pctstamp)
 
 		for i in $(rangeconv 0-$(($input_len-1))); do
-			value=$(echo "$string" | jq ".Inputs[$i].state")
-			objaddr=$(echo "$string" | jq ".Inputs[$i].id")
+			value=$(echo "$json" | jq ".Inputs[$i].state")
+			objaddr=$(echo "$json" | jq ".Inputs[$i].id")
 			printf '%s %s %s %s %s %s\n' "$asduaddr" "$objaddr" "$m_sp_tb_1" "$value" "-" "$ts"
 		done
 		
 		# Temperature status
-		Temp=$(echo "$string" | jq ".sysinfo.sysinfo_temp")
+		Temp=$(echo "$json" | jq ".sysinfo.sysinfo_temp")
 		case "$Temp" in
 		'null' )
 			true
@@ -70,8 +71,8 @@ while read string; do
 		esac
 
 		# Battery status
-		BatteryState=$(echo "$string" | jq ".sysinfo.sysinfo_bat[0]")
-		BatteryCharge=$(echo "$string" | jq ".sysinfo.sysinfo_bat[1]")
+		BatteryState=$(echo "$json" | jq ".sysinfo.sysinfo_bat[0]")
+		BatteryCharge=$(echo "$json" | jq ".sysinfo.sysinfo_bat[1]")
 		case "$BatteryState" in
 		'"bat_ok"' )
 			objaddr=18 value=0
@@ -94,7 +95,7 @@ while read string; do
 		esac 
 	
 		# Power status
-		Power=$(echo "$string" | jq ".sysinfo.sysinfo_ext_pwr" )
+		Power=$(echo "$json" | jq ".sysinfo.sysinfo_ext_pwr" )
 		case "$Power" in
 		'null' )
 			objaddr=17 value=1

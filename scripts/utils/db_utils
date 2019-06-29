@@ -77,7 +77,7 @@ setdbact_qds()
 	fi
 }
 
-tmsig_send()
+ts_send()
 {
 	local asduaddr objaddr type value ts
     asduaddr=$1

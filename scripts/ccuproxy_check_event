@@ -1,0 +1,93 @@
+#!/bin/sh
+
+. $IECDIR/iecenv
+. $UTILS/log_utils
+. $UTILS/service_utils
+. $UTILS/db_utils
+. $UTILS/http_ccuproxy_utils
+
+sleeptime=60
+link_ts=1000
+link_down=0
+link_up=1
+
+while true; do
+	listen_event | sed -u -e '/^[[:space:]]*$/d' -e 's/^data:\(.*\)$/\1/' | \
+		while read json; do
+			event_type=$(echo "$json" | jq '.event' | jq 'if type=="array" then "array" else "string" end')
+			[ "$event_type" = '"array"' ] && event=$(echo "$json" | jq '.event[0]') || event=$(echo "$json" | jq '.event') 
+
+			imei=$(echo "$json" | jq '.imei' | tr -d '"')
+			[ "$imei" != "null" ] && asduaddr=$(cat "$RTU" | awk -v imei=$imei '{ if ( $2 == imei) print $1 }')
+
+			id=$(echo "$json" | jq '.ack')
+
+			if [ "$id" = "null" ]; then
+				case "$event" in
+					'"keepalive"' ) 
+						logmsgtime "Connection with proxy-server $CCUPROXY is ok" 
+					;;
+					'"online"' ) 
+						logmsgtime "Rtu $asduaddr is connected"
+						ts_send "$asduaddr" "$link_ts" 30 "$link_up"
+					;;
+					'"offline"' ) 
+						logmsgtime "Rtu $asduaddr is disconnected"
+						ts_send "$asduaddr" "$link_ts" 30 "$link_down"
+						setdbact_qds "$asduaddr" "NT"
+					;;
+					* )
+						logmsgtime "Event_json = $json"
+					;;
+				esac
+			else
+				case "$event" in
+					'"event_power_on"' ) 
+						logmsgtime "External power of rtu $asduaddr is switch on" 
+						if json_parse "$asduaddr" "$json" "event";  then
+							send_ack "$imei" "$id"
+						fi
+					;;
+					'"event_power_off"' ) 
+						logmsgtime "External power of rtu $asduaddr is switch off" 
+						if json_parse "$asduaddr" "$json" "event"; then
+							send_ack "$imei" "$id"
+						fi
+					;;
+					'"event_input"' )
+						input=$(echo "$json" | jq '.event[1]')
+						value=$(echo "$json" | jq '.event[2]' | awk '/false/ { $0 = 0; print }; /true/ { $0 = 1; print }')
+						logmsgtime "Rtu $asduaddr input $input is $value" 
+						if json_parse "$asduaddr" "$json" "event"; then
+							send_ack "$imei" "$id"
+						fi
+					;;
+					'"event_battery_low"' )
+						value=$(echo "$json" | jq '.event[1]')
+						logmsgtime "Rtu $asduaddr battery charge is $value" 
+						if json_parse "$asduaddr" "$json" "event"; then
+							send_ack "$imei" "$id"
+						fi
+					;;
+					'"event_temp_low"' | '"event_temp_normal"' | '"event_temp_high"' )
+						value=$(echo "$json" | jq '.event[1]')
+						logmsgtime "Rtu $asduaddr temperature is $value" 
+						if json_parse "$asduaddr" "$json" "event"; then
+							send_ack "$imei" "$id"
+						fi
+					;;
+					'"event_case_open"' ) 
+						logmsgtime "Case rtu $asduaddr is open" 
+						send_ack "$imei" "$id"
+					;;
+					* )
+						logmsgtime "Event_json = $json"
+					;;
+				esac
+			fi
+		done
+
+	logmsgtime "Connection with proxy-server $CCUPROXY is down" 
+	sleep "$sleeptime" 
+	logmsgtime "Attempting to reconnect to proxy-server $CCUPROXY" 
+done

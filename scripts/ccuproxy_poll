@@ -11,17 +11,17 @@ code=0
 link_ts=1000
 link_status=0
 
-imei=$(cat "$RTU" | awk -v comaddr=$asduaddr '{ if ( $1 == comaddr) print $0 }' | cut -d " " -f 2)
+imei=$(cat "$RTU" | awk -v comaddr=$asduaddr '{ if ( $1 == comaddr) print $2 }')
 
 if ! echo "$imei" | grep -q -E "^[[:digit:]]{15}$"; then
 	logmsgtime "Format imei \"rtu $asduaddr\" is incorrect"
 	code=2
 elif get_status "$imei"; then 
 	if ! json_inputs=$(get_inputs "$imei"); then
-		logmsgtime "Information about inputs \"rtu $asduaddr\" from proxy $CCUPROXY could not be obtained"	
+		logmsgtime "Information about inputs rtu $asduaddr from proxy $CCUPROXY could not be obtained"	
 		code=24
 	elif ! json_sysinfo=$(get_sysinfo "$imei"); then
-		logmsgtime "System information about \"rtu $asduaddr\" from ccu_proxy $CCUPROXY could not be obtained"	
+		logmsgtime "System information about rtu $asduaddr from ccu_proxy $CCUPROXY could not be obtained"	
 		code=24
 	elif ! [ -n "$json_inputs" ] && [ -n "$json_sysinfo" ]; then
 		logmsgtime "Received data from ccu_proxy $CCUPROXY is not correct"	
@@ -36,15 +36,15 @@ else
 	case "$code" in
 		6 ) logmsgtime "The address of the given proxy $CCUPROXY could not be resolved" ;;
 		7 ) logmsgtime "Failed connect to proxy $CCUPROXY" ;;
-		20 ) logmsgtime "Device \"rtu $asduaddr\" not connected to proxy $CCUPROXY" ;;
+		20 ) logmsgtime "Device rtu $asduaddr not connected to proxy $CCUPROXY" ;;
 		* ) logmsgtime "Curl exit code = $code"  ;;
 	esac
 fi
 
 case "$code" in
-	0 ) json_parse "$asduaddr" "info" "$response" ;;
+	0 ) json_parse "$asduaddr" "$response" "info" ;;
 	20 | 24 ) 
-		tmsig_send "$asduaddr" "$link_ts" 30 "$link_status"
+		ts_send "$asduaddr" "$link_ts" 30 "$link_status"
 		setdbact_qds "$asduaddr" "NT"
 	;;
 	* ) true ;;
