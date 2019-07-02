@@ -72,7 +72,7 @@ done <<-EOF
 EOF
 
 # SMS processing service
-if [ -c "$GSMDEV" ] && [ -x "$IECDIR/smsget"  ]; then
+if [ -x "$IECDIR/smsget" ]; then
 	stty raw -echo -F "$GSMDEV"
 	smsget -d -F "$GSMDEV" 2>>"$LOGDIR/smsget.log"
 	smsget -t 10 -g -F "$GSMDEV" 2>>"$LOGDIR/smsget.log" & 
