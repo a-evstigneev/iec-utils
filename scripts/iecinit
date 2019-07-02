@@ -11,26 +11,28 @@ test -x $IECDIR/iecproxy || exit 1
 test -x $IECDIR/ieclink || exit 1
 test -x $IECDIR/ginterrog || exit 1
 
-tmpfile=$(mktemp -p $RUNDIR iec_childpids.XXXXXX)
+tmpfile=$(mktemp -p $RUNDIR iecinit_childpids.XXXXXX)
 
 sigterm()
 {
 	local pid 
 	trap '' TERM CHLD
 	
-	jobs -p >$tmpfile
-	while read pid; do
-		kill -s TERM $pid >/dev/null 2>&1
-	done <<-EOF
-		$(cat $tmpfile)
-	EOF
+	kill -TERM "-$$" >/dev/null 2>&1
 
-	trap '-' TERM
+#	jobs -p >$tmpfile
+#	while read pid; do
+#		kill -s TERM $pid >/dev/null 2>&1
+#	done <<-EOF
+#		$(cat $tmpfile)
+#	EOF
+
+	trap '-' TERM CHLD
 }
 
 cleandir()
 {
-	rm -rf "$RUNDIR/*"
+	rm -rf ${RUNDIR}/*
 	exit 0
 }
 
@@ -66,7 +68,7 @@ while read cts_name cts_address cts_port; do
 		-d 3 &
 
 done <<-EOF
-	$(cat $CTS | grep -v '^#' | sed '/^$/d')
+	$(cat "$CTS" | grep -v '^#' | sed '/^$/d')
 EOF
 
 # SMS processing service
@@ -77,20 +79,21 @@ if [ -c "$GSMDEV" ] && [ -x "$IECDIR/smsget"  ]; then
 fi
 
 # Http-server-event processing service from CCUSERVER
-#if [ -x "$IECDIR/ccuserver_initpoll" ]; then
-#	setsid ccuserver_initpoll &
-#fi
+if [ -x "$IECDIR/ccuserver_initpoll" ]; then
+	[ -d "$LOGDIR/ccuserver" ] || mkdir -p "$LOGDIR/ccuserver" 2>/dev/null
+	ccuserver_initpoll 2>>"$LOGDIR/ccuserver/ccuserver_initpoll.log" &
+fi
 
 # Http-server-event processing service from CCUPROXY
 if [ -x "$IECDIR/ccuproxy_initpoll" ] && [ -x "$IECDIR/ccuproxy_eventget" ]; then
 	[ -d "$LOGDIR/ccuproxy" ] || mkdir -p "$LOGDIR/ccuproxy" 2>/dev/null
-	ccuproxy_initpoll
+	ccuproxy_initpoll # synchronization with devices
 	ccuproxy_eventget 2>>"$LOGDIR/ccuproxy/ccuproxy_eventget.log" &
 fi
 
 # Rtu polling service
-#if [ -x "$IECDIR/cron_initpoll" ]; then
-#	cron_initpoll &
-#fi
+if [ -x "$IECDIR/cron_initpoll" ]; then
+	cron_initpoll &
+fi
 
 wait

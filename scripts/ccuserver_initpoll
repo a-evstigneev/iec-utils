@@ -2,19 +2,19 @@
 
 . $IECDIR/config/iecenv
 
-tmpfile=$(mktemp -p "$RUNDIR" ccuserver_childpids.XXXXXX)
+#tmpfile=$(mktemp -p "$RUNDIR" ccuserver_childpids.XXXXXX)
 
-sigterm()
-{
-	local pid
-	trap '' TERM CHLD
+#sigterm()
+#{
+#	local pid
+#	trap '' TERM CHLD
 
-	kill -TERM "-$$" >/dev/null 2>&1
+#	kill -TERM "-$$" >/dev/null 2>&1
 
-	trap '-' TERM
-}
+#	trap '-' TERM
+#}
 
-trap 'sigterm' TERM
+#trap 'sigterm' TERM
 
 logdir="$LOGDIR/ccuserver"
 [ -d "$logdir" ] || mkdir -p "$logdir" 2>/dev/null

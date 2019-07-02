@@ -1,6 +1,6 @@
 json_parse()
 {
-	local asduaddr json tag parser code
+	local asduaddr json tag parser archdir tmpfile valuelist code
 	
 	asduaddr="$1" 
 	json="$2"

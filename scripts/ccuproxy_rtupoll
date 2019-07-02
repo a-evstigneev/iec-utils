@@ -9,7 +9,8 @@
 asduaddr=$1
 code=0
 link_ts=1000
-link_status=0
+link_down=0
+link_up=1
 
 imei=$(cat "$RTU" | awk -v comaddr=$asduaddr '{ if ( $1 == comaddr) print $2 }')
 
@@ -42,9 +43,12 @@ else
 fi
 
 case "$code" in
-	0 ) json_parse "$asduaddr" "$response" "info" ;;
+	0 ) 
+		json_parse "$asduaddr" "$response" "info" 
+		ts_send "$asduaddr" "$link_ts" 30 "$link_up"
+	;;
 	20 | 24 ) 
-		ts_send "$asduaddr" "$link_ts" 30 "$link_status"
+		ts_send "$asduaddr" "$link_ts" 30 "$link_down"
 		setdbact_qds "$asduaddr" "NT"
 	;;
 	* ) true ;;

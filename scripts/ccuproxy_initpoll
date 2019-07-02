@@ -2,19 +2,19 @@
 
 . $IECDIR/config/iecenv
 
-tmpfile=$(mktemp -p "$RUNDIR" ccuproxy_childpids.XXXXXX)
+#tmpfile=$(mktemp -p "$RUNDIR" ccuproxy_childpids.XXXXXX)
 
-sigterm()
-{
-	local pid
-	trap '' TERM CHLD
+#sigterm()
+#{
+#	local pid
+#	trap '' TERM CHLD
+#
+#	kill -TERM "-$$" >/dev/null 2>&1
+#
+#	trap '-' TERM
+#}
 
-	kill -TERM "-$$" >/dev/null 2>&1
-
-	trap '-' TERM
-}
-
-trap 'sigterm' TERM
+#trap 'sigterm' TERM
 
 logdir="$LOGDIR/ccuproxy"
 [ -d "$logdir" ] || mkdir -p "$logdir" 2>/dev/null

@@ -14,17 +14,17 @@ reqvoltage=13 # required external power supply voltage
 while read string; do
 	case "$tag" in
 		"event" ) 
-			event_len=$(echo $string | jq ".Events | length")
+			event_len=$(echo "$string" | jq ".Events | length")
 			for i in $(rangeconv 0-$(($event_len-1))); do
-				ID=$(echo $string | jq ".Events[$i].ID")
-				Type=$(echo $string | jq ".Events[$i].Type")
+				ID=$(echo "$string" | jq ".Events[$i].ID")
+				Type=$(echo "$string" | jq ".Events[$i].Type")
 
 				case "$Type" in
 				'"InputActive"' ) 
-					value=1 objaddr=$(echo $string | jq ".Events[$i].Number")
+					value=1 objaddr=$(echo "$string" | jq ".Events[$i].Number")
 				;;
 				'"InputPassive"' ) 
-					value=0 objaddr=$(echo $string | jq ".Events[$i].Number")
+					value=0 objaddr=$(echo "$string" | jq ".Events[$i].Number")
 				;;
 				'"PowerRecovery"' )
 					value=0 objaddr=17
@@ -47,17 +47,17 @@ while read string; do
 			done
 		;;
 		"info" ) 
-			input_len=$(echo $string | jq ".Inputs | length")
+			input_len=$(echo "$string" | jq ".Inputs | length")
 			ts=$(get_pctstamp)
 
 			for i in $(rangeconv 0-$(($input_len-1))); do
-				value=$(echo $string | jq ".Inputs[$i].Active")
+				value=$(echo "$string" | jq ".Inputs[$i].Active")
 				objaddr=$(($i+1))
 				printf '%s %s %s %s %s %s\n' "$asduaddr" "$objaddr" "$m_sp_tb_1" "$value" "-" "$ts"
 			done
 			
 			# Temperature status
-			Temp=$(echo $string | jq ".Temp")
+			Temp=$(echo "$string" | jq ".Temp")
 			case "$Temp" in
 			'"NotValid"' )
 				true
@@ -69,8 +69,8 @@ while read string; do
 			esac
 
 			# Battery status
-			BatteryState=$(echo $string | jq ".Battery.State")
-			BatteryCharge=$(echo $string | jq ".Battery.Charge")
+			BatteryState=$(echo "$string" | jq ".Battery.State")
+			BatteryCharge=$(echo "$string" | jq ".Battery.Charge")
 			case "$BatteryState" in
 			'"OK"' )
 				objaddr=18 value=0
@@ -93,7 +93,7 @@ while read string; do
 			esac 
 			
 			# Power status
-			Power=$(echo $string | jq ".Power" )
+			Power=$(echo "$string" | jq ".Power" )
 			case "$Power" in
 			'"Off"' )
 				objaddr=17 value=1
