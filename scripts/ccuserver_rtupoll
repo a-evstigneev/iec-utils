@@ -35,7 +35,7 @@ link_down=0
 while true; do
 	if response=$(get_state $asduaddr); then
 		logmsgtime "Connection with $CCUSERVER server succeeded"
-		ts_send "$asduaddr" "$link_ts" 30 "$link_up"
+		link_status=$link_up; ts_send "$asduaddr" "$link_ts" 30 "$link_status"
 		json_parse "$asduaddr" "$response" "info" 
 
 		ginterrog $asduaddr $polltime &
@@ -72,7 +72,7 @@ while true; do
 	fi
 
 	if [ "$link_status" -ne "$link_down" ]; then
-		ts_send "$asduaddr" "$link_ts" 30 "$link_down"
+		link_status=$link_down; ts_send "$asduaddr" "$link_ts" 30 "$link_status"
 		setdbact_qds "$asduaddr" "NT"
 		[ -n "$gipid" ] && kill -TERM $gipid >/dev/null 2>&1 && gipid=""
 	fi
