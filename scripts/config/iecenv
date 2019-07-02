@@ -1,29 +1,27 @@
 # Env variable $IECDIR is initialized in the file iecd
 UTILS="$IECDIR/utils"
-
 VARDIR="$IECDIR/var"
 RUNDIR="$IECDIR/var/run"
 SMSDROPDIR="$IECDIR/var/smsdrop"
 LOGDIR="$IECDIR/log"
-
 DB_ACT="$IECDIR/db_active"
 DB_ARCH="$IECDIR/db_archive"
 
-RTU="$IECDIR/rtu.conf"
-CTS="$IECDIR/cts.conf"
+RTU="$IECDIR/config/rtu.conf"
+CTS="$IECDIR/config/cts.conf"
 
 GSMDEV="/dev/ttyUSB0"
 DEVLOCK="$IECDIR/device.lock"
 SMS_NEXTPOLL=15
 
-OID="$IECDIR/oid"
 PARSERS="$IECDIR/parsers"
 
 RTUPOLL_SHEDULE="$IECDIR/rtupoll_shedule"
 
 SNMPTRAPCONF="$IECDIR/snmptrapd.conf"
-
-EMAIL="komisyk@mail.ru"
+OID="$IECDIR/oid"
 
 CCUSERVER="https://ccu.sh"
 CCUPROXY="https://192.168.70.10:8443"
+
+EMAIL="komisyk@mail.ru"

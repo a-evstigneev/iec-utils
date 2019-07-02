@@ -1,0 +1,43 @@
+#!/bin/sh
+
+. $IECDIR/config/iecenv #LOGDIR, RTUPOLL_SHEDULE
+
+[ -f "$RTUPOLL_SHEDULE" ] || exit 1
+CRONTAB_FILE="$RUNDIR/rtupoll_crontab"
+
+make_crontab()
+{
+	local shedule=$1	
+	local time cmd
+
+	echo 'MAILTO=""' >> "$CRONTAB_FILE"
+	echo "PATH=${PATH}" >> "$CRONTAB_FILE"
+	echo "IECDIR=${IECDIR}" >> "$CRONTAB_FILE"
+	
+	while read cmd time;do 
+		if [ -x "${IECDIR}/${cmd}" ]; then
+			echo "$time $cmd 2>>${LOGDIR}/${cmd}.log" >> "$CRONTAB_FILE"
+		fi
+	done <<-EOF
+		$(cat "$RTUPOLL_SHEDULE")
+	EOF
+}
+
+sigterm()
+{
+	local pid 
+	
+	trap '' TERM CHLD
+	crontab -r
+	trap '-' TERM
+	
+	exit 0
+}
+
+trap 'sigterm' TERM
+
+make_crontab "$RTUPOLL_SHEDULE"
+crontab "$CRONTAB_FILE"
+rm "$CRONTAB_FILE"
+
+while true; do sleep 10; done

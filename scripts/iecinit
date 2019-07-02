@@ -2,8 +2,7 @@
 
 . $IECDIR/config/iecenv # VARDIR, RUNDIR, LOGDIR, SMSDROPDIR, CTS, GSMDEV
 
-test -x $IECDIR/smsget || exit 1
-test -x $IECDIR/smsdrop || exit 1
+# Required components
 test -x $IECDIR/quemngr || exit 1
 test -x $IECDIR/asdusend || exit 1
 test -x $IECDIR/asduconv || exit 1
@@ -12,7 +11,7 @@ test -x $IECDIR/iecproxy || exit 1
 test -x $IECDIR/ieclink || exit 1
 test -x $IECDIR/ginterrog || exit 1
 
-tmpfile=$(mktemp -p $RUNDIR childpids.XXXXXX)
+tmpfile=$(mktemp -p $RUNDIR iec_childpids.XXXXXX)
 
 sigterm()
 {
@@ -38,7 +37,6 @@ cleandir()
 trap 'cleandir' EXIT
 trap 'sigterm' TERM
 
-#cd $IECDIR
 while read cts_name cts_address cts_port; do
 	mkdir -p "$LOGDIR/$cts_name"
 	mkdir -p "$VARDIR/$cts_name/work/drop"
@@ -71,21 +69,28 @@ done <<-EOF
 	$(cat $CTS | grep -v '^#' | sed '/^$/d')
 EOF
 
-# sms get 
-if [ -c $GSMDEV ]; then
-	stty raw -echo -F $GSMDEV
-	smsget -d -F $GSMDEV 2>>$LOGDIR/smsget.log
-	smsget -t 10 -g -F $GSMDEV 2>>$LOGDIR/smsget.log & 
+# SMS processing service
+if [ -c "$GSMDEV" ] && [ -x "$IECDIR/smsget"  ]; then
+	stty raw -echo -F "$GSMDEV"
+	smsget -d -F "$GSMDEV" 2>>"$LOGDIR/smsget.log"
+	smsget -t 10 -g -F "$GSMDEV" 2>>"$LOGDIR/smsget.log" & 
 fi
 
-# snmp trap get 
-#if [ -x "$IECDIR/trapget" ]; then
-#	trapget 2>>$LOGDIR/trapget.log &
-#fi
+# Http-server-event processing service from CCUSERVER
+if [ -x "$IECDIR/ccuserver_initpoll" ]; then
+	setsid ccuserver_initpoll &
+fi
 
-# http event get
-if [ -x "$IECDIR/httpget" ]; then
-	setsid httpget &
+# Http-server-event processing service from CCUPROXY
+if [ -x "$IECDIR/ccuproxy_initpoll" ] && [ -x "$IECDIR/ccuproxy_eventget" ]; then
+	[ -d "$LOGDIR/ccuproxy" ] || mkdir -p "$LOGDIR/ccuproxy" 2>/dev/null
+	ccuproxy_initpoll
+	ccuproxy_eventget 2>>"$LOGDIR/ccuproxy/ccuproxy_eventget.log" &
+fi
+
+# Rtu polling service
+if [ -x "$IECDIR/cron_initpoll" ]; then
+	cron_initpoll &
 fi
 
 wait

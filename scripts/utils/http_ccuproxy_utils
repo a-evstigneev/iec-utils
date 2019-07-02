@@ -1,10 +1,10 @@
 json_parse()
 {
-	local asduaddr json type parser code
+	local asduaddr json tag parser code
 	
 	asduaddr="$1" 
 	json="$2"
-	type="$3"
+	tag="$3"
 	parser=$(cat "$RTU" | awk -v comaddr=$asduaddr '{ if ( $1 == comaddr) print $0 }' | cut -d " " -f 3)
 
 	archdir="$DB_ARCH/$asduaddr"
@@ -13,7 +13,7 @@ json_parse()
 	tmpfile=$(mktemp -u -p $archdir tmpccu.XXXXXX)
 	[ -f "$tmpfile" ] && rm "$tmpfile" 2>/dev/null
 	
-	valuelist=$(echo "$json" | $PARSERS/$parser "$asduaddr" "$type")
+	valuelist=$(echo "$json" | $PARSERS/$parser "$asduaddr" "$tag")
 	
 	code=1
 	if [ -n "$valuelist" ]; then 

@@ -4,7 +4,7 @@
 . $UTILS/log_utils
 . $UTILS/service_utils
 . $UTILS/db_utils
-. $UTILS/http_utils
+. $UTILS/http_ccuserver_utils
 
 asduaddr=$1
 sleeptime=60
@@ -21,7 +21,7 @@ ginterrog()
 	while true; do
 		sleep $time
 		if response=$(get_state $asduaddr); then
-			json_parse "$asduaddr" "state" "$response"	
+			json_parse "$asduaddr" "$response" "info"	
 			logmsgtime "The general interrogation $CCUSERVER server was successful"
 		fi
 	done
@@ -36,7 +36,7 @@ while true; do
 	if response=$(get_state $asduaddr); then
 		logmsgtime "Connection with $CCUSERVER server succeeded"
 		link_status=$link_up; ts_send "$asduaddr" "$link_ts" 30 "$link_status"
-		json_parse "$asduaddr" "state" "$response"  
+		json_parse "$asduaddr" "$response" "info" 
 
 		ginterrog $asduaddr $polltime &
 		gipid=$!
@@ -51,7 +51,7 @@ while true; do
 			'{"Type":"NewEvents"}') 
 				if response=$(get_state $asduaddr); then
 					logmsgtime "Event from $CCUSERVER Received"
-					listid=$(json_parse "$asduaddr" "events" "$response")  
+					listid=$(json_parse "$asduaddr" "$response" "event")  
 					[ -n "$listid" ] && ack_events "$asduaddr" "$listid"
 				else
 					logmsgtime "Synchronization with $CCUSERVER server failed"

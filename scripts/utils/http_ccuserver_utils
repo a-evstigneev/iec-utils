@@ -1,9 +1,10 @@
 json_parse()
 {
-	local asduaddr class type json parser
+	local asduaddr json tag type parser
+	
 	asduaddr=$1
-	class="$2"
-	json="$3"
+	json="$2"
+	tag="$3"
 	parser=$(cat "$RTU" | awk -v comaddr=$asduaddr '{ if ( $1 == comaddr) print $0 }' | cut -d " " -f 3)
 
 	archdir="$DB_ARCH/$asduaddr"
@@ -12,45 +13,45 @@ json_parse()
 	tmpfile=$(mktemp -u -p $archdir tmpccu.XXXXXX)
 	[ -f "$tmpfile" ] && rm "$tmpfile" 2>/dev/null
 	
-	valuelist=$(echo "$json" | $PARSERS/$parser "$asduaddr" "$class")
-	case "$class" in
-	"events" ) 
-		while read id type value; do
-			[ -z "$listid" ] && listid=$id || listid="${listid}%2C${id}"
-			case "$type" in
-			'"Event"' ) true ;;
-			* )
-				echo "$value" > "$tmpfile"
-					
-				if sync "$tmpfile" 2>/dev/null; then
-					putqueue  "$tmpfile"
-					putdbact  "$tmpfile"
-					putdbarch "$tmpfile"
-					rm "$tmpfile" 2>/dev/null
-				else
-					rm "$tmpfile" 2>/dev/null
-				fi
-			;;
-			esac
-		done <<-EOF
-			$valuelist
-		EOF
-		echo "$listid"
-	;;
-	"state" )
-		cat - >> "$tmpfile" <<-EOF
-			$valuelist
-		EOF
-		
-		if sync "$tmpfile" 2>/dev/null; then
-			putqueue  "$tmpfile"
-			putdbact  "$tmpfile"
-			putdbarch "$tmpfile"
-			rm "$tmpfile" 2>/dev/null
-		else
-			rm "$tmpfile" 2>/dev/null
-		fi
-	;;
+	valuelist=$(echo "$json" | $PARSERS/$parser "$asduaddr" "$tag")
+	case "$tag" in
+		"event" ) 
+			while read id type value; do
+				[ -z "$listid" ] && listid=$id || listid="${listid}%2C${id}"
+				case "$type" in
+					'"Event"' ) true ;;
+					* )
+						echo "$value" > "$tmpfile"
+							
+						if sync "$tmpfile" 2>/dev/null; then
+							putqueue  "$tmpfile"
+							putdbact  "$tmpfile"
+							putdbarch "$tmpfile"
+							rm "$tmpfile" 2>/dev/null
+						else
+							rm "$tmpfile" 2>/dev/null
+						fi
+					;;
+				esac
+			done <<-EOF
+				$valuelist
+			EOF
+			echo "$listid"
+		;;
+		"info" )
+			cat - >> "$tmpfile" <<-EOF
+				$valuelist
+			EOF
+			
+			if sync "$tmpfile" 2>/dev/null; then
+				putqueue  "$tmpfile"
+				putdbact  "$tmpfile"
+				putdbarch "$tmpfile"
+				rm "$tmpfile" 2>/dev/null
+			else
+				rm "$tmpfile" 2>/dev/null
+			fi
+		;;
 	esac
 }
 
@@ -87,7 +88,7 @@ ack_events()
 
 get_state()
 {
-	local class string tmpfile code kind response valuelist value idlist 
+	local string tmpfile code kind response valuelist value idlist 
 	
 	asduaddr=$1	
 	user=$(cat "$RTU" | awk -v comaddr=$asduaddr '{ if ( $1 == comaddr) print $0 }' | cut -d " " -f 2)
@@ -95,20 +96,24 @@ get_state()
 	
 	response=$(curl -s -N --connect-timeout 15 --fail-early --keepalive --keepalive-time 15 --user "$user" "${CCUSERVER}${p_state}")
 	code=$?
+	echo "code = $code, response = $response" >/opt/iecd/ccuserver_response.log
 	case $code in
-	0 )
-		if echo "$response" | jq -e '.' >/dev/null 2>&1;  then
-			# Проверять длину $response
-			# json string response
-			echo "$response"
-		elif echo "$response" | grep -q "DOCTYPE html"; then
-			# html response
-			code=1
-		fi
-	;;
-	6 ) logmsgtime "The address of the given server $CCUSERVER could not be resolved (curl exit code = 6)" ;;
-	7 ) logmsgtime "Failed to connect to host $CCUSERVER (curl exit code = 7)" ;;
-	* ) logmsgtime "Exit code $code" ;;
+		0 )
+			if echo "$response" | grep -q "DOCTYPE html"; then
+				code=1
+			elif ! echo "$response" | jq -e '.' >/dev/null 2>&1;  then
+				code=1
+			elif ! echo "$response" | jq -e '.Inputs' >/dev/null 2>&1; then
+				code=1
+				logmsgtime "Invalid response from $CCUSERVER - json message does not contain block Inputs"
+			else 
+				# correct json string response
+				echo "$response"
+			fi
+		;;
+		6 ) logmsgtime "The address of the given server $CCUSERVER could not be resolved (curl exit code = 6)" ;;
+		7 ) logmsgtime "Failed to connect to host $CCUSERVER (curl exit code = 7)" ;;
+		* ) logmsgtime "Curl exit code = $code" ;;
 	esac
 	
 	return $code

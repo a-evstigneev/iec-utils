@@ -2,7 +2,7 @@
 
 . $IECDIR/config/iecenv
 
-tmpfile=$(mktemp -p $RUNDIR http_childpids.XXXXXX)
+tmpfile=$(mktemp -p "$RUNDIR" ccuserver_childpids.XXXXXX)
 
 sigterm()
 {
@@ -16,12 +16,14 @@ sigterm()
 
 trap 'sigterm' TERM
 
-logdir="$LOGDIR/httplog"
-mkdir -p "$logdir"
+logdir="$LOGDIR/ccuserver"
+[ -d "$logdir" ] || mkdir -p "$logdir" 2>/dev/null
+
+[ -x "$IECDIR/ccuserver_rtupoll" ] || exit 1 
 
 while read asduaddr credentials dev description; do
 	[ -d "$DB_ACT/$asduaddr" ] || mkdir -p "$DB_ACT/$asduaddr"
-	ccuserver_poll "$asduaddr" 2>>"$logdir/rtu_${asduaddr}" &
+	ccuserver_rtupoll "$asduaddr" 2>>"$logdir/rtu_${asduaddr}.log" &
 done <<-EOF
 	$(cat "$RTU" | grep ccu825_gprs)
 EOF

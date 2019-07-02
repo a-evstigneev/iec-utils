@@ -1,7 +1,6 @@
 #!/bin/sh
 
-IECDIR="/opt/iecd"
-. $IECDIR/config/iecenv
+. $IECDIR/config/iecenv # DB_ACT, RTU,
 . $UTILS/service_utils
 . $UTILS/log_utils
 . $UTILS/db_utils
@@ -9,6 +8,8 @@ IECDIR="/opt/iecd"
 control_time=$((2*24*3600))
 objaddr_ex=1000
 count=0
+link_up=1
+link_down=0
 
 while read asduaddr info model identity; do
 	case "$model" in 
@@ -17,7 +18,7 @@ while read asduaddr info model identity; do
 				if ! [ -f "$DB_ACT/$asduaddr/$fn" ]; then 
 					continue
 				elif [ $(( $(date +%s) - $(stat --printf %Y "$DB_ACT/$asduaddr/$fn") )) -gt $control_time ]; then
-					tmsig_send "$asduaddr" "$objaddr_ex" 30 0
+					ts_send "$asduaddr" "$objaddr_ex" 30 "$link_down"
 					count=0
 					break
 				else
@@ -27,12 +28,12 @@ while read asduaddr info model identity; do
 				$(find "$DB_ACT/$asduaddr" -type f -printf "%P\n" 2>/dev/null | grep -v "$objaddr_ex")
 			EOF
 
-			[ $count -gt 0 ] && tmsig_send "$asduaddr" "$objaddr_ex" 30 1 
+			[ $count -gt 0 ] && ts_send "$asduaddr" "$objaddr_ex" 30 "$link_up"
 		;;
 		* )
 			true
 		;;
 	esac
 done <<-EOF	
-	$(cat $RTU)
+	$(cat "$RTU")
 EOF

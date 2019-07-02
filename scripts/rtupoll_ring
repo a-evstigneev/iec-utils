@@ -1,6 +1,6 @@
 #!/bin/sh
 
-. $IECDIR/config/iecenv # GSMDEV, DEVLOCK
+. $IECDIR/config/iecenv # GSMDEV, DEVLOCK, RTU
 . $UTILS/log_utils
 . $UTILS/io_utils
 
@@ -67,15 +67,8 @@ if [ -n "$number" ]; then
 	exit $?
 fi
 
-if [ $# -eq 1 ] && [ -f $1 ]; then 
-	rtu=$1 
-else 
-	usage 
-	exit 0
-fi 
-
 if cmdsend "$GSMDEV" "AT+CREG?" response; then
-	echo $response  | grep -q "0,1" && logmsgtime "GSM device $GSMDEV is registered on the network"
+	echo "$response"  | grep -q "0,1" && logmsgtime "GSM device $GSMDEV is registered on the network"
 else
 	logmsgtime "Device $GSMDEV is not available now"
 	exit 2
@@ -91,4 +84,4 @@ while read rtu number type; do
 	;;
 	*) true	;;
 	esac
-done <$rtu
+done <"$RTU"
