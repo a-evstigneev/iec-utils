@@ -20,12 +20,13 @@ logdir="$LOGDIR/ccuserver"
 [ -d "$logdir" ] || mkdir -p "$logdir" 2>/dev/null
 
 [ -x "$IECDIR/ccuserver_rtupoll" ] || exit 1 
+cat "$RTU" | grep -q 'ccu825_gprs' || exit 1
 
 while read asduaddr credentials dev description; do
 	[ -d "$DB_ACT/$asduaddr" ] || mkdir -p "$DB_ACT/$asduaddr"
 	ccuserver_rtupoll "$asduaddr" 2>>"$logdir/rtu_${asduaddr}.log" &
 done <<-EOF
-	$(cat "$RTU" | grep ccu825_gprs)
+	$(cat "$RTU" | grep 'ccu825_gprs')
 EOF
 
 wait
