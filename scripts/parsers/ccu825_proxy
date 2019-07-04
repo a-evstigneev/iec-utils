@@ -29,7 +29,7 @@ while read json; do
 			;;
 			'"event_input"' )
 				objaddr=$(echo "$json" | jq '.event[1]')
-				value=$(echo "$json" | jq '.event[2]' | awk '/false/ { $0 = 1; print }; /true/ { $0 = 0; print }')
+				value=$(echo "$json" | jq '.event[2]' | awk '/false/ { $0 = 0; print }; /true/ { $0 = 1; print }')
 				asdu_type=$m_sp_tb_1
 			;;
 			'"event_battery_low"' )
