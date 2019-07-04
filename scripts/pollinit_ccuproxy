@@ -1,0 +1,41 @@
+#!/bin/sh
+
+. $IECDIR/config/iecenv
+. $UTILS/log_utils
+
+#tmpfile=$(mktemp -p "$RUNDIR" ccuproxy_childpids.XXXXXX)
+
+#sigterm()
+#{
+#	local pid
+#	trap '' TERM CHLD
+#
+#	kill -TERM "-$$" >/dev/null 2>&1
+#
+#	trap '-' TERM
+#}
+
+#trap 'sigterm' TERM
+
+if ! [ -x "$IECDIR/poll_ccuproxy" ]; then
+	logmsgtime "Poll_ccuproxy utility was not found in the working directory"
+	logmsgtime "Pollinit_ccuproxy terminated"
+	exit 1
+elif ! cat "$RTU" | grep -q "ccu825_proxy"; then
+	logmsgtime "No device ccu825_proxy related entries found in the file $RTU"
+	logmsgtime "Pollinit_ccuproxy terminated"
+	exit 1
+fi
+
+logdir="$LOGDIR/ccuproxy"
+[ -d "$logdir" ] || mkdir -p "$logdir" 2>/dev/null
+
+while read asduaddr credentials dev description; do
+	[ -d "$DB_ACT/$asduaddr" ] || mkdir -p "$DB_ACT/$asduaddr"
+	poll_ccuproxy "$asduaddr" 2>>"$logdir/rtu_${asduaddr}.log" &
+	logmsgtime "Programm instance poll_ccuproxy[$!] was running for rtu_${asduaddr}"
+done <<-EOF
+	$(cat "$RTU" | grep "ccu825_proxy")
+EOF
+
+wait

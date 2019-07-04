@@ -16,10 +16,10 @@ SMS_NEXTPOLL=15
 
 PARSERS="$IECDIR/parsers"
 
-RTUPOLL_SHEDULE="$IECDIR/rtupoll_shedule"
+POLLING_SHEDULE="$IECDIR/polling_shedule"
 
-SNMPTRAPCONF="$IECDIR/snmptrapd.conf"
-OID="$IECDIR/oid"
+SNMPTRAPCONF="$IECDIR/snmp/snmptrapd.conf"
+OID="$IECDIR/snmp/oid"
 
 CCUSERVER="https://ccu.sh"
 CCUPROXY="https://192.168.70.10:8443"

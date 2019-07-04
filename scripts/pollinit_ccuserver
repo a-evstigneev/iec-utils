@@ -1,0 +1,41 @@
+#!/bin/sh
+
+. $IECDIR/config/iecenv
+. $UTILS/log_utils
+
+#tmpfile=$(mktemp -p "$RUNDIR" ccuserver_childpids.XXXXXX)
+
+#sigterm()
+#{
+#	local pid
+#	trap '' TERM CHLD
+
+#	kill -TERM "-$$" >/dev/null 2>&1
+
+#	trap '-' TERM
+#}
+
+#trap 'sigterm' TERM
+
+if ! [ -x "$IECDIR/poll_ccuserver" ]; then
+	logmsgtime "Poll_ccuserver utility was not found in the working directory"
+	logmsgtime "Pollinit_ccuserver terminated"
+	exit 1
+elif ! cat "$RTU" | grep -q "ccu825_gprs"; then
+	logmsgtime "No device ccu825_gprs related entries found in the file $RTU"
+	logmsgtime "Pollinit_ccuserver terminated"
+	exit 1
+fi
+
+logdir="$LOGDIR/ccuserver"
+[ -d "$logdir" ] || mkdir -p "$logdir" 2>/dev/null
+
+while read asduaddr credentials dev description; do
+	[ -d "$DB_ACT/$asduaddr" ] || mkdir -p "$DB_ACT/$asduaddr"
+	poll_ccuserver "$asduaddr" 2>>"$logdir/rtu_${asduaddr}.log" &
+	logmsgtime "Programm instance poll_ccuserver[$!] was running for rtu_${asduaddr}"
+done <<-EOF
+	$(cat "$RTU" | grep "ccu825_gprs")
+EOF
+
+wait

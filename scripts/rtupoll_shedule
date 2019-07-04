@@ -1,4 +1,0 @@
-rtupoll_ring 40 * * * * 
-rtupoll_sms 45 * * * * 
-check_availability 50 * * * *
-ccuproxy_initpoll 50 * * * *

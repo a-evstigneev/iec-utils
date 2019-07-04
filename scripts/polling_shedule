@@ -1,0 +1,4 @@
+poll_ring 30 * * * * 
+poll_sms 35 * * * * 
+check_availability 40 * * * *
+pollinit_ccuproxy 45 * * * *

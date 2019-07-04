@@ -79,21 +79,19 @@ if [ -x "$IECDIR/smsget" ]; then
 fi
 
 # Http-server-event processing service from CCUSERVER
-if [ -x "$IECDIR/ccuserver_initpoll" ]; then
-	[ -d "$LOGDIR/ccuserver" ] || mkdir -p "$LOGDIR/ccuserver" 2>/dev/null
-	ccuserver_initpoll 2>>"$LOGDIR/ccuserver/ccuserver_initpoll.log" &
+if [ -x "$IECDIR/pollinit_ccuserver" ]; then
+	pollinit_ccuserver 2>>"$LOGDIR/pollinit_ccuserver.log" &
 fi
 
 # Http-server-event processing service from CCUPROXY
-if [ -x "$IECDIR/ccuproxy_initpoll" ] && [ -x "$IECDIR/ccuproxy_eventget" ]; then
-	[ -d "$LOGDIR/ccuproxy" ] || mkdir -p "$LOGDIR/ccuproxy" 2>/dev/null
-	ccuproxy_initpoll # synchronization with devices
-	ccuproxy_eventget 2>>"$LOGDIR/ccuproxy/ccuproxy_eventget.log" &
+if [ -x "$IECDIR/pollinit_ccuproxy" ] && [ -x "$IECDIR/eventget_ccuproxy" ]; then
+	pollinit_ccuproxy 2>>"$LOGDIR/pollinit_ccuproxy.log" # synchronization with devices
+	eventget_ccuproxy 2>>"$LOGDIR/eventget_ccuproxy.log" &
 fi
 
 # Rtu polling service
-if [ -x "$IECDIR/cron_initpoll" ]; then
-	cron_initpoll &
+if [ -x "$IECDIR/pollinit_cron" ]; then
+	pollinit_cron &
 fi
 
 wait

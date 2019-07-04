@@ -1,6 +1,6 @@
 #!/bin/sh
 
-. $IECDIR/config/iecenv # DB_ACT, RTU,
+. $IECDIR/config/iecenv # DB_ACT, RTU
 . $UTILS/service_utils
 . $UTILS/log_utils
 . $UTILS/db_utils

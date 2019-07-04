@@ -134,13 +134,13 @@ void sig_chld(int signum)
 }
 
 int
-connect_hook(char *pid)
+hook_connect(char *pid)
 {
 	int n = -1;
 	char command[BUF_SIZE] = {0};
 
 	if (pid != NULL) {
-		snprintf(command, BUF_SIZE, "%s %s", "connect_hook", pid);
+		snprintf(command, BUF_SIZE, "%s %s", "hook_connect", pid);
 		n = system(command);
 	}
 
@@ -148,13 +148,13 @@ connect_hook(char *pid)
 }
 
 int
-disconnect_hook(char *pid)
+hook_disconnect(char *pid)
 {
 	int n = -1;
 	char command[BUF_SIZE] = {0};
 	
 	if (pid != NULL) {
-		snprintf(command, BUF_SIZE, "%s %s", "disconnect_hook", pid);
+		snprintf(command, BUF_SIZE, "%s %s", "hook_disconnect", pid);
 		n = system(command);
 	}
 
@@ -276,7 +276,7 @@ main(int argc, char *argv[])
 					if (new_connect) {
 						fdread[1].fd = new_sockfd;
 						fdread[1].events = POLLIN; // Ждем подключений от sockwrite, который передаст ASDU или уведомит, что отложенных сообщений в очереди нет
-						connect_hook(pid_notify);
+						hook_connect(pid_notify);
 						
 						dprintf(pipefd1[1], "%s\n", GI_CON);
 						LOG_MSG(2, "send GI_CON (C_IC_NA_1 cot=7) %s to ieclink", GI_CON);
@@ -310,8 +310,8 @@ main(int argc, char *argv[])
 							fdread[1].fd = -1;
 							unlink(unixsock);
 							LOG_MSG(2, "file unix_socket %s removed", unixsock);
-							disconnect_hook(pid_notify);
-							LOG_MSG(2, "start disconnect_hook for process pid = %d", pid_notify);
+							hook_disconnect(pid_notify);
+							LOG_MSG(2, "start hook_disconnect for process pid = %d", pid_notify);
 							break;
 						case '<':
 							LOG_MSG(2, "received \"<\" from ieclink, transmission confirmed");
