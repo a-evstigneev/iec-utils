@@ -1,11 +1,10 @@
 putqueue()
 {
-	local file="$1"
-	local cts rest dropmsg inode
+	local file cts rest dropmsg inode
+	file=$1
 
 	while read cts rest; do
 		dropmsg=$(mktemp -u -p $VARDIR/$cts/work/drop dropmsg.XXXXXX)
-		# dropmsg="$VARDIR/$cts/work/drop/dropmsg"
 
 		if cp "$file" "$dropmsg" 2>/dev/null && sync "$dropmsg" 2>/dev/null; then
 			inode="$VARDIR/$cts/work/drop/$(stat -c %i $dropmsg)"
@@ -18,7 +17,7 @@ putqueue()
 			fi
 	    else
 			rm "$dropmsg" 2>/dev/null   
-			logmsgtime "Сoping file $file to file "$dropmsg" is failed"
+			logmsgtime "Сopying file $file to directory $VARDIR/$cts/work/drop is failed"
 		fi
 	done <<-EOF
 		$(cat "$CTS" | grep -v '^#' | sed '/^$/d')
@@ -27,11 +26,12 @@ putqueue()
 
 putdbarch()
 {
-	local file="$1"
-	local asduaddr rest archmsg
+	local file asduaddr rest archmsg
+	file=$1
 
 	read asduaddr rest <"$file"
 	archmsg=$DB_ARCH/$asduaddr/$(/bin/date '+%G-%m-%d_%H:%M:%S')_$(mktemp -u "XXXXXX")
+	
 	if cp "$file" "$archmsg" 2>/dev/null && sync "$archmsg" 2>/dev/null; then
 		logmsgtime "Copying file $file to file $archmsg was done"
 	else
@@ -41,8 +41,8 @@ putdbarch()
 
 putdbact()
 {
-	local file="$1"
-	local asduasddr objaddr type value qds timestamp
+	local file asduasddr objaddr type value qds timestamp
+	file=$1
 
 	while read asduaddr objaddr type value qds timestamp; do
 		case "$type" in
@@ -59,7 +59,7 @@ putdbact()
 		sync "$DB_ACT/$asduaddr/$type/$objaddr"
 	done <"$file"
 
-	logmsgtime "Copying file $file to dir $DB_ACT was done"
+	logmsgtime "Copying values from file $file to directory $DB_ACT was done"
 }
 
 setdbact_qds()

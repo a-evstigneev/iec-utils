@@ -14,6 +14,8 @@ link_up=1
 while true; do
 	listen_event | sed -u -e '/^[[:space:]]*$/d' -e 's/^data:\(.*\)$/\1/' | \
 		while read json; do
+			echo "$json" >>"$LOGDIR/eventget_ccuproxy_raw.log"
+			
 			event_type=$(echo "$json" | jq '.event' | jq 'if type=="array" then "array" else "string" end')
 			[ "$event_type" = '"array"' ] && event=$(echo "$json" | jq '.event[0]') || event=$(echo "$json" | jq '.event') 
 
