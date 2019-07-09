@@ -27,7 +27,7 @@ elif get_status "$imei"; then
 	elif ! [ -n "$json_inputs" ] && [ -n "$json_sysinfo" ]; then
 		logmsgtime "Received data from ccu_proxy $CCUPROXY is not correct"	
 		code=24
-	elif echo "$json_inputs" | jq -e '.' >/dev/null 2>&1 && echo "$json_sysinfo" | jq -e '.' >/dev/null 2>&1; then
+	elif ! echo "$json_inputs" | jq -e '.' >/dev/null 2>&1 || ! echo "$json_sysinfo" | jq -e '.' >/dev/null 2>&1; then
 		logmsgtime "Received data from ccu_proxy $CCUPROXY is not correct json data"	
 		code=24
 	elif error_code=$(echo "$json_inputs" | jq -e '.error_code'); then
