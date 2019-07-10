@@ -31,9 +31,11 @@ elif get_status "$imei"; then
 		logmsgtime "Received data from ccu_proxy $CCUPROXY is not correct json data"	
 		code=24
 	elif error_code=$(echo "$json_inputs" | jq -e '.error_code'); then
+		echo "inputs ($asduaddr) -> $json_inputs" >>"$LOGDIR/poll_ccuproxy_raw.log"
 		logmsgtime "Error code $error_code was detected in message json_inputs"	
 		code=24
 	elif error_code=$(echo "$json_sysinfo" | jq -e '.error_code'); then
+		echo "sysinfo ($asduaddr) -> $json_sysinfo" >>"$LOGDIR/poll_ccuproxy_raw.log"
 		logmsgtime "Error code $error_code was detected in message json_sysinfo"	
 		code=24
 	else
