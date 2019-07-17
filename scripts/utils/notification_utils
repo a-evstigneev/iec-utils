@@ -4,6 +4,6 @@ send_notification()
 	
 	# Pre-tuning msmtp is required
 	if [ -x /usr/bin/msmtp ]; then
-		/bin/echo -e "Subject: gsm-modem fault\r\n\r\n${_msg}\n" | msmtp -a komisyk -t ${EMAIL} >/dev/null 2>&1
+		/bin/echo -e "Subject: gsm-modem fault\r\n\r\n${_msg}\n" | msmtp -a ${MAILUSER} -t ${MAILURL} >/dev/null 2>&1
 	fi
 }

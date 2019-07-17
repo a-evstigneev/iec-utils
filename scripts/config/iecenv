@@ -24,4 +24,5 @@ OID="$IECDIR/snmp/oid"
 CCUSERVER="https://ccu.sh"
 CCUPROXY="https://192.168.70.10:8443"
 
-EMAIL="komisyk@mail.ru"
+MAILURL="komisyk@mail.ru"
+MAILUSER="komisyk"
