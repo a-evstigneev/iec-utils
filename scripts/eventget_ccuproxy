@@ -21,7 +21,7 @@ while true; do
 
 			imei=$(echo "$json" | jq '.imei' | tr -d '"')
 			if [ "$imei" != "null" ]; then
-				asduaddr=$(cat "$RTU" | awk -v imei=$imei '{ if ( $2 == imei) print $1 }'); then
+				asduaddr=$(cat "$RTU" | awk -v imei=$imei '{ if ( $2 == imei) print $1 }')
 				if [ -z "$asduaddr" ]; then
 					logmsgtime "Imei $imei not found in $RTU"
 					continue
