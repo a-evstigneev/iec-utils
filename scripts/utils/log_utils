@@ -14,3 +14,12 @@ logmsgtime()
 	_pid=$(echo $$)
 	/usr/bin/printf '%s\n' "$(LANG=en date '+%b %d %T') $(hostname) $(basename "$0")[${_pid}]: $_msg" >&2
 }
+
+logmsgtime_debug()
+{
+	local _msg _pid
+	
+	_msg=$1
+	_pid=$(echo $$)
+	/usr/bin/printf '%s\n' "$(LANG=en date '+%b %d %T') $(hostname) $(basename "$0")[${_pid}]: $_msg"
+}

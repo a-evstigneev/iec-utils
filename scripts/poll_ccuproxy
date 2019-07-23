@@ -31,20 +31,20 @@ elif get_status "$imei"; then
 		logmsgtime "Received data from ccu_proxy $CCUPROXY is not correct json data"	
 		code=24
 	elif error_code=$(echo "$json_inputs" | jq -e '.error_code'); then
-		echo "inputs ($asduaddr) -> $json_inputs" >>"$LOGDIR/poll_ccuproxy_raw.log"
+		logmsgtime_debug "inputs ($asduaddr) -> $json_inputs" >>"$LOGDIR/poll_ccuproxy_raw.log"
 		logmsgtime "Error code $error_code was detected in message json_inputs"	
 		code=24
 	elif error_code=$(echo "$json_sysinfo" | jq -e '.error_code'); then
-		echo "sysinfo ($asduaddr) -> $json_sysinfo" >>"$LOGDIR/poll_ccuproxy_raw.log"
+		logmsgtime_debug "sysinfo ($asduaddr) -> $json_sysinfo" >>"$LOGDIR/poll_ccuproxy_raw.log"
 		logmsgtime "Error code $error_code was detected in message json_sysinfo"	
 		code=24
 	else
-		echo "inputs ($asduaddr) -> $json_inputs" >>"$LOGDIR/poll_ccuproxy_raw.log"
-		echo "sysinfo ($asduaddr) -> $json_sysinfo" >>"$LOGDIR/poll_ccuproxy_raw.log"
+		logmsgtime_debug "inputs ($asduaddr) -> $json_inputs" >>"$LOGDIR/poll_ccuproxy_raw.log"
+		logmsgtime_debug "sysinfo ($asduaddr) -> $json_sysinfo" >>"$LOGDIR/poll_ccuproxy_raw.log"
 		json_inputs=$(echo "$json_inputs" | sed 's/,/},{/g; s/false/0/g; s/true/1/g; s/:/_/g; s/\"\([0-9]\{0,2\}\)\"/\x22id\x22:\1,/g; s/_/\x22state\x22:/g')
 		json_sysinfo=$(echo "$json_sysinfo" | tail -c +2)
 		response="{\"Inputs\":[${json_inputs}],${json_sysinfo}"
-		echo "json_assemble_response ($asduaddr) -> $response" >>"$LOGDIR/poll_ccuproxy_raw.log"
+		logmsgtime_debug "json_assemble_response ($asduaddr) -> $response" >>"$LOGDIR/poll_ccuproxy_raw.log"
 	fi
 	
 else
