@@ -18,7 +18,7 @@ while read asduaddr info model identity; do
 				if ! [ -f "$DB_ACT/$asduaddr/$fn" ]; then 
 					continue
 				elif [ $(( $(date +%s) - $(stat --printf %Y "$DB_ACT/$asduaddr/$fn") )) -gt $control_time ]; then
-					logmsgtime "Time of last data modification $(stat --printf %y $DB_ACT/$asduaddr/$fn)"
+					logmsgtime "Time of last data modification file $DB_ACT/$asduaddr/$fn - $(stat --printf %y $DB_ACT/$asduaddr/$fn)"
 					ts_send "$asduaddr" "$objaddr_ex" 30 "$link_down"
 					count=0
 					break
