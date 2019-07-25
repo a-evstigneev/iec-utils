@@ -14,7 +14,7 @@ while read asduaddr info model identity; do
 	case "$model" in 
 		ccu825_sms | granit ) 
 			count=0
-			check_list=$(find "$DB_ACT/$asduaddr" -type f -printf "%P\n" | grep -v "1000")
+			check_list=$(find "$DB_ACT/$asduaddr" -type f -printf "%P\n" 2>/dev/null | grep -v "1000")
 			if ! [ -z "$check_list" ]; then
 				while read fn; do 
 					if [ $(( $(date +%s) - $(stat --printf %Y "$DB_ACT/$asduaddr/$fn") )) -gt $control_time ]; then
