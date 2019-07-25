@@ -14,21 +14,18 @@ while read asduaddr info model identity; do
 	case "$model" in 
 		ccu825_sms | granit ) 
 			count=0
-			check_list=$(find "$DB_ACT/$asduaddr" -type f -printf "%P\n" 2>/dev/null | grep -v "1000")
-			if ! [ -z "$check_list" ]; then
-				while read fn; do 
-					if [ $(( $(date +%s) - $(stat --printf %Y "$DB_ACT/$asduaddr/$fn") )) -gt $control_time ]; then
-						logmsgtime "Time of last data modification file $DB_ACT/$asduaddr/$fn - $(stat --printf %y $DB_ACT/$asduaddr/$fn)"
-						ts_send "$asduaddr" "$objaddr_ex" 30 "$link_down"
-						count=0
-						break
-					else
-						count=$(( $count + 1 ))
-					fi
-				done <<-EOF
-					$check_list
-				EOF
-			fi
+			while read fn && [ -n "$fn" ]; do
+				if [ $(( $(date +%s) - $(stat --printf %Y "$DB_ACT/$asduaddr/$fn") )) -gt $control_time ]; then
+					logmsgtime "Time of last data modification file $DB_ACT/$asduaddr/$fn - $(stat --printf %y $DB_ACT/$asduaddr/$fn)"
+					ts_send "$asduaddr" "$objaddr_ex" 30 "$link_down"
+					count=0
+					break
+				else
+					count=$(( $count + 1 ))
+				fi
+			done <<-EOF
+				$(find "$DB_ACT/$asduaddr" -type f -printf "%P\n" 2>/dev/null | grep -v "1000")
+			EOF
 
 			[ $count -gt 0 ] && ts_send "$asduaddr" "$objaddr_ex" 30 "$link_up"
 		;;
