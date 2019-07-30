@@ -14,16 +14,20 @@ gipid=""
 
 ginterrog() 
 {
-	local time asduaddr
+	local time asduaddr response
 	asduaddr=$1
 	time=$2
-	
+		
 	while true; do
 		sleep $time
 		if response=$(get_state $asduaddr); then
 			json_parse "$asduaddr" "$response" "info"	
 			logmsgtime "The general interrogation $CCUSERVER server was successful"
 		fi
+		
+		# Впоследствии удалить вывод сырых сообщений
+		[ -n "$response" ] && logmsgtime_debug "$response" >> $LOGDIR/ccuserver/rtu_${asduaddr}_gi_raw.log
+	
 	done
 }
 
@@ -44,18 +48,26 @@ while true; do
 		listen_events $asduaddr | \
 		sed -u -e '/^[[:space:]]*$/d' -e 's/^data:\(.*\)$/\1/' | \
 		while read string; do 
+
+			# Впоследствии удалить вывод сырых сообщений
+			logmsgtime_debug "$string" >> $LOGDIR/ccuserver/rtu_${asduaddr}_event_raw.log
+
 			case "$string" in
 			'{"Type":"Keepalive"}') 
 				continue 
 			;;
 			'{"Type":"NewEvents"}') 
-				if response=$(get_state $asduaddr); then
+				if events=$(get_state $asduaddr); then
 					logmsgtime "Event from $CCUSERVER Received"
-					listid=$(json_parse "$asduaddr" "$response" "event")  
+					listid=$(json_parse "$asduaddr" "$events" "event")  
 					[ -n "$listid" ] && ack_events "$asduaddr" "$listid"
 				else
 					logmsgtime "Synchronization with $CCUSERVER server failed"
 				fi
+
+				# Впоследствии удалить вывод сырых сообщений
+				[ -n "$events" ] && logmsgtime_debug "$events" >> $LOGDIR/ccuserver/rtu_${asduaddr}_event_raw.log
+
 			;;
 			'{"Type":"Close"}') 
 				logmsgtime "Controller has disconnected. The channel will be closed." 
