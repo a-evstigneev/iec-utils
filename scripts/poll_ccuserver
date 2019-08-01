@@ -58,9 +58,15 @@ while true; do
 			;;
 			'{"Type":"NewEvents"}') 
 				if events=$(get_state $asduaddr); then
-					logmsgtime "Event from $CCUSERVER Received"
+					logmsgtime "Event from $CCUSERVER received"
 					listid=$(json_parse "$asduaddr" "$events" "event")  
-					[ -n "$listid" ] && ack_events "$asduaddr" "$listid"
+					if [ -n "$listid" ]; then
+						logmsgtime "List events $listid to confirm"
+						status=$(ack_events "$asduaddr" "$listid")
+						code=$(echo "$status" | jq '.Status.Code')
+						description=$(echo "$status" | jq '.Status.Description')
+						logmsgtime "Event confirmation status: code = $code, description = \"${description}\""
+					fi
 				else
 					logmsgtime "Synchronization with $CCUSERVER server failed"
 				fi
