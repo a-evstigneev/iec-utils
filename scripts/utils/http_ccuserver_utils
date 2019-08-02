@@ -37,6 +37,7 @@ json_parse()
 				$valuelist
 			EOF
 			echo "$listid"
+			listid=""
 		;;
 		"info" )
 			cat - >> "$tmpfile" <<-EOF
