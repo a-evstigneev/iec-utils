@@ -67,6 +67,7 @@ while true; do
 						description=$(echo "$status" | jq '.Status.Description')
 						logmsgtime "Event confirmation status: code = $code, description = \"${description}\""
 					fi
+					listid=""
 				else
 					logmsgtime "Synchronization with $CCUSERVER server failed"
 				fi

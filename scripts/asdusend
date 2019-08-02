@@ -10,7 +10,7 @@ cts_name=$1
 
 sendfile()
 {
-	asduconv -c 3 $1 | sockwrite -d 3 -s $VARDIR/$cts_name/usocket 
+	asduconv -c 3 $1 | tee -a -i /opt/iecd/log/asduconfv.log | sockwrite -d 3 -s $VARDIR/$cts_name/usocket 
 }
 
 end_defque()
