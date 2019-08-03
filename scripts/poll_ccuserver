@@ -65,7 +65,7 @@ while true; do
 						status=$(ack_events "$asduaddr" "$listid")
 						code=$(echo "$status" | jq '.Status.Code')
 						description=$(echo "$status" | jq '.Status.Description')
-						logmsgtime "Event confirmation status: code = $code, description = \"${description}\""
+						logmsgtime "Event confirmation status: code = $code, description = ${description}"
 					fi
 					listid=""
 				else

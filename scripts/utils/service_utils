@@ -1,7 +1,11 @@
 get_pctstamp()
 {
-	# timestamp format "${nanosec}:${min}:${hour}:${day_m}:${day_w}:${month}:${year}"
-	date "+%-N:%-M:%-H:%-d:%-u:%-m:%y"
+	# timestamp format "${msec}:${min}:${hour}:${day_m}:${day_w}:${month}:${year}"
+	local timestamp
+
+	msec=$(echo $(date "+%-S%3N") | sed 's/^0*//')
+	timestamp=${msec}:$(date "+%-M:%-H:%-d:%-u:%-m:%y")
+	echo "$timestamp"
 }
 
 rangeconv()
